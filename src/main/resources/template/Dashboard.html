@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Dashboard-FINVISION</title>
+        <!--Link to external CSS-->
+        <link rel="stylesheet" href="style.css">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <div style="display: flex; height:100vh;">
+
+            <!--Sidebar-->
+            <div class="sidebar">
+                <div>
+                    <h2>Clarity in every Dollar</h2>
+                    <a href="#">Dashboard</a>
+                    <a href="#">Tracker</a>
+                    <a href="#">Set Budget</a>
+                    <a href="#">Cash Flow</a>
+                    <a href="#">Bill Reminders</a>
+                    <a href="#">Insights</a>
+                </div>
+
+                <div>
+                    <a href="#">Logout</a>
+                    <div class="help-icon">?</div>
+                </div>
+            </div>
+
+            <!--Main Content-->
+            <div class="main">
+                <div class="card">
+                    <h3>Tracker</h3>
+                    <p>Track expenses, cash flow and income here.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Set Budget</h3>
+                    <p>Creaate and adjust your monthly budget goals.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Spending Visualization</h3>
+                    <canvas id="spendingChart"></canvas>
+                 </div>
+
+                <div class="card">
+                    <h3>Cash Flow</h3>
+                    <p>View predicted cash flow based on your habits.</p>
+                </div>
+
+                 <div class="card">
+                    <h3>Payment Organizer</h3>
+                    <p>Bill reminders and payment tracking.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Insights</h3>
+                    <p>Personalized tips for saving and investing.</p>
+                </div>
+            </div>
+        </div>
+
+        <!--Chart Script-->
+        <script>
+            const ctx = document.getElementbyId('spendingChart'.getContext('2D'));
+            new Chart(ctx,{
+                type: 'pie',
+                data: {
+                    labels: ['Rent', 'Utilities', 'Entertainment', 'Grocery', 'Others'],
+                    datasets: [{
+                        data: [400, 800, 150, 300, 100],
+                        backgroundColor: ['#3498db','#2ecc71','#e67e22','#e74c3c','#9b59b6']
+                    }]
+                }
+            });
+        </script>
+    </body>
+</html>

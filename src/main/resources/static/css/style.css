@@ -1,0 +1,137 @@
+/* General */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+}
+
+/* Header (if needed later) */
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+/* Login Page */
+.login-card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  width: 320px;
+  text-align: center;
+  margin: 100px auto;
+}
+
+.login-card h2 {
+  margin-bottom: 20px;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.login-card button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2c3e50;
+  color: white;
+  cursor: pointer;
+}
+
+.login-card button:hover {
+  background: #1a252f;
+}
+
+.login-card .links {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.login-card .links a {
+  color: #2c3e50;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+/* Dashboard Layout */
+.sidebar {
+  width: 220px;
+  background: #2c3e50;
+  color: white;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar h2 {
+  margin: 0 0 20px;
+}
+
+.sidebar a {
+  color: white;
+  text-decoration: none;
+  display: block;
+  margin: 10px 0;
+}
+
+.sidebar a:hover {
+  text-decoration: underline;
+}
+
+.help-icon {
+  text-align: center;
+  margin-top: auto;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.main {
+  flex: 1;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: minmax(200px, auto);
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+.help-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #3498db;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto 0;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.help-icon:hover {
+  background: #217dbb;
+}
+
