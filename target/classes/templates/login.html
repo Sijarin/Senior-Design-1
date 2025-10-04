@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Login-FINVISION</title>
+        <link rel="stylesheet" th:href="@{/css/style.css}">
+    </head>
+    <body class="login-body">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1>FINVISION</h1>
+                    <p>Clarity in every Dollar</p>
+                </div>
+                
+                <h2>Login</h2>
+                
+                <form action="/dashboard" method="post">
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-login">Login</button>
+                </form>
+
+                <div class="links">
+                    <a href="/signup">Create Account</a>
+                    <a href="/forgot-password">Forgot Password?</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
