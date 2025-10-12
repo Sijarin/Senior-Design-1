@@ -1,5 +1,4 @@
-/* Dashboard Page Style */
-
+/* Global Reset */
 * {
     margin: 0;
     padding: 0;
@@ -10,6 +9,10 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f5f6fa;
 }
+
+/* ============================================
+   DASHBOARD PAGE STYLES
+   ============================================ */
 
 .sidebar {
     width: 250px;
@@ -95,8 +98,10 @@ canvas {
     height: auto !important;
 }
 
+/* ============================================
+   LOGIN PAGE STYLES
+   ============================================ */
 
-/* Login Page Styles */
 .login-body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
@@ -191,4 +196,57 @@ canvas {
     text-decoration: none;
     font-size: 14px;
     transition: color 0.3s;
+}
+
+.links a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* ============================================
+   ALERT & MESSAGE STYLES
+   ============================================ */
+
+/* General alert styles */
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.alert-danger {
+    background-color: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.alert-success {
+    background-color: #efe;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+/* Error and Success messages for login page */
+.error-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 14px;
+    text-align: center;
+    background-color: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.success-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 14px;
+    text-align: center;
+    background-color: #efe;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
 }
