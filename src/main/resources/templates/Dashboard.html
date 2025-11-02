@@ -24,7 +24,14 @@
                 </div>
 
                 <div>
-                    <a href="#">Logout</a>
+                    <!--<a href="/logout" class="logout-btn">Logout</a>-->
+                    <form th:action="@{/logout}" method="post" class="logout-form">
+                        <button type="submit" class="logout-btn">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                        </button>
+                    </form>
+
+
                     <div class="help-icon">?</div>
                 </div>
             </div>
