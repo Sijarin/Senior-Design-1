@@ -31,6 +31,29 @@ body {
     line-height: 1.4;
 }
 
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.menu-toggle {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.nav-menu {
+    display: none;
+}
+
+.nav-menu.show {
+    display: block;
+}
+
 .sidebar a {
     color: white;
     text-decoration: none;
@@ -38,7 +61,6 @@ body {
     margin: 5px 0;
     border-radius: 8px;
     display: block;
-    transition: background 0.3s ease;
 }
 
 .sidebar a:hover {
@@ -71,31 +93,41 @@ body {
 
 .card {
     background: white;
-    padding: 25px;
+    padding: 15px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card:hover {
-    transform: translateY(-5px);
+.card[onclick] {
+    cursor: pointer;
+}
+
+.card[onclick]:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .card h3 {
     color: #2c3e50;
-    margin-bottom: 12px;
-    font-size: 20px;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.card h3 i {
+    color: #667eea;
+    margin-right: 8px;
 }
 
 .card p {
     color: #7f8c8d;
-    line-height: 1.6;
+    font-size: 13px;
+    line-height: 1.4;
 }
 
 canvas {
-    max-width: 100%;
-    height: auto !important;
+    max-width: 250px;
+    max-height: 250px;
+    margin: 0 auto;
+    display: block;
 }
 
 /* ============================================
@@ -271,6 +303,4 @@ canvas {
 
 .logout-btn:hover {
     background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.6);
-    transform: scale(1.03);
 }

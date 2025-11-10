@@ -11,4 +11,19 @@ public class DashboardController {
         return "Dashboard";
     }
 
+    @GetMapping("/tracker")
+    public String tracker() {
+        return "Trackerpage";
+    }
+
+    @GetMapping("/budget")
+    public String budget() {
+        return "BudgetSet";
+    }
+
+    @GetMapping("/insights")
+    public String insights() {
+        return "Insightspage";
+    }
+
 }

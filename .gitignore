@@ -62,3 +62,44 @@ log/
 *.temp
 *.bak
 *.cache
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Compiled files
+*.pyc
+*.pyo
+*.class
+
+# Dependencies and libraries
+/lib/
+/libs/
+/vendor/
+*.so
+*.dll
+*.dylib
+
+# CDN and external resources (if downloaded locally)
+/src/main/resources/static/vendor/
+/src/main/resources/static/libs/
+/src/main/resources/static/node_modules/
+
+# Large media files
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# Security sensitive files
+*.pem
+*.key
+*.cert
+*.p12
+credentials.json
+secrets.json
