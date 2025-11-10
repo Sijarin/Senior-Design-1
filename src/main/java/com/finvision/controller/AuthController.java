@@ -19,11 +19,13 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // ---------- LOGIN ----------
     @GetMapping("/login")
     public String login() {
         return "login"; // loads login.html
     }
 
+    // ---------- REGISTER ----------
     @GetMapping("/register")
     public String register() {
         return "register"; // loads register.html
@@ -32,45 +34,79 @@ public class AuthController {
     @PostMapping("/register")
     public String registerUser(@RequestParam String username,
                                @RequestParam String password,
-                               @RequestParam(required = false) String email,
                                @RequestParam(required = false) String confirmPassword,
                                Model model) {
 
-        // Validate passwords match (if you're using confirmPassword field)
+        // Check if passwords match
         if (confirmPassword != null && !password.equals(confirmPassword)) {
-            model.addAttribute("error", "Passwords do not match");
+            model.addAttribute("error", "Passwords do not match.");
             return "register";
         }
 
-        // Check if username already exists
+        // Check if username exists
         if (userRepository.findByUsername(username).isPresent()) {
-            model.addAttribute("error", "Username already exists");
+            model.addAttribute("error", "Username already exists.");
             return "register";
         }
 
-        // Create new user with hashed password
+        // Save new user
         User user = new User();
         user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password)); // Hash the password!
+        user.setPassword(passwordEncoder.encode(password));
 
-        /*// Set email if your User model has it
-        if (email != null && !email.isEmpty()) {
-            user.setEmail(email);
-        }*/
+        // TODO: Set security question/answer if added in register.html
+        // user.setSecurityQuestion(securityQuestion);
+        // user.setSecurityAnswer(securityAnswer);
 
         userRepository.save(user);
-
-        model.addAttribute("message", "Account created successfully! You can now login.");
         return "redirect:/login?registered=true";
     }
 
+    // ---------- FORGOT PASSWORD ----------
     @GetMapping("/forgot-password")
-    public String forgotPassword() {
-        return "forgot-password"; // loads forgot-password.html
+    public String showForgotPasswordPage() {
+        return "forgot-password";
     }
 
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam("username") String username, Model model) {
+        User user = userRepository.findByUsername(username).orElse(null);
+
+        if (user == null) {
+            model.addAttribute("error", "No user found with that username.");
+            return "forgot-password";
+        }
+
+        model.addAttribute("securityQuestion", user.getSecurityQuestion());
+        model.addAttribute("username", username);
+        return "reset-password";
+    }
+
+    // ---------- RESET PASSWORD ----------
     @GetMapping("/reset-password")
-    public String resetPassword() {
-        return "reset-password"; // loads reset-password.html
+    public String resetPasswordPage() {
+        return "reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam("username") String username,
+                                       @RequestParam("securityAnswer") String securityAnswer,
+                                       @RequestParam("newPassword") String newPassword,
+                                       Model model) {
+
+        User user = userRepository.findByUsername(username).orElse(null);
+
+        if (user == null || !user.getSecurityAnswer().equalsIgnoreCase(securityAnswer)) {
+            model.addAttribute("error", "Incorrect security answer.");
+            model.addAttribute("username", username);
+            model.addAttribute("securityQuestion", user != null ? user.getSecurityQuestion() : "");
+            return "reset-password";
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        model.addAttribute("success", "Password reset successful! You can now log in.");
+        return "login";
     }
 }
