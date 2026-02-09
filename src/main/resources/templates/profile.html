@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Settings - FINVISION</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <button class="menu-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <div class="profile-icon-wrapper">
+    <div class="profile-icon" onclick="toggleProfileMenu()">
+      <i class="fas fa-user"></i>
+    </div>
+
+    <div id="profileMenu" class="profile-dropdown hidden">
+      <a th:href="@{/profile}">Profile Settings</a>
+      <a th:href="@{/logout}">Logout</a>
+    </div>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav id="sidebar" class="sidebar hidden">
+  <h2>Clarity in every Dollar</h2>
+
+  <a th:href="@{/dashboard}"><i class="fas fa-home"></i> Dashboard</a>
+  <a th:href="@{/tracker}"><i class="fas fa-chart-line"></i> Tracker</a>
+  <a th:href="@{/budget}"><i class="fas fa-wallet"></i> Set Budget</a>
+  <a th:href="@{/cashflow}"><i class="fas fa-money-bill-wave"></i> Cash Flow</a>
+  <a th:href="@{/payments}"><i class="fas fa-bell"></i> Payment Organizer</a>
+  <a th:href="@{/insights}"><i class="fas fa-lightbulb"></i> Insights</a>
+
+  <form th:action="@{/logout}" method="post" class="logout-form">
+    <button type="submit" class="logout-btn">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+    </button>
+  </form>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="profile-container">
+  <h1>Profile Settings</h1>
+
+  <!-- Personal Information -->
+  <section class="profile-card">
+    <h2>Personal Information</h2>
+    <form method="post" th:action="@{/profile/update}">
+      <label>Name:</label>
+      <input type="text" name="name" th:value="${user.name}" required>
+
+      <label>Email:</label>
+      <input type="email" name="email" th:value="${user.email}" required>
+
+      <label>Username:</label>
+      <input type="text" name="username" th:value="${user.username}" required>
+
+      <button type="submit" class="btn-primary">Save Changes</button>
+    </form>
+  </section>
+
+  <!-- Security -->
+  <section class="profile-card">
+    <h2>Security</h2>
+    <form method="post" th:action="@{/profile/password}">
+      <label>Current Password:</label>
+      <input type="password" name="currentPassword">
+
+      <label>New Password:</label>
+      <input type="password" name="newPassword">
+
+      <label>Confirm New Password:</label>
+      <input type="password" name="confirmPassword">
+
+      <button type="submit" class="btn-primary">Update Password</button>
+    </form>
+  </section>
+
+  <!-- Danger Zone -->
+  <section class="profile-card danger-zone">
+    <h2>Danger Zone</h2>
+    <p>Deleting your account is permanent and cannot be undone.</p>
+    <form method="post" th:action="@{/profile/delete}">
+      <button type="submit" class="btn-danger">Delete Account</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("hidden");
+  }
+  function toggleProfileMenu() {
+      document.getElementById("profileMenu").classList.toggle("hidden");
+  }
+</script>
+
+</body>
+</html>
