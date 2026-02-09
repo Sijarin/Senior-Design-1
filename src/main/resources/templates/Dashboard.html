@@ -1,120 +1,86 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Dashboard-FINVISION</title>
-        <!--Link to external CSS-->
-        <link rel="stylesheet" th:href="@{/css/style.css}">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    </head>
-    <body>
-        <div style="display: flex; height:100vh;">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>FinVision Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
 
-            <!--Sidebar-->
-            <div class="sidebar" id="sidebar">
-                <div>
-                    <div class="sidebar-header">
-                        <h2>Clarity in every Dollar</h2>
-                        <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                    </div>
-                    <nav class="nav-menu" id="navMenu">
-                        <a href="/dashboard">Dashboard</a>
-                        <a href="/tracker">Tracker</a>
-                        <a href="/budget">Set Budget</a>
-                        <a href="#">Cash Flow</a>
-                        <a href="#">Bill Reminders</a>
-                        <a href="/insights">Insights</a>
-                    </nav>
-                </div>
+<div class="dashboard-wrapper">
 
-                <div>
-                    <!--<a href="/logout" class="logout-btn">Logout</a>-->
-                    <form th:action="@{/logout}" method="post" class="logout-form">
-                        <button type="submit" class="logout-btn">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-                        </button>
-                    </form>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
+        <div class="sidebar-header">
+            <span class="brand-text">Clarity in every Dollar</span>
+            <button class="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+        </div>
 
-                    <div class="help-icon">?</div>
-                </div>
-            </div>
+        <nav class="nav-menu">
+            <a th:href="@{/dashboard}" class="menu-item">Dashboard</a>
+            <a th:href="@{/tracker}" class="menu-item">Tracker</a>
+            <a th:href="@{/budget}" class="menu-item">Set Budget</a>
+            <a th:href="@{/cashflow}" class="menu-item">Cash Flow</a>
+            <a th:href="@{/reminders}" class="menu-item">Bill Reminders</a>
+            <a th:href="@{/insights}" class="menu-item">Insights</a>
+        </nav>
 
-            <!--Main Content-->
-            <div class="main">
-                <div class="card" onclick="window.location.href='/tracker'">
-                    <h3><i class="fas fa-chart-line"></i> Tracker</h3>
-                    <p>Track expenses, cash flow and income here.</p>
-                </div>
+        <div class="sidebar-footer">
+            <a th:href="@{/logout}" class="logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </aside>
 
-                <div class="card" onclick="window.location.href='/budget'">
-                    <h3><i class="fas fa-wallet"></i> Set Budget</h3>
-                    <p>Create and adjust your monthly budget goals.</p>
-                </div>
+    <!-- MAIN CONTENT -->
+    <main class="main">
 
-                <div class="card">
-                    <h3>Spending Visualization</h3>
-                    <canvas id="spendingChart"></canvas>
-                </div>
-
-                <div class="card">
-                    <h3><i class="fas fa-money-bill-wave"></i> Cash Flow</h3>
-                    <p>View predicted cash flow based on your habits.</p>
-                </div>
-
-                <div class="card">
-                    <h3><i class="fas fa-bell"></i> Payment Organizer</h3>
-                    <p>Bill reminders and payment tracking.</p>
-                </div>
-
-                <div class="card" onclick="window.location.href='/insights'">
-                    <h3><i class="fas fa-lightbulb"></i> Insights</h3>
-                    <p>Personalized tips for saving and investing.</p>
+        <!-- Top bar with profile -->
+        <div class="topbar">
+            <div></div> <!-- empty space for left -->
+            <div class="profile-icon-wrapper">
+                <div class="profile-icon">
+                    <a th:href="@{/profile}">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!--Chart Script-->
-        <script>
-            const ctx = document.getElementById('spendingChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Rent', 'Utilities', 'Entertainment', 'Grocery', 'Others'],
-                    datasets: [{
-                        data: [400, 800, 150, 300, 100],
-                        backgroundColor: ['#3498db','#2ecc71','#e67e22','#e74c3c','#9b59b6']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 10,
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <h2>Welcome Back, 👋</h2>
+            <p>Your personalized financial command center.</p>
+        </div>
 
-            // Toggle Menu Function
-            function toggleMenu() {
-                const navMenu = document.getElementById('navMenu');
-                const menuToggle = document.getElementById('menuToggle');
+        <!-- Video Demo Box -->
+        <div class="card video-box">
+            <h3>Demo Preview Area</h3>
+            <p>You can embed or upload your demonstration walkthrough video here.</p>
+            <div class="video-placeholder">
+                <i class="fa-solid fa-video fa-3x"></i>
+            </div>
+        </div>
 
-                navMenu.classList.toggle('show');
-                menuToggle.classList.toggle('active');
-            }
-        </script>
-    </body>
+    </main>
+
+</div>
+
+<!-- CHATBOT BUTTON -->
+<div class="chatbot-btn">
+    <i class="fa-solid fa-robot"></i>
+</div>
+
+<script>
+    // Hamburger toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('show');
+    });
+</script>
+
+</body>
 </html>
