@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Insights</title>
+  <meta charset="UTF-8">
+  <style>
+  body { font-family: Arial, sans-serif; padding: 30px; }
+  .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; width: 360px; }
+  .line { margin: 10px 0; font-size: 18px; }
+</style>
+</head>
+<body>
+  <h2>Monthly Insights</h2>
+
+  <p>Total Income: $<span th:text="${income}"></span></p>
+  <p>Total Expenses: $<span th:text="${expenses}"></span></p>
+  <p>Remaining: $<span th:text="${remaining}"></span></p>
+  <h3>Suggestions</h3>
+<ul>
+  <li th:each="s : ${suggestions}" th:text="${s}"></li>
+</ul>
+
+</body>
+</html>
