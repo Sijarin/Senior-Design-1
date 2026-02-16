@@ -55,32 +55,26 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
 
-<<<<<<< HEAD
         <!-- .env loader -->
-=======
 
 
         <!-- H2 database -->
 
->>>>>>> d5f8ea33a4c1ec9fb3f244785d489f7ad249469d
         <dependency>
             <groupId>me.paulschwarz</groupId>
             <artifactId>spring-dotenv</artifactId>
             <version>4.0.0</version>
         </dependency>
 
-<<<<<<< HEAD
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-=======
 
         <!-- Optional: For password encoding (BCrypt is included with security) -->
-
->>>>>>> d5f8ea33a4c1ec9fb3f244785d489f7ad249469d
     </dependencies>
 
     <build>
