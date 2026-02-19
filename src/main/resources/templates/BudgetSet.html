@@ -8,105 +8,132 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="budget-container">
 
-                <button type="button" class="budget-btn" onclick="window.location.href='/dashboard'"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
-                <br><br>
-                <h2>Set Your Budget For this Month- <span th:text="${currentMonth}">February 2026</span></h2>
+<div class="dashboard-wrapper">
 
-                <form th:action="@{/budget}" method="POST">
+    <!-- SIDEBAR -->
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
 
+    <!-- MAIN CONTENT -->
+    <main class="main">
 
-                    <!-- Income Section -->
-                    <div class="budget-section">
-                        <h3>INCOME</h3>
+        <!-- Top bar with profile -->
+        <div class="topbar">
+            <div></div>
+            <div class="profile-icon-wrapper">
+                <div class="profile-icon">
+                    <a th:href="@{/profile}">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                        <div class="budget-form-row">
-                            <label for="monthlyIncome">Monthly Income</label>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" name="monthlyIncome" id="monthlyIncome" required>
-                        </div>
+        <div class="budget-container">
 
-                        <div class="budget-form-row">
-                            <label for="otherIncome">Other Income</label>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" name="otherIncome" id="otherIncome">
-                        </div>
+            <h2>Set Your Budget For this Month - <span th:text="${currentMonth}">February 2026</span></h2>
+
+            <form th:action="@{/budget}" method="POST">
+
+                <!-- Income Section -->
+                <div class="budget-section">
+                    <h3>INCOME</h3>
+
+                    <div class="budget-form-row">
+                        <label for="monthlyIncome">Monthly Income</label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="monthlyIncome" id="monthlyIncome" required>
                     </div>
 
-                    <!-- Fixed Expenses Section -->
-                    <div class="budget-section">
-                        <h3>Fixed Expenses</h3>
-
-                        <table class="budget-table">
-                            <tr>
-                                <th>Category</th>
-                                <th>Planned Amount</th>
-                            </tr>
-                            <tr>
-                                <td>Rent / Mortgage</td>
-                                <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="rent"></td>
-                            </tr>
-                            <tr>
-                                <td>Utilities</td>
-                                <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="utilities"></td>
-                            </tr>
-                            <tr>
-                                <td>Insurance</td>
-                                <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="insurance"></td>
-                            </tr>
-                            <tr>
-                                <td>Groceries</td>
-                                <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="groceries"></td>
-                            </tr>
-                            <tr>
-                                <td>Subscriptions</td>
-                                <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="subscriptions"></td>
-                            </tr>
-                        </table>
+                    <div class="budget-form-row">
+                        <label for="otherIncome">Other Income</label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="otherIncome" id="otherIncome">
                     </div>
+                </div>
 
-                    <!-- Variable Expenses Section -->
-                    <div class="budget-section">
-                        <h3>Miscellaneous Expenses</h3>
+                <!-- Fixed Expenses Section -->
+                <div class="budget-section">
+                    <h3>Fixed Expenses</h3>
 
-                        <table class="budget-table" id="variableTable">
-                            <tr>
-                                <th>Title</th>
-                                <th>Amount</th>
-                                <th>Action</th>
-                            </tr>
-                        </table>
+                    <table class="budget-table">
+                        <tr>
+                            <th>Category</th>
+                            <th>Planned Amount</th>
+                        </tr>
+                        <tr>
+                            <td>Rent / Mortgage</td>
+                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="rent"></td>
+                        </tr>
+                        <tr>
+                            <td>Utilities</td>
+                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="utilities"></td>
+                        </tr>
+                        <tr>
+                            <td>Insurance</td>
+                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="insurance"></td>
+                        </tr>
+                        <tr>
+                            <td>Groceries</td>
+                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="groceries"></td>
+                        </tr>
+                        <tr>
+                            <td>Subscriptions</td>
+                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="subscriptions"></td>
+                        </tr>
+                    </table>
+                </div>
 
-                        <br>
-                        <button type="button" class="budget-btn" onclick="addRow()">Add Expense</button>
-                    </div>
+                <!-- Variable Expenses Section -->
+                <div class="budget-section">
+                    <h3>Miscellaneous Expenses</h3>
+
+                    <table class="budget-table" id="variableTable">
+                        <tr>
+                            <th>Title</th>
+                            <th>Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </table>
 
                     <br>
-                    <button type="submit" class="budget-btn">Save</button>
+                    <button type="button" class="budget-btn" onclick="addRow()">Add Expense</button>
+                </div>
 
-                </form>
+                <br>
+                <button type="submit" class="budget-btn">Save</button>
+
+            </form>
 
         </div>
 
-    <script>
-        function addRow() {
-            const table = document.getElementById("variableTable");
-            const row = table.insertRow();
+    </main>
 
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1);
-            const cell3 = row.insertCell(2);
+</div>
 
-            cell1.innerHTML = '<input type="text" name="variableTitle" required>';
-            cell2.innerHTML = '<input type="text" inputmode="numeric" pattern="[0-9]*" name="variableAmount" placeholder="0" required>';
-            cell3.innerHTML = '<button type="button" class="budget-btn remove-btn" onclick="removeRow(this)">X</button>';
-        }
+<script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('show');
+    });
 
-        function removeRow(button) {
-            const row = button.parentNode.parentNode;
-            row.parentNode.removeChild(row);
-        }
+    function addRow() {
+        const table = document.getElementById("variableTable");
+        const row = table.insertRow();
 
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        const cell3 = row.insertCell(2);
 
-    </script>
+        cell1.innerHTML = '<input type="text" name="variableTitle" required>';
+        cell2.innerHTML = '<input type="text" inputmode="numeric" pattern="[0-9]*" name="variableAmount" placeholder="0" required>';
+        cell3.innerHTML = '<button type="button" class="budget-btn remove-btn" onclick="removeRow(this)">X</button>';
+    }
+
+    function removeRow(button) {
+        const row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+</script>
+
 </body>
 </html>
