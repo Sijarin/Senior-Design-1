@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside th:fragment="sidebar" class="sidebar">
+
+    <div class="sidebar-header">
+        <span class="brand-text">Clarity in every Dollar</span>
+        <button class="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+    </div>
+
+    <nav class="nav-menu">
+        <a th:href="@{/dashboard}" class="menu-item">Dashboard</a>
+        <a th:href="@{/tracker}" class="menu-item">Tracker</a>
+        <a th:href="@{/budget}" class="menu-item">Set Budget</a>
+        <a th:href="@{/cashflow}" class="menu-item">Cash Flow</a>
+        <a th:href="@{/reminders}" class="menu-item">Bill Reminders</a>
+        <a th:href="@{/insights}" class="menu-item">Insights</a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a th:href="@{/logout}" class="logout-btn">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </a>
+    </div>
+
+</aside>
+
+</body>
+</html>

@@ -1,24 +1,55 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Insights</title>
-  <meta charset="UTF-8">
-  <style>
-  body { font-family: Arial, sans-serif; padding: 30px; }
-  .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; width: 360px; }
-  .line { margin: 10px 0; font-size: 18px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Insights - FINVISION</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-  <h2>Monthly Insights</h2>
 
-  <p>Total Income: $<span th:text="${income}"></span></p>
-  <p>Total Expenses: $<span th:text="${expenses}"></span></p>
-  <p>Remaining: $<span th:text="${remaining}"></span></p>
-  <h3>Suggestions</h3>
-<ul>
-  <li th:each="s : ${suggestions}" th:text="${s}"></li>
-</ul>
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <!-- Top bar with profile -->
+        <div class="topbar">
+            <div></div>
+            <div class="profile-icon-wrapper">
+                <div class="profile-icon">
+                    <a th:href="@{/profile}">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <h2>Monthly Insights</h2>
+
+        <p>Total Income: $<span th:text="${income}"></span></p>
+        <p>Total Expenses: $<span th:text="${expenses}"></span></p>
+        <p>Remaining: $<span th:text="${remaining}"></span></p>
+
+        <h3>Suggestions</h3>
+        <ul>
+            <li th:each="s : ${suggestions}" th:text="${s}"></li>
+        </ul>
+
+    </main>
+
+</div>
+
+<script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('show');
+    });
+</script>
 
 </body>
 </html>

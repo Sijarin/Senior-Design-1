@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tracker - FINVISION</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <!-- Top bar with profile -->
+        <div class="topbar">
+            <div></div>
+            <div class="profile-icon-wrapper">
+                <div class="profile-icon">
+                    <a th:href="@{/profile}">
+                        <i class="fa-solid fa-user"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <h2>Tracker</h2>
+        <!-- Tracker content goes here -->
+
+    </main>
+
+</div>
+
+<script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('show');
+    });
+</script>
+
+</body>
+</html>
