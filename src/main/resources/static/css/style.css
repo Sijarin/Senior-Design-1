@@ -1,28 +1,61 @@
-/* ============================================
-   GLOBAL RESET
-   ============================================ */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f6fa;
+/* Light mode CSS variables (color tokens used site-wide) */
+:root {
+    --bg-main:        #f5f6fa;
+    --bg-card:        #ffffff;
+    --bg-video:       #f0f0f0;
+    --bg-input:       #ffffff;
+    --bg-budget:      #8980eb;
+
+    --text-main:      #2c3e50;
+    --text-muted:     #7f8c8d;
+    --text-input:     #000000;
+    --text-budget-h2: #0d0dcb;
+    --text-budget-h3: #030a12;
+
+    --border-card:    #e0e0e0;
+    --border-video:   #d0d0d0;
+    --border-budget:  #dddddd;
+    --border-input:   #e0e0e0;
 }
 
-/* ============================================
-   DASHBOARD PAGE STYLES
-   ============================================ */
+/* Dark mode overrides — all elements update automatically via var() */
+body.dark-mode {
+    --bg-main:        #1a1a2e;
+    --bg-card:        #16213e;
+    --bg-video:       #0f3460;
+    --bg-input:       #2d2d44;
+    --bg-budget:      #3a3580;
 
-/* Layout Wrapper */
+    --text-main:      #e0e0e0;
+    --text-muted:     #aaaaaa;
+    --text-input:     #e0e0e0;
+    --text-budget-h2: #a0a0ff;
+    --text-budget-h3: #dddddd;
+
+    --border-card:    #444444;
+    --border-video:   #444444;
+    --border-budget:  #555555;
+    --border-input:   #555555;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+}
+
+/* Dashboard page — layout, sidebar, cards, video box, and chatbot button */
 .dashboard-wrapper {
     display: flex;
     min-height: 100vh;
 }
 
-/* Sidebar */
 .sidebar {
     width: 250px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -31,9 +64,9 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     padding: 20px 15px;
-    position: fixed;        
-    top: 0;                 
-    height: 100vh; 
+    position: fixed;
+    top: 0;
+    height: 100vh;
 }
 
 .sidebar-header {
@@ -105,7 +138,6 @@ body {
     border-color: rgba(255, 255, 255, 0.6);
 }
 
-/* Main Content */
 .main {
     flex: 1;
     padding: 5px 10px;
@@ -114,14 +146,13 @@ body {
     gap: 0px;
     overflow-y: auto;
     margin-left: 250px;
-    height: 100vh;    
-    position: relative; 
+    height: 100vh;
+    position: relative;
 }
 
-/* Topbar for profile icon */
 .topbar {
     position: absolute;
-    top: 8px; 
+    top: 8px;
     right: 10px;
     width: auto;
     display: flex;
@@ -130,7 +161,32 @@ body {
     padding-bottom: 0px;
 }
 
-/* Profile Icon */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.topbar-dark-toggle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.topbar-dark-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
 .profile-icon-wrapper {
     position: relative;
 }
@@ -163,17 +219,15 @@ body {
     height: 100%;
 }
 
-/* Welcome Banner */
 .welcome-banner {
-    background: white;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-/* Cards */
 .card {
-    background: white;
+    background: var(--bg-card);
     padding: 15px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -188,7 +242,7 @@ body {
 }
 
 .card h3 {
-    color: #2c3e50;
+    color: var(--text-main);
     margin-bottom: 8px;
     font-size: 16px;
 }
@@ -199,12 +253,11 @@ body {
 }
 
 .card p {
-    color: #7f8c8d;
+    color: var(--text-muted);
     font-size: 13px;
     line-height: 1.4;
 }
 
-/* Video Box */
 .video-box {
     display: flex;
     flex-direction: column;
@@ -215,20 +268,19 @@ body {
 .video-placeholder {
     width: 100%;
     height: 200px;
-    background: #f0f0f0;
+    background: var(--bg-video);
     border-radius: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 10px;
-    border: 2px dashed #d0d0d0;
+    border: 2px dashed var(--border-video);
 }
 
 .video-placeholder i {
     color: #667eea;
 }
 
-/* Chatbot Floating Button */
 .chatbot-btn {
     position: fixed;
     bottom: 25px;
@@ -252,9 +304,7 @@ body {
     transform: scale(1.07);
 }
 
-/* ============================================
-   LOGIN PAGE STYLES
-   ============================================ */
+/* Login page — centered card with form, inputs, and links */
 .login-body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
@@ -270,7 +320,7 @@ body {
 }
 
 .login-card {
-    background: white;
+    background: var(--bg-card);
     padding: 40px;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -288,14 +338,14 @@ body {
 }
 
 .login-header p {
-    color: #7f8c8d;
+    color: var(--text-muted);
     font-size: 14px;
     margin: 0;
 }
 
 .login-card h2 {
     text-align: center;
-    color: #2c3e50;
+    color: var(--text-main);
     margin-bottom: 25px;
     font-size: 24px;
 }
@@ -307,7 +357,7 @@ body {
 .form-group input {
     width: 100%;
     padding: 14px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-input);
     border-radius: 8px;
     font-size: 16px;
     transition: border-color 0.3s;
@@ -354,9 +404,7 @@ body {
     text-decoration: underline;
 }
 
-/* ============================================
-   PROFILE PAGE STYLES
-   ============================================ */
+/* Profile page — user info cards, danger zone, and action buttons */
 .profile-container {
     padding: 30px;
     max-width: 800px;
@@ -364,11 +412,11 @@ body {
 }
 
 .profile-card {
-    background: white;
+    background: var(--bg-card);
     padding: 20px;
     border-radius: 12px;
     margin-bottom: 20px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-card);
 }
 
 .danger-zone {
@@ -389,9 +437,16 @@ body {
     cursor: pointer;
 }
 
-/* ============================================
-   RESPONSIVE STYLES
-   ============================================ */
+/* Global inputs — applies theme variables to all input, textarea, and select elements */
+input,
+textarea,
+select {
+    background-color: var(--bg-input);
+    color: var(--text-input);
+    border-color: var(--border-input);
+}
+
+/* Responsive — stacks sidebar on top for screens under 768px */
 @media (max-width: 768px) {
     .dashboard-wrapper {
         flex-direction: column;
@@ -435,14 +490,11 @@ body {
     }
 }
 
-/* ============================================
-   BUDGET SET PAGE STYLES
-   ============================================ */
-
+/* Budget page — form rows, input table, and action buttons */
 .budget-container {
     max-width: 800px;
     margin: 0;
-    background: #8980eb;
+    background: var(--bg-budget);
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -450,7 +502,7 @@ body {
 
 .budget-container h2 {
     margin-bottom: 10px;
-    color: #0d0dcb;
+    color: var(--text-budget-h2);
 }
 
 .budget-section {
@@ -459,9 +511,9 @@ body {
 
 .budget-section h3 {
     margin-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-budget);
     padding-bottom: 5px;
-    color: #030a12;
+    color: var(--text-budget-h3);
 }
 
 .budget-form-row {
@@ -513,3 +565,4 @@ body {
 .budget-btn.remove-btn {
     background-color: #e74c3c;
 }
+

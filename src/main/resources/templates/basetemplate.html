@@ -26,5 +26,26 @@
 
 </aside>
 
+<!-- Shared topbar: dark mode toggle + profile icon -->
+<div th:fragment="topbar" class="topbar">
+    <div></div>
+    <div class="topbar-right">
+        <button id="darkModeToggle" class="topbar-dark-toggle">
+            <i id="darkModeIcon" class="fa-solid fa-moon"></i>
+        </button>
+        <div class="profile-icon-wrapper">
+            <div class="profile-icon">
+                <a th:href="@{/profile}">
+                    <i class="fa-solid fa-user"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="darkMode">
+    <script th:src="@{/js/darkmode.js}"></script>
+</th:block>
+
 </body>
 </html>

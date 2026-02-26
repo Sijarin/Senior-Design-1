@@ -16,17 +16,7 @@
     <!-- MAIN CONTENT -->
     <main class="main">
 
-        <!-- Top bar with profile -->
-        <div class="topbar">
-            <div></div>
-            <div class="profile-icon-wrapper">
-                <div class="profile-icon">
-                    <a th:href="@{/profile}">
-                        <i class="fa-solid fa-user"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
+        <div th:replace="~{basetemplate :: topbar}"></div>
 
         <div class="profile-container">
             <h1>Profile Settings</h1>
@@ -87,5 +77,6 @@
     });
 </script>
 
+<th:block th:replace="~{basetemplate :: darkMode}"></th:block>
 </body>
 </html>
