@@ -6,17 +6,24 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.finvision.model.Budget;
+import com.finvision.model.User;
 import com.finvision.repository.BudgetRepository;
+import com.finvision.repository.UserRepository;
+
 @Controller
 public class DashboardController {
 
     @Autowired
     private BudgetRepository budgetRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/dashboard")
     public String dashboard() {
@@ -35,6 +42,14 @@ public class DashboardController {
         model.addAttribute("currentMonth", currentMonth);
         return "BudgetSet";
     }
+
+    @GetMapping("/profile")
+    public String profile(Authentication authentication, Model model) {
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("user", user);
+        return "profile";
+    }
+
 
 @GetMapping("/insights")
 public String insights(Model model) {
