@@ -380,24 +380,7 @@
                         Miscellaneous Expenses
                     </div>
 
-                    <div id="varContainer">
-                        <!-- Pre-fill existing variable rows for returning users -->
-                        <div th:if="${varTitles != null and !varTitles.isEmpty()}"
-                             th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}"
-                             class="var-row">
-                            <input type="text" name="variableTitle"
-                                   th:value="${varTitles[i]}" placeholder="Expense name">
-                            <div class="exp-input-wrap" style="flex:1">
-                                <span class="sym">$</span>
-                                <input type="number" name="variableAmount" min="0" step="0.01"
-                                       th:value="${varAmounts != null and varAmounts.size() > i} ? ${varAmounts[i]} : 0"
-                                       placeholder="0" class="expense-input">
-                            </div>
-                            <button type="button" class="btn-remove-row" onclick="removeRow(this)">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-                    </div>
+                    <div id="varContainer"></div>
 
                     <button type="button" class="btn-add-expense" onclick="addRow()">
                         <i class="fa-solid fa-plus"></i> Add Expense
@@ -471,7 +454,7 @@
 
     // ── Variable expense rows ──
     let rowCount = 0;
-    function addRow() {
+    function addRow(title, amount) {
         rowCount++;
         const container = document.getElementById('varContainer');
         const div = document.createElement('div');
@@ -492,12 +475,29 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>`;
         container.appendChild(div);
+        if (title)  div.querySelector('[name="variableTitle"]').value  = title;
+        if (amount) div.querySelector('[name="variableAmount"]').value = amount;
     }
 
     function removeRow(id) {
         const row = document.getElementById(id);
         if (row) { row.remove(); recalc(); }
     }
+</script>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+(function() {
+    var titles  = /*[[${varTitles}]]*/ [];
+    var amounts = /*[[${varAmounts}]]*/ [];
+    if (titles && titles.length > 0) {
+        for (var i = 0; i < titles.length; i++) {
+            addRow(titles[i], amounts[i] != null ? amounts[i] : '');
+        }
+        recalc();
+    }
+})();
+/*]]>*/
 </script>
 
 <th:block th:replace="~{basetemplate :: darkMode}"></th:block>
