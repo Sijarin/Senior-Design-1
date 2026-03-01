@@ -4,27 +4,94 @@
 
 <aside th:fragment="sidebar" class="sidebar">
 
-    <div class="sidebar-header">
-        <span class="brand-text">Clarity in every Dollar</span>
-        <button class="menu-toggle"><i class="fa-solid fa-bars"></i></button>
+    <!-- ── Brand Logo ── -->
+    <div class="sb-brand">
+        <div class="sb-logo">
+            <div class="sb-logo-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <div class="sb-logo-text">FinVision</div>
+                <span class="sb-logo-sub">Clarity in every dollar</span>
+            </div>
+        </div>
+        <button class="menu-toggle" onclick="document.querySelector('.nav-menu').classList.toggle('show')">
+            <i class="fa-solid fa-bars"></i>
+        </button>
     </div>
 
+    <!-- ── User mini-profile ── -->
+    <div class="sb-user" th:if="${displayName != null}">
+        <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+             th:src="${profilePhoto}" alt="Profile" class="sb-user-photo">
+        <div th:unless="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+             class="sb-user-initial"
+             th:text="${userInitial != null} ? ${userInitial} : 'U'">U</div>
+        <div>
+            <div class="sb-user-name" th:text="${displayName}">User</div>
+            <div class="sb-user-role">Member</div>
+        </div>
+    </div>
+
+    <!-- ── Navigation ── -->
     <nav class="nav-menu">
-        <a th:href="@{/dashboard}" class="menu-item">Dashboard</a>
-        <a th:href="@{/budget}" class="menu-item">Set Budget</a>
-        <a th:href="@{/tracker}" class="menu-item">Goal Tracking</a>
-        <a th:href="@{/predictive-cash-flow}" class="menu-item">Predictive Cash Flow</a>
-        <a th:href="@{/alerts}" class="menu-item">Alerts &amp; Notifications</a>
-        <a th:href="@{/insights}" class="menu-item">Insights</a>
-        <a th:href="@{/spending-visualization}" class="menu-item">Spending Visualization</a>
-        <a th:href="@{/receipt-scan}" class="menu-item">Receipt Scanner</a>
+
+        <div class="sb-section-label">Main</div>
+
+        <a th:href="@{/dashboard}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-house"></i></div>
+            <span class="mi-text">Dashboard</span>
+        </a>
+        <a th:href="@{/budget}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-wallet"></i></div>
+            <span class="mi-text">Set Budget</span>
+        </a>
+        <a th:href="@{/tracker}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <span class="mi-text">Goal Tracking</span>
+        </a>
+
+        <div class="sb-section-label">Analytics</div>
+
+        <a th:href="@{/predictive-cash-flow}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <span class="mi-text">Predictive Cash Flow</span>
+        </a>
+        <a th:href="@{/alerts}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-bell"></i></div>
+            <span class="mi-text">Alerts &amp; Notifications</span>
+        </a>
+        <a th:href="@{/insights}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-brain"></i></div>
+            <span class="mi-text">Insights</span>
+        </a>
+        <a th:href="@{/spending-visualization}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            <span class="mi-text">Spending Visualization</span>
+        </a>
+        <a th:href="@{/receipt-scan}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-receipt"></i></div>
+            <span class="mi-text">Receipt Scanner</span>
+        </a>
+
     </nav>
 
+    <!-- ── Footer / Logout ── -->
     <div class="sidebar-footer">
         <a th:href="@{/logout}" class="logout-btn">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            <div class="lb-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <span>Logout</span>
         </a>
     </div>
+
+    <!-- Active-page highlight -->
+    <script>
+    (function() {
+        var path = window.location.pathname;
+        document.querySelectorAll('.sidebar .menu-item').forEach(function(a) {
+            var href = a.getAttribute('href') || '';
+            if (href && path === href) a.classList.add('sb-active');
+        });
+    })();
+    </script>
 
 </aside>
 
