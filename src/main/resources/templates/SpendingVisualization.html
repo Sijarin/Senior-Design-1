@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Spending Visualization – FinVision</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analyzer-header {
+            margin-bottom: 1.5rem;
+        }
+        .analyzer-header h2 {
+            margin: 0 0 0.25rem 0;
+        }
+        .analyzer-header p {
+            margin: 0;
+            color: var(--text-muted, #666);
+            font-size: 0.95rem;
+        }
+        .charts-row {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .chart-card {
+            flex: 1;
+            min-width: 280px;
+            background: var(--card-bg, #fff);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+        }
+        .chart-card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            color: var(--text-main, #2c3e50);
+        }
+        .no-budget-msg {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--card-bg, #fff);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .no-budget-msg p {
+            color: var(--text-main, #2c3e50);
+            margin-top: 0.75rem;
+        }
+        .no-budget-msg a {
+            color: #667eea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <div th:replace="~{basetemplate :: topbar}"></div>
+
+        <div class="analyzer-header">
+            <h2>Spending Visualization</h2>
+            <p>Interactive charts and category breakdowns of income and expenses.</p>
+        </div>
+
+        <!-- Charts -->
+        <div th:if="${hasBudget}" class="charts-row">
+
+            <!-- Bar Chart: Income vs Total Expenses -->
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-chart-bar" style="color:#667eea; margin-right:6px;"></i>Income vs Expenses</h3>
+                <canvas id="barChart" height="260"></canvas>
+            </div>
+
+            <!-- Pie Chart: Expense Category Breakdown -->
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-chart-pie" style="color:#764ba2; margin-right:6px;"></i>Expense Breakdown</h3>
+                <canvas id="pieChart" height="260"></canvas>
+            </div>
+
+        </div>
+
+        <!-- No budget set yet -->
+        <div th:if="${!hasBudget}" class="no-budget-msg">
+            <i class="fa-solid fa-chart-pie fa-3x" style="color:#667eea;"></i>
+            <p>No budget data found.<br><a href="/budget">Set your budget</a> to see your charts here.</p>
+        </div>
+
+    </main>
+</div>
+
+<!-- CHATBOT BUTTON -->
+<div class="chatbot-btn">
+    <i class="fa-solid fa-robot"></i>
+</div>
+
+<script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('show');
+    });
+</script>
+
+<th:block th:if="${hasBudget}">
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var income        = [[${income}]];
+    var totalExpenses = [[${totalExpenses}]];
+    var pieLabels     = [[${pieLabels}]];
+    var pieData       = [[${pieData}]];
+
+    // Bar Chart
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Income', 'Expenses'],
+            datasets: [{
+                data: [income, totalExpenses],
+                backgroundColor: ['#667eea', '#e74c3c'],
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(v) { return '$' + v.toLocaleString(); }
+                    }
+                }
+            }
+        }
+    });
+
+    // Pie Chart
+    new Chart(document.getElementById('pieChart'), {
+        type: 'pie',
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieData,
+                backgroundColor: [
+                    '#667eea','#764ba2','#f6d365','#e74c3c',
+                    '#2ecc71','#3498db','#e67e22','#9b59b6',
+                    '#1abc9c','#e91e63'
+                ]
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 14, padding: 10 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.label + ': $' + ctx.parsed.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+</th:block>
+
+<th:block th:replace="~{basetemplate :: darkMode}"></th:block>
+</body>
+</html>

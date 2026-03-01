@@ -2,35 +2,512 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Tracker - FINVISION</title>
+    <title>Goal Tracking – FinVision</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ── Page ── */
+        .gt-page { padding: 1.5rem 1.8rem 3rem; }
+
+        /* ── Hero ── */
+        .gt-hero {
+            background: linear-gradient(135deg,#f093fb 0%,#f5576c 50%,#4facfe 100%);
+            border-radius: 18px; padding: 1.6rem 2rem;
+            color: #fff; display: flex; align-items: center; gap: 1.2rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 6px 28px rgba(240,147,251,0.4);
+        }
+        .gt-hero .hero-icon {
+            width: 60px; height: 60px; background: rgba(255,255,255,0.22);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+        }
+        .gt-hero h2 { margin: 0 0 0.2rem; font-size: 1.45rem; }
+        .gt-hero p  { margin: 0; font-size: 0.88rem; opacity: 0.9; }
+
+        /* ── Summary stats ── */
+        .summary-row { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-bottom: 1.8rem; }
+        .sum-card {
+            flex: 1; min-width: 140px; border-radius: 14px;
+            padding: 1.1rem 1.3rem; color: #fff;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            position: relative; overflow: hidden;
+        }
+        .sum-card .sc-bg { position:absolute;right:-8px;bottom:-8px;font-size:4rem;opacity:.1; }
+        .sum-card .sc-label { font-size:.75rem;opacity:.88;text-transform:uppercase;letter-spacing:.5px; }
+        .sum-card .sc-val   { font-size:1.3rem;font-weight:700;margin-top:3px; }
+        .sc-a { background:linear-gradient(135deg,#667eea,#764ba2); }
+        .sc-b { background:linear-gradient(135deg,#11998e,#38ef7d);color:#003d2e; }
+        .sc-c { background:linear-gradient(135deg,#f093fb,#f5576c); }
+        .sc-d { background:linear-gradient(135deg,#4facfe,#00f2fe);color:#003d5e; }
+
+        /* ── Section title ── */
+        .sec-title {
+            display:flex;align-items:center;gap:.55rem;
+            font-size:1.05rem;font-weight:700;
+            color:var(--text-main,#2c3e50);margin:0 0 1rem;
+        }
+
+        /* ── Add goal button ── */
+        .btn-add-goal {
+            display:inline-flex;align-items:center;gap:.5rem;
+            padding:.65rem 1.3rem;
+            background:linear-gradient(135deg,#667eea,#764ba2);
+            color:#fff;border:none;border-radius:10px;
+            font-size:.9rem;font-weight:600;cursor:pointer;
+            box-shadow:0 3px 12px rgba(102,126,234,.35);
+            transition:transform .2s,box-shadow .2s;
+        }
+        .btn-add-goal:hover { transform:translateY(-2px);box-shadow:0 6px 18px rgba(102,126,234,.45); }
+
+        /* ── Goal cards grid ── */
+        .goals-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+            gap:1.2rem; margin-bottom:1.8rem;
+        }
+        .goal-card {
+            border-radius:16px;padding:1.4rem;color:#fff;
+            position:relative;overflow:hidden;
+            box-shadow:0 5px 20px rgba(0,0,0,0.13);
+        }
+        .goal-card .gc-bg { position:absolute;right:-12px;bottom:-12px;font-size:5.5rem;opacity:.1; }
+        .goal-card .gc-top {
+            display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;
+        }
+        .goal-card .gc-icon {
+            width:44px;height:44px;background:rgba(255,255,255,.22);
+            border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+        }
+        .goal-card .gc-actions { display:flex;gap:.4rem; }
+        .goal-card .gc-actions button {
+            width:30px;height:30px;border-radius:50%;border:none;
+            background:rgba(255,255,255,.2);color:#fff;cursor:pointer;font-size:.8rem;
+            display:flex;align-items:center;justify-content:center;transition:background .2s;
+        }
+        .goal-card .gc-actions button:hover { background:rgba(255,255,255,.35); }
+        .goal-card .gc-name   { font-size:.75rem;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px; }
+        .goal-card .gc-title  { font-size:1.05rem;font-weight:700;margin-bottom:.8rem; }
+        .goal-card .gc-amounts { display:flex;justify-content:space-between;margin-bottom:.6rem;font-size:.82rem; }
+        .goal-card .gc-amounts .saved { font-size:1.2rem;font-weight:700; }
+        .gc-bar-track { background:rgba(255,255,255,.25);border-radius:999px;height:8px;margin-bottom:.6rem;overflow:hidden; }
+        .gc-bar-fill  { height:100%;border-radius:999px;background:rgba(255,255,255,.85);transition:width .6s ease; }
+        .goal-card .gc-footer {
+            display:flex;justify-content:space-between;align-items:center;font-size:.78rem;opacity:.85;
+        }
+        .goal-card .gc-badge {
+            background:rgba(255,255,255,.25);padding:2px 10px;border-radius:999px;font-weight:600;font-size:.72rem;
+        }
+        .gc-emerald { background:linear-gradient(135deg,#11998e,#38ef7d);color:#003d2e; }
+        .gc-purple  { background:linear-gradient(135deg,#667eea,#764ba2); }
+        .gc-rose    { background:linear-gradient(135deg,#f093fb,#f5576c); }
+        .gc-ocean   { background:linear-gradient(135deg,#4facfe,#00f2fe);color:#003d5e; }
+        .gc-amber   { background:linear-gradient(135deg,#f6d365,#fda085);color:#5a2d00; }
+        .gc-indigo  { background:linear-gradient(135deg,#a18cd1,#fbc2eb);color:#3d004a; }
+        .gc-red     { background:linear-gradient(135deg,#e74c3c,#c0392b); }
+        .gc-teal    { background:linear-gradient(135deg,#43e97b,#38f9d7);color:#003d2e; }
+
+        /* ── Modals ── */
+        .overlay {
+            display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+            z-index:999;align-items:center;justify-content:center;
+        }
+        .overlay.open { display:flex; }
+        .modal {
+            background:#fff;border-radius:18px;padding:2rem;
+            width:100%;max-width:440px;box-shadow:0 12px 40px rgba(0,0,0,.25);position:relative;
+        }
+        .modal h3 { margin:0 0 1.2rem;font-size:1.1rem;color:#2c3e50; }
+        .modal label { font-size:.8rem;font-weight:600;color:#666;display:block;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.4px; }
+        .modal input,.modal select {
+            width:100%;padding:.7rem .9rem;border:2px solid #e8eaf6;
+            border-radius:10px;font-size:.95rem;margin-bottom:1rem;
+            color:#2c3e50;background:#fff;transition:border-color .2s;
+        }
+        .modal input:focus,.modal select:focus { outline:none;border-color:#667eea; }
+        .modal-footer { display:flex;gap:.7rem;justify-content:flex-end;margin-top:.5rem; }
+        .btn-cancel  { padding:.6rem 1.2rem;border:2px solid #e0e0e0;background:transparent;border-radius:9px;cursor:pointer;font-size:.9rem;color:#666; }
+        .btn-confirm { padding:.6rem 1.4rem;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer; }
+        .btn-close-modal { position:absolute;top:1rem;right:1rem;background:transparent;border:none;font-size:1.1rem;cursor:pointer;color:#999; }
+
+        /* ── Chart card ── */
+        .chart-card {
+            background:var(--card-bg,#fff);border-radius:16px;
+            padding:1.5rem 1.6rem;box-shadow:0 3px 16px rgba(0,0,0,.07);margin-bottom:1.8rem;
+        }
+        .chart-card h3 { margin:0 0 1rem;font-size:1rem;color:var(--text-main,#2c3e50);display:flex;align-items:center;gap:.5rem; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align:center;padding:3rem 2rem;background:var(--card-bg,#fff);
+            border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);
+            color:var(--text-main,#2c3e50);margin-bottom:1.8rem;
+        }
+        .empty-state p { margin:.6rem 0 0;color:#888; }
+
+        /* ── Tips ── */
+        .tips-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1.1rem; }
+        .tip-card {
+            border-radius:14px;padding:1.2rem;color:#fff;
+            box-shadow:0 3px 14px rgba(0,0,0,.09);position:relative;overflow:hidden;
+        }
+        .tip-card .tip-bg { position:absolute;right:-10px;bottom:-8px;font-size:4.5rem;opacity:.1; }
+        .tip-card .tip-icon {
+            width:38px;height:38px;background:rgba(255,255,255,.22);border-radius:50%;
+            display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.6rem;
+        }
+        .tip-card h4 { margin:0 0 .4rem;font-size:.92rem; }
+        .tip-card p  { margin:0;font-size:.8rem;opacity:.9;line-height:1.5; }
+        .tc-1{background:linear-gradient(135deg,#11998e,#38ef7d);color:#003d2e;}
+        .tc-2{background:linear-gradient(135deg,#667eea,#764ba2);}
+        .tc-3{background:linear-gradient(135deg,#f6d365,#fda085);color:#5a2d00;}
+        .tc-4{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#003d5e;}
+    </style>
 </head>
 <body>
-
 <div class="dashboard-wrapper">
-
-    <!-- SIDEBAR -->
     <aside th:replace="~{basetemplate :: sidebar}"></aside>
-
-    <!-- MAIN CONTENT -->
     <main class="main">
-
         <div th:replace="~{basetemplate :: topbar}"></div>
+        <div class="gt-page">
 
-        <h2>Tracker</h2>
-        <!-- Tracker content goes here -->
+            <!-- Hero -->
+            <div class="gt-hero">
+                <div class="hero-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <div>
+                    <h2>Goal Tracking</h2>
+                    <p>Create and monitor financial goals like emergency funds, retirement savings, and more.</p>
+                </div>
+            </div>
 
+            <!-- Summary Stats -->
+            <div class="summary-row">
+                <div class="sum-card sc-a">
+                    <i class="fa-solid fa-flag sc-bg"></i>
+                    <div class="sc-label">Active Goals</div>
+                    <div class="sc-val" id="statGoals">0</div>
+                </div>
+                <div class="sum-card sc-b">
+                    <i class="fa-solid fa-piggy-bank sc-bg"></i>
+                    <div class="sc-label">Total Saved</div>
+                    <div class="sc-val" id="statSaved">$0</div>
+                </div>
+                <div class="sum-card sc-c">
+                    <i class="fa-solid fa-bullseye sc-bg"></i>
+                    <div class="sc-label">Total Target</div>
+                    <div class="sc-val" id="statTarget">$0</div>
+                </div>
+                <div class="sum-card sc-d">
+                    <i class="fa-solid fa-percent sc-bg"></i>
+                    <div class="sc-label">Overall Progress</div>
+                    <div class="sc-val" id="statPct">0%</div>
+                </div>
+            </div>
+
+            <!-- Goals header + add button -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.6rem;">
+                <p class="sec-title" style="margin:0;">
+                    <i class="fa-solid fa-flag" style="color:#f5576c;"></i> My Goals
+                </p>
+                <button class="btn-add-goal" onclick="openAddModal()">
+                    <i class="fa-solid fa-plus"></i> Add New Goal
+                </button>
+            </div>
+
+            <!-- Goals grid -->
+            <div class="goals-grid" id="goalsGrid"></div>
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <i class="fa-solid fa-bullseye fa-3x" style="color:#667eea;margin-bottom:.8rem;"></i>
+                <p>No goals yet. Click <strong>Add New Goal</strong> to get started!</p>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-card" id="chartSection" style="display:none;">
+                <h3><i class="fa-solid fa-chart-bar" style="color:#667eea;"></i> Goal Progress Overview</h3>
+                <canvas id="goalChart" height="100"></canvas>
+            </div>
+
+            <!-- Tips -->
+            <p class="sec-title">
+                <i class="fa-solid fa-lightbulb" style="color:#f6d365;"></i> Goal-Setting Tips
+            </p>
+            <div class="tips-grid">
+                <div class="tip-card tc-1">
+                    <i class="fa-solid fa-shield-halved tip-bg"></i>
+                    <div class="tip-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h4>Emergency Fund First</h4>
+                    <p>Build 3–6 months of expenses before any other goal. It protects all your other plans.</p>
+                </div>
+                <div class="tip-card tc-2">
+                    <i class="fa-solid fa-chart-line tip-bg"></i>
+                    <div class="tip-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <h4>Automate Contributions</h4>
+                    <p>Set up automatic transfers on payday. What you don't see, you don't spend.</p>
+                </div>
+                <div class="tip-card tc-3">
+                    <i class="fa-solid fa-calendar-check tip-bg"></i>
+                    <div class="tip-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                    <h4>Set a Deadline</h4>
+                    <p>Goals with specific dates are 3× more likely to be achieved. Make it concrete.</p>
+                </div>
+                <div class="tip-card tc-4">
+                    <i class="fa-solid fa-layer-group tip-bg"></i>
+                    <div class="tip-icon"><i class="fa-solid fa-layer-group"></i></div>
+                    <h4>Prioritize Wisely</h4>
+                    <p>Focus on 1–3 goals at a time. Spreading too thin slows all progress equally.</p>
+                </div>
+            </div>
+
+        </div>
     </main>
+</div>
 
+<div class="chatbot-btn"><i class="fa-solid fa-robot"></i></div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="goalModal">
+    <div class="modal">
+        <button class="btn-close-modal" onclick="closeModal('goalModal')"><i class="fa-solid fa-xmark"></i></button>
+        <h3 id="modalTitle">Add New Goal</h3>
+        <input type="hidden" id="editGoalId">
+        <label>Goal Name</label>
+        <input type="text" id="goalName" placeholder="e.g. Emergency Fund">
+        <label>Category</label>
+        <select id="goalCategory">
+            <option value="emergency">🛡️ Emergency Fund</option>
+            <option value="retirement">🏦 Retirement Savings</option>
+            <option value="house">🏠 Home Down Payment</option>
+            <option value="vacation">✈️ Vacation Fund</option>
+            <option value="debt">💳 Debt Payoff</option>
+            <option value="education">🎓 Education</option>
+            <option value="car">🚗 Car / Vehicle</option>
+            <option value="investment">📈 Investment Fund</option>
+            <option value="custom">⭐ Custom Goal</option>
+        </select>
+        <label>Target Amount ($)</label>
+        <input type="number" id="goalTarget" placeholder="10000" min="1">
+        <label>Amount Already Saved ($)</label>
+        <input type="number" id="goalSaved" placeholder="0" min="0">
+        <label>Target Date</label>
+        <input type="date" id="goalDate">
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('goalModal')">Cancel</button>
+            <button class="btn-confirm" onclick="saveGoal()">Save Goal</button>
+        </div>
+    </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="overlay" id="depositModal">
+    <div class="modal" style="max-width:360px;">
+        <button class="btn-close-modal" onclick="closeModal('depositModal')"><i class="fa-solid fa-xmark"></i></button>
+        <h3>Add Contribution</h3>
+        <input type="hidden" id="depositGoalId">
+        <label>Amount to Add ($)</label>
+        <input type="number" id="depositAmount" placeholder="100" min="1">
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('depositModal')">Cancel</button>
+            <button class="btn-confirm" onclick="confirmDeposit()">Add Funds</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    menuToggle.addEventListener('click', () => {
-        navMenu.classList.toggle('show');
+    document.querySelector('.menu-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.toggle('show');
     });
+
+    const COLORS = ['gc-purple','gc-emerald','gc-rose','gc-ocean','gc-amber','gc-indigo','gc-red','gc-teal'];
+    const CAT_ICONS = {
+        emergency:'fa-shield-halved', retirement:'fa-building-columns',
+        house:'fa-house', vacation:'fa-plane', debt:'fa-credit-card',
+        education:'fa-graduation-cap', car:'fa-car', investment:'fa-chart-line', custom:'fa-star'
+    };
+    const CAT_LABELS = {
+        emergency:'Emergency Fund', retirement:'Retirement Savings',
+        house:'Home Down Payment', vacation:'Vacation Fund', debt:'Debt Payoff',
+        education:'Education', car:'Car / Vehicle', investment:'Investment Fund', custom:'Custom Goal'
+    };
+
+    const PRESETS = [
+        { id:'p1', name:'Emergency Fund',     category:'emergency',  target:10000, saved:2500, date:'2026-12-31' },
+        { id:'p2', name:'Retirement Savings', category:'retirement', target:50000, saved:8000, date:'2030-06-30' },
+        { id:'p3', name:'Vacation Fund',      category:'vacation',   target:3000,  saved:900,  date:'2026-08-01' },
+    ];
+
+    function loadGoals() {
+        const raw = localStorage.getItem('fv_goals');
+        if (raw) return JSON.parse(raw);
+        localStorage.setItem('fv_goals', JSON.stringify(PRESETS));
+        return PRESETS;
+    }
+    function saveGoals(g) { localStorage.setItem('fv_goals', JSON.stringify(g)); }
+    function genId() { return 'g_' + Date.now(); }
+
+    let chartInstance = null;
+
+    function render() {
+        const goals = loadGoals();
+        const grid  = document.getElementById('goalsGrid');
+        const empty = document.getElementById('emptyState');
+        const chartSec = document.getElementById('chartSection');
+        grid.innerHTML = '';
+
+        if (goals.length === 0) {
+            empty.style.display = 'block';
+            chartSec.style.display = 'none';
+            updateStats([]);
+            return;
+        }
+        empty.style.display = 'none';
+        chartSec.style.display = 'block';
+
+        goals.forEach((g, idx) => {
+            const pct  = Math.min(Math.round((g.saved / g.target) * 100), 100);
+            const color = COLORS[idx % COLORS.length];
+            const icon  = CAT_ICONS[g.category] || 'fa-star';
+            const left  = Math.max(g.target - g.saved, 0).toFixed(2);
+            const badge = pct >= 100 ? '🎉 Completed' : pct >= 75 ? '🔥 Almost There' : pct >= 40 ? '📈 On Track' : '🚀 Getting Started';
+
+            const card = document.createElement('div');
+            card.className = 'goal-card ' + color;
+            card.innerHTML = `
+                <i class="fa-solid ${icon} gc-bg"></i>
+                <div class="gc-top">
+                    <div class="gc-icon"><i class="fa-solid ${icon}"></i></div>
+                    <div class="gc-actions">
+                        <button title="Add funds" onclick="openDeposit('${g.id}')"><i class="fa-solid fa-plus"></i></button>
+                        <button title="Edit" onclick="openEdit('${g.id}')"><i class="fa-solid fa-pen"></i></button>
+                        <button title="Delete" onclick="deleteGoal('${g.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="gc-name">${CAT_LABELS[g.category] || 'Goal'}</div>
+                <div class="gc-title">${g.name}</div>
+                <div class="gc-amounts">
+                    <div><div style="font-size:.72rem;opacity:.8;">Saved</div><div class="saved">$${Number(g.saved).toLocaleString()}</div></div>
+                    <div style="text-align:right;"><div style="font-size:.72rem;opacity:.8;">Target</div><div class="target">$${Number(g.target).toLocaleString()}</div></div>
+                </div>
+                <div class="gc-bar-track"><div class="gc-bar-fill" style="width:${pct}%"></div></div>
+                <div class="gc-footer">
+                    <span>${pct}% &bull; $${left} left</span>
+                    <span class="gc-badge">${badge}</span>
+                </div>
+                ${g.date ? `<div style="font-size:.72rem;opacity:.75;margin-top:.5rem;"><i class="fa-solid fa-calendar"></i> Target: ${g.date}</div>` : ''}`;
+            grid.appendChild(card);
+        });
+
+        updateStats(goals);
+        renderChart(goals);
+    }
+
+    function updateStats(goals) {
+        const saved  = goals.reduce((s, g) => s + Number(g.saved), 0);
+        const target = goals.reduce((s, g) => s + Number(g.target), 0);
+        const pct    = target > 0 ? Math.round((saved / target) * 100) : 0;
+        document.getElementById('statGoals').textContent  = goals.length;
+        document.getElementById('statSaved').textContent  = '$' + saved.toLocaleString();
+        document.getElementById('statTarget').textContent = '$' + target.toLocaleString();
+        document.getElementById('statPct').textContent    = pct + '%';
+    }
+
+    function renderChart(goals) {
+        const ctx = document.getElementById('goalChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        const pal = ['#667eea','#11998e','#f5576c','#4facfe','#f6d365','#a18cd1','#e74c3c','#43e97b'];
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: goals.map(g => g.name),
+                datasets: [
+                    { label:'Saved',     data: goals.map(g => g.saved),
+                      backgroundColor: goals.map((_,i) => pal[i%pal.length]),
+                      borderRadius:8, borderSkipped:false },
+                    { label:'Remaining', data: goals.map(g => Math.max(g.target - g.saved, 0)),
+                      backgroundColor: goals.map((_,i) => pal[i%pal.length]+'40'),
+                      borderRadius:8, borderSkipped:false }
+                ]
+            },
+            options: {
+                responsive:true,
+                plugins: {
+                    legend: { position:'top', labels:{ boxWidth:14, padding:12 } },
+                    tooltip: { callbacks:{ label: c => c.dataset.label+': $'+c.parsed.y.toLocaleString() } }
+                },
+                scales: {
+                    x:{ stacked:true },
+                    y:{ stacked:true, ticks:{ callback: v => '$'+v.toLocaleString() } }
+                }
+            }
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = 'Add New Goal';
+        ['editGoalId','goalName','goalTarget','goalSaved','goalDate'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('goalCategory').value = 'emergency';
+        document.getElementById('goalModal').classList.add('open');
+    }
+
+    function openEdit(id) {
+        const g = loadGoals().find(x => x.id === id);
+        if (!g) return;
+        document.getElementById('modalTitle').textContent = 'Edit Goal';
+        document.getElementById('editGoalId').value   = id;
+        document.getElementById('goalName').value     = g.name;
+        document.getElementById('goalCategory').value = g.category;
+        document.getElementById('goalTarget').value   = g.target;
+        document.getElementById('goalSaved').value    = g.saved;
+        document.getElementById('goalDate').value     = g.date || '';
+        document.getElementById('goalModal').classList.add('open');
+    }
+
+    function saveGoal() {
+        const name   = document.getElementById('goalName').value.trim();
+        const cat    = document.getElementById('goalCategory').value;
+        const target = parseFloat(document.getElementById('goalTarget').value);
+        const saved  = parseFloat(document.getElementById('goalSaved').value) || 0;
+        const date   = document.getElementById('goalDate').value;
+        const editId = document.getElementById('editGoalId').value;
+        if (!name || !target || target <= 0) { alert('Please enter a name and a valid target amount.'); return; }
+        const goals = loadGoals();
+        if (editId) {
+            const idx = goals.findIndex(g => g.id === editId);
+            if (idx !== -1) goals[idx] = { ...goals[idx], name, category:cat, target, saved, date };
+        } else {
+            goals.push({ id:genId(), name, category:cat, target, saved, date });
+        }
+        saveGoals(goals); closeModal('goalModal'); render();
+    }
+
+    function deleteGoal(id) {
+        if (!confirm('Delete this goal?')) return;
+        saveGoals(loadGoals().filter(g => g.id !== id)); render();
+    }
+
+    function openDeposit(id) {
+        document.getElementById('depositGoalId').value = id;
+        document.getElementById('depositAmount').value = '';
+        document.getElementById('depositModal').classList.add('open');
+    }
+
+    function confirmDeposit() {
+        const id  = document.getElementById('depositGoalId').value;
+        const amt = parseFloat(document.getElementById('depositAmount').value);
+        if (!amt || amt <= 0) { alert('Enter a valid amount.'); return; }
+        const goals = loadGoals();
+        const g = goals.find(x => x.id === id);
+        if (g) g.saved = Math.min(Number(g.saved) + amt, Number(g.target));
+        saveGoals(goals); closeModal('depositModal'); render();
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.overlay').forEach(o => {
+        o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+    });
+
+    render();
 </script>
 
 <th:block th:replace="~{basetemplate :: darkMode}"></th:block>
