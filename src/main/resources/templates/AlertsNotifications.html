@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Alerts &amp; Notifications – FinVision</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ── Page header ── */
+        .page-header { margin-bottom: 1.8rem; }
+        .page-header h2 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+        .page-header p  { margin: 0; color: var(--text-muted,#666); font-size: 0.95rem; }
+
+        /* ── Section titles ── */
+        .section-title {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1.05rem; font-weight: 700;
+            color: var(--text-main,#2c3e50);
+            margin: 0 0 1rem;
+        }
+
+        /* ── Alert banners ── */
+        .alerts-grid {
+            display: flex; flex-direction: column; gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .alert-banner {
+            display: flex; align-items: flex-start; gap: 1rem;
+            border-radius: 14px; padding: 1.1rem 1.4rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            position: relative; overflow: hidden;
+        }
+        .alert-banner .alert-bg-icon {
+            position: absolute; right: -8px; bottom: -8px;
+            font-size: 5.5rem; opacity: 0.08;
+        }
+        .alert-banner .alert-icon-wrap {
+            width: 48px; height: 48px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+        .alert-banner .alert-body { flex: 1; }
+        .alert-banner .alert-body h4 { margin: 0 0 0.25rem; font-size: 0.98rem; }
+        .alert-banner .alert-body p  { margin: 0; font-size: 0.85rem; line-height: 1.55; opacity: 0.9; }
+        .alert-banner .alert-badge {
+            font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+            border-radius: 999px; white-space: nowrap; align-self: flex-start;
+            margin-top: 2px;
+        }
+
+        /* Overspending – red */
+        .alert-danger  { background: linear-gradient(135deg,#ffe0e0,#ffd6d6); color: #7b1a1a; }
+        .alert-danger  .alert-icon-wrap { background: #e74c3c; color: #fff; }
+        .alert-danger  .alert-badge     { background: #e74c3c; color: #fff; }
+        /* Low balance – amber */
+        .alert-warning { background: linear-gradient(135deg,#fff8e1,#ffecb3); color: #6b4500; }
+        .alert-warning .alert-icon-wrap { background: #f39c12; color: #fff; }
+        .alert-warning .alert-badge     { background: #f39c12; color: #fff; }
+        /* Healthy – green */
+        .alert-success { background: linear-gradient(135deg,#e6f9f1,#d0f0e4); color: #14532d; }
+        .alert-success .alert-icon-wrap { background: #27ae60; color: #fff; }
+        .alert-success .alert-badge     { background: #27ae60; color: #fff; }
+        /* Info – blue */
+        .alert-info    { background: linear-gradient(135deg,#e3f2fd,#bbdefb); color: #0d3c61; }
+        .alert-info    .alert-icon-wrap { background: #2980b9; color: #fff; }
+        .alert-info    .alert-badge     { background: #2980b9; color: #fff; }
+        /* No budget – grey */
+        .alert-neutral { background: linear-gradient(135deg,#f5f5f5,#ececec); color: #444; }
+        .alert-neutral .alert-icon-wrap { background: #95a5a6; color: #fff; }
+        .alert-neutral .alert-badge     { background: #95a5a6; color: #fff; }
+
+        /* ── Bill reminder cards ── */
+        .bills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        .bill-card {
+            border-radius: 14px; padding: 1.2rem 1.1rem;
+            color: #fff; position: relative; overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .bill-card .bill-bg { position:absolute;right:-10px;bottom:-10px;font-size:4.5rem;opacity:0.12; }
+        .bill-card .bill-icon {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; margin-bottom: 0.3rem;
+        }
+        .bill-card .bill-name  { font-size: 0.8rem; opacity: 0.88; }
+        .bill-card .bill-amount{ font-size: 1.3rem; font-weight: 700; }
+        .bill-card .bill-due   {
+            font-size: 0.72rem; background: rgba(255,255,255,0.22);
+            border-radius: 999px; padding: 2px 9px; display: inline-block;
+            margin-top: 0.2rem; width: fit-content;
+        }
+        .bc-rent    { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .bc-util    { background: linear-gradient(135deg,#f7971e,#ffd200); color: #4a2c00; }
+        .bc-ins     { background: linear-gradient(135deg,#11998e,#38ef7d); color: #003d2e; }
+        .bc-groc    { background: linear-gradient(135deg,#fc4a1a,#f7b733); }
+        .bc-subs    { background: linear-gradient(135deg,#4facfe,#00f2fe); color: #003d5e; }
+        .bc-custom  { background: linear-gradient(135deg,#a18cd1,#fbc2eb); color: #3d004a; }
+        .no-bills-msg {
+            text-align:center; padding: 2rem;
+            background: var(--card-bg,#fff);
+            border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            color: var(--text-main,#2c3e50); margin-bottom: 2rem;
+        }
+        .no-bills-msg a { color:#667eea; font-weight:700; }
+
+        /* ── Savings nudge cards ── */
+        .nudges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.1rem;
+        }
+        .nudge-card {
+            border-radius: 14px; padding: 1.3rem;
+            position: relative; overflow: hidden;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.09);
+            color: #fff;
+        }
+        .nudge-card .nudge-bg { position:absolute;right:-10px;bottom:-10px;font-size:5rem;opacity:0.1; }
+        .nudge-card .nudge-icon {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.15rem; margin-bottom: 0.7rem;
+        }
+        .nudge-card h4 { margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .nudge-card p  { margin: 0; font-size: 0.82rem; opacity: 0.92; line-height: 1.55; }
+        .nc-1 { background: linear-gradient(135deg,#11998e,#38ef7d); color:#003d2e; }
+        .nc-2 { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .nc-3 { background: linear-gradient(135deg,#f093fb,#f5576c); }
+        .nc-4 { background: linear-gradient(135deg,#4facfe,#00f2fe); color:#003d5e; }
+        .nc-5 { background: linear-gradient(135deg,#f6d365,#fda085); color:#5a2d00; }
+        .nc-6 { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); color:#003060; }
+    </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <main class="main">
+        <div th:replace="~{basetemplate :: topbar}"></div>
+
+        <!-- Header -->
+        <div class="page-header">
+            <h2>Alerts &amp; Notifications</h2>
+            <p>Overspending warnings, bill reminders, and savings nudges for <span th:text="${currentMonth}">this month</span>.</p>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 1 — SMART ALERTS
+             ══════════════════════════════ -->
+        <p class="section-title">
+            <i class="fa-solid fa-bell" style="color:#e74c3c;"></i> Smart Alerts
+        </p>
+        <div class="alerts-grid">
+
+            <!-- Overspending alert (shown when overspending) -->
+            <div th:if="${status == 'overspending'}" class="alert-banner alert-danger">
+                <i class="fa-solid fa-triangle-exclamation alert-bg-icon"></i>
+                <div class="alert-icon-wrap"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="alert-body">
+                    <h4>🚨 Overspending Detected!</h4>
+                    <p>You've exceeded your income this month. Your expenses are
+                       <strong th:text="${percent} + '%'"></strong> of your income,
+                       leaving you <strong>$<span th:text="${#strings.replace(remaining,'-','')}"></span></strong> in the red.
+                       Cut discretionary spending immediately.</p>
+                </div>
+                <span class="alert-badge">URGENT</span>
+            </div>
+
+            <!-- Low balance warning -->
+            <div th:if="${status == 'low'}" class="alert-banner alert-warning">
+                <i class="fa-solid fa-circle-exclamation alert-bg-icon"></i>
+                <div class="alert-icon-wrap"><i class="fa-solid fa-circle-exclamation"></i></div>
+                <div class="alert-body">
+                    <h4>⚠️ Low Balance Warning</h4>
+                    <p>Your remaining balance is under 20% of your income.
+                       You've spent <strong th:text="${percent} + '%'"></strong> of your income so far.
+                       Avoid non-essential purchases for the rest of the month.</p>
+                </div>
+                <span class="alert-badge">WARNING</span>
+            </div>
+
+            <!-- On track (healthy) -->
+            <div th:if="${status == 'healthy'}" class="alert-banner alert-success">
+                <i class="fa-solid fa-circle-check alert-bg-icon"></i>
+                <div class="alert-icon-wrap"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="alert-body">
+                    <h4>✅ You're on Track!</h4>
+                    <p>Great financial discipline this month! You've spent
+                       <strong th:text="${percent} + '%'"></strong> of your income,
+                       leaving <strong>$<span th:text="${remaining}"></span></strong> available.
+                       Consider saving or investing the remainder.</p>
+                </div>
+                <span class="alert-badge">HEALTHY</span>
+            </div>
+
+            <!-- No budget set -->
+            <div th:if="${status == 'none'}" class="alert-banner alert-neutral">
+                <i class="fa-solid fa-clipboard-list alert-bg-icon"></i>
+                <div class="alert-icon-wrap"><i class="fa-solid fa-clipboard-list"></i></div>
+                <div class="alert-body">
+                    <h4>📋 No Budget Found</h4>
+                    <p>Set up your budget to receive personalized alerts.
+                       <a th:href="@{/budget}" style="color:inherit;font-weight:700;">Set budget →</a></p>
+                </div>
+                <span class="alert-badge">INFO</span>
+            </div>
+
+            <!-- Budget info card (always shown when budget exists) -->
+            <div th:if="${hasBudget}" class="alert-banner alert-info">
+                <i class="fa-solid fa-chart-pie alert-bg-icon"></i>
+                <div class="alert-icon-wrap"><i class="fa-solid fa-chart-pie"></i></div>
+                <div class="alert-body">
+                    <h4>📊 Monthly Summary</h4>
+                    <p>Income: <strong>$<span th:text="${income}"></span></strong> &nbsp;|&nbsp;
+                       Expenses: <strong>$<span th:text="${expenses}"></span></strong> &nbsp;|&nbsp;
+                       Remaining: <strong>$<span th:text="${remaining}"></span></strong>
+                    </p>
+                </div>
+                <span class="alert-badge">SUMMARY</span>
+            </div>
+
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 2 — BILL REMINDERS
+             ══════════════════════════════ -->
+        <p class="section-title">
+            <i class="fa-solid fa-file-invoice-dollar" style="color:#667eea;"></i> Bill Reminders
+        </p>
+
+        <div th:if="${hasBudget}" class="bills-grid">
+
+            <div th:if="${rent != '0.00'}" class="bill-card bc-rent">
+                <i class="fa-solid fa-house bill-bg"></i>
+                <div class="bill-icon"><i class="fa-solid fa-house"></i></div>
+                <div class="bill-name">Rent / Mortgage</div>
+                <div class="bill-amount">$<span th:text="${rent}"></span></div>
+                <div class="bill-due">Due: 1st of month</div>
+            </div>
+
+            <div th:if="${utilities != '0.00'}" class="bill-card bc-util">
+                <i class="fa-solid fa-bolt bill-bg"></i>
+                <div class="bill-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div class="bill-name">Utilities</div>
+                <div class="bill-amount">$<span th:text="${utilities}"></span></div>
+                <div class="bill-due">Due: 15th of month</div>
+            </div>
+
+            <div th:if="${insurance != '0.00'}" class="bill-card bc-ins">
+                <i class="fa-solid fa-shield-halved bill-bg"></i>
+                <div class="bill-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="bill-name">Insurance</div>
+                <div class="bill-amount">$<span th:text="${insurance}"></span></div>
+                <div class="bill-due">Due: 10th of month</div>
+            </div>
+
+            <div th:if="${groceries != '0.00'}" class="bill-card bc-groc">
+                <i class="fa-solid fa-cart-shopping bill-bg"></i>
+                <div class="bill-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                <div class="bill-name">Groceries</div>
+                <div class="bill-amount">$<span th:text="${groceries}"></span></div>
+                <div class="bill-due">Ongoing monthly</div>
+            </div>
+
+            <div th:if="${subscriptions != '0.00'}" class="bill-card bc-subs">
+                <i class="fa-solid fa-tv bill-bg"></i>
+                <div class="bill-icon"><i class="fa-solid fa-tv"></i></div>
+                <div class="bill-name">Subscriptions</div>
+                <div class="bill-amount">$<span th:text="${subscriptions}"></span></div>
+                <div class="bill-due">Auto-renews monthly</div>
+            </div>
+
+            <!-- Variable / custom expenses -->
+            <th:block th:if="${varTitles != null}"
+                      th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
+                <div th:if="${varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
+                    <i class="fa-solid fa-tag bill-bg"></i>
+                    <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
+                    <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
+                    <div class="bill-amount">$<span th:text="${#numbers.formatDecimal(varAmounts[i],1,2)}"></span></div>
+                    <div class="bill-due">Custom expense</div>
+                </div>
+            </th:block>
+
+        </div>
+
+        <div th:if="${!hasBudget}" class="no-bills-msg">
+            <i class="fa-solid fa-file-invoice-dollar fa-2x" style="color:#667eea; margin-bottom:0.6rem;"></i>
+            <p>No bills to display. <a href="/budget">Set your budget</a> to see your bill reminders.</p>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 3 — SAVINGS NUDGES
+             ══════════════════════════════ -->
+        <p class="section-title">
+            <i class="fa-solid fa-seedling" style="color:#27ae60;"></i> Savings Nudges
+        </p>
+        <div class="nudges-grid">
+
+            <div class="nudge-card nc-1">
+                <i class="fa-solid fa-piggy-bank nudge-bg"></i>
+                <div class="nudge-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+                <h4>Pay Yourself First</h4>
+                <p>Transfer at least <strong>10–20%</strong> of your income to savings the moment you get paid — before any spending.</p>
+            </div>
+
+            <div class="nudge-card nc-2">
+                <i class="fa-solid fa-coffee nudge-bg"></i>
+                <div class="nudge-icon"><i class="fa-solid fa-coffee"></i></div>
+                <h4>The Latte Factor</h4>
+                <p>Skipping a $5 daily coffee saves <strong>~$150/month</strong>. Small habits compound into big savings over time.</p>
+            </div>
+
+            <div class="nudge-card nc-3">
+                <i class="fa-solid fa-scissors nudge-bg"></i>
+                <div class="nudge-icon"><i class="fa-solid fa-scissors"></i></div>
+                <h4>Trim the Fat</h4>
+                <p>Audit your subscriptions today. Cancel any service you haven't used in the <strong>last 30 days</strong>.</p>
+            </div>
+
+            <div class="nudge-card nc-4">
+                <i class="fa-solid fa-chart-line nudge-bg"></i>
+                <div class="nudge-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <h4>Let Money Work</h4>
+                <p>Put idle savings into a <strong>high-yield savings account</strong> (4–5% APY) instead of a regular checking account.</p>
+            </div>
+
+            <div class="nudge-card nc-5">
+                <i class="fa-solid fa-tags nudge-bg"></i>
+                <div class="nudge-icon"><i class="fa-solid fa-tags"></i></div>
+                <h4>Shop Smarter</h4>
+                <p>Use cashback apps, coupons, and store-brand alternatives to cut grocery bills by up to <strong>25%</strong>.</p>
+            </div>
+
+            <div class="nudge-card nc-6">
+                <i class="fa-solid fa-bullseye nudge-bg"></i>
+                <div class="nudge-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <h4>Set a Goal</h4>
+                <p>Give every dollar a purpose. Set a <strong>savings target</strong> (vacation, emergency fund, down payment) and track progress monthly.</p>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+<!-- CHATBOT BUTTON -->
+<div class="chatbot-btn">
+    <i class="fa-solid fa-robot"></i>
+</div>
+
+<script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('show');
+    });
+</script>
+
+<th:block th:replace="~{basetemplate :: darkMode}"></th:block>
+</body>
+</html>

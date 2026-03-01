@@ -3,24 +3,77 @@ package com.finvision.controller;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.finvision.model.Budget;
+import com.finvision.model.User;
 import com.finvision.repository.BudgetRepository;
+import com.finvision.repository.UserRepository;
+
 @Controller
 public class DashboardController {
 
     @Autowired
     private BudgetRepository budgetRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/dashboard")
     public String dashboard() {
         return "Dashboard";
+    }
+
+    @GetMapping("/spending-visualization")
+    public String spendingVisualization(Model model) {
+        Budget budget = budgetRepository.findAll()
+                .stream()
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        if (budget != null) {
+            double income = budget.getMonthlyIncome() + budget.getOtherIncome();
+            double rent = budget.getRent();
+            double utilities = budget.getUtilities();
+            double insurance = budget.getInsurance();
+            double groceries = budget.getGroceries();
+            double subscriptions = budget.getSubscriptions();
+            double totalExpenses = rent + utilities + insurance + groceries + subscriptions;
+
+            java.util.List<String> pieLabels = new java.util.ArrayList<>();
+            java.util.List<Double> pieData = new java.util.ArrayList<>();
+            if (rent > 0)          { pieLabels.add("Rent");          pieData.add(rent); }
+            if (utilities > 0)     { pieLabels.add("Utilities");     pieData.add(utilities); }
+            if (insurance > 0)     { pieLabels.add("Insurance");     pieData.add(insurance); }
+            if (groceries > 0)     { pieLabels.add("Groceries");     pieData.add(groceries); }
+            if (subscriptions > 0) { pieLabels.add("Subscriptions"); pieData.add(subscriptions); }
+
+            java.util.List<String> varTitles = budget.getVariableTitle();
+            java.util.List<Double> varAmounts = budget.getVariableAmount();
+            if (varTitles != null && varAmounts != null) {
+                for (int i = 0; i < Math.min(varTitles.size(), varAmounts.size()); i++) {
+                    if (varAmounts.get(i) != null && varAmounts.get(i) > 0) {
+                        pieLabels.add(varTitles.get(i));
+                        pieData.add(varAmounts.get(i));
+                        totalExpenses += varAmounts.get(i);
+                    }
+                }
+            }
+
+            model.addAttribute("income", income);
+            model.addAttribute("totalExpenses", totalExpenses);
+            model.addAttribute("pieLabels", pieLabels);
+            model.addAttribute("pieData", pieData);
+            model.addAttribute("hasBudget", true);
+        } else {
+            model.addAttribute("hasBudget", false);
+        }
+
+        return "SpendingVisualization";
     }
 
     @GetMapping("/tracker")
@@ -36,69 +89,165 @@ public class DashboardController {
         return "BudgetSet";
     }
 
-@GetMapping("/insights")
-public String insights(Model model) {
-  Budget budget = budgetRepository.findAll()
-        .stream()
-        .reduce((first, second) -> second)
-        .orElse(null);
-
-double income;
-double expenses;
-double remaining;
-double percent;
-List<String> suggestions;
-
-if (budget != null) {
-    income = budget.getMonthlyIncome() + budget.getOtherIncome();
-
-    expenses =
-            budget.getRent() +
-            budget.getUtilities() +
-            budget.getInsurance() +
-            budget.getGroceries() +
-            budget.getSubscriptions();
-
-    remaining = income - expenses;
-    percent = (income == 0) ? 0 : (expenses / income) * 100;
-
-    suggestions = null;
-
-    if (remaining < 0) {
-        suggestions = List.of(
-                "You are overspending by $" + String.format("%.2f", Math.abs(remaining)) + ".",
-                "Your expenses are about " + String.format("%.0f", percent) + "% of your income.",
-                "Reduce discretionary spending like dining, subscriptions, or shopping."
-        );
+    @GetMapping("/profile")
+    public String profile(Authentication authentication, Model model) {
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("user", user);
+        return "profile";
     }
-    else if (remaining < income * 0.2) {
-        suggestions = List.of(
-                "Your remaining balance is low.",
-                "Try to limit non-essential expenses this month.",
-                "Track daily spending to stay within budget."
-        );
+
+@GetMapping("/predictive-cash-flow")
+public String predictiveCashFlow(Model model) {
+    Budget budget = budgetRepository.findAll()
+            .stream()
+            .reduce((first, second) -> second)
+            .orElse(null);
+
+    if (budget != null) {
+        double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
+        double expenses = budget.getRent() + budget.getUtilities() +
+                          budget.getInsurance() + budget.getGroceries() +
+                          budget.getSubscriptions();
+
+        java.util.List<Double> varAmounts = budget.getVariableAmount();
+        if (varAmounts != null) {
+            for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
+        }
+
+        double monthlySavings = income - expenses;
+        double savingsRate    = (income == 0) ? 0 : (monthlySavings / income) * 100;
+
+        // Build 6-month forecast (labels + cumulative balances)
+        java.util.List<String> monthLabels      = new java.util.ArrayList<>();
+        java.util.List<String> projectedBalances = new java.util.ArrayList<>();
+        java.util.List<String> monthlyIncomes    = new java.util.ArrayList<>();
+        java.util.List<String> monthlyExpenses   = new java.util.ArrayList<>();
+
+        LocalDate cursor = LocalDate.now();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MMM yyyy");
+        double cumulative = 0;
+        for (int i = 0; i < 6; i++) {
+            cumulative += monthlySavings;
+            monthLabels.add(cursor.plusMonths(i).format(fmt));
+            projectedBalances.add(String.format("%.2f", cumulative));
+            monthlyIncomes.add(String.format("%.2f", income));
+            monthlyExpenses.add(String.format("%.2f", expenses));
+        }
+
+        String trajectory = monthlySavings > 0 ? "positive" : (monthlySavings < 0 ? "negative" : "neutral");
+
+        model.addAttribute("hasBudget",          true);
+        model.addAttribute("income",             String.format("%.2f", income));
+        model.addAttribute("expenses",           String.format("%.2f", expenses));
+        model.addAttribute("monthlySavings",     String.format("%.2f", monthlySavings));
+        model.addAttribute("savingsRate",        String.format("%.0f", savingsRate));
+        model.addAttribute("sixMonthTotal",      String.format("%.2f", cumulative));
+        model.addAttribute("trajectory",         trajectory);
+        model.addAttribute("monthLabels",        monthLabels);
+        model.addAttribute("projectedBalances",  projectedBalances);
+        model.addAttribute("monthlyIncomes",     monthlyIncomes);
+        model.addAttribute("monthlyExpenses",    monthlyExpenses);
+    } else {
+        model.addAttribute("hasBudget", false);
+        model.addAttribute("trajectory", "none");
     }
-    else {
-        suggestions = List.of(
-                "Great job! You are within your budget.",
-                "Your expenses are about " + String.format("%.0f", percent) + "% of your income.",
-                "Consider saving or investing part of your remaining amount."
-        );
-    }
-} else {
-    // No budget found: provide defaults
-    income = 0;
-    expenses = 0;
-    remaining = 0;
-    percent = 0;
-    suggestions = List.of("No budget data available. Please set up your budget.");
+
+    model.addAttribute("currentMonth",
+        LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
+
+    return "PredictiveCashFlow";
 }
 
-model.addAttribute("income", String.format("%.2f", income));
-model.addAttribute("expenses", String.format("%.2f", expenses));
-model.addAttribute("remaining", String.format("%.2f", remaining));
-model.addAttribute("suggestions", suggestions);
+@GetMapping("/alerts")
+public String alerts(Model model) {
+    Budget budget = budgetRepository.findAll()
+            .stream()
+            .reduce((first, second) -> second)
+            .orElse(null);
 
-return "InsightsPage";
+    if (budget != null) {
+        double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
+        double expenses = budget.getRent() + budget.getUtilities() +
+                          budget.getInsurance() + budget.getGroceries() +
+                          budget.getSubscriptions();
+
+        java.util.List<Double> varAmounts = budget.getVariableAmount();
+        if (varAmounts != null) {
+            for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
+        }
+
+        double remaining = income - expenses;
+        double percent   = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
+        String status    = remaining < 0 ? "overspending" : (remaining < income * 0.2 ? "low" : "healthy");
+
+        model.addAttribute("hasBudget",  true);
+        model.addAttribute("status",     status);
+        model.addAttribute("income",     String.format("%.2f", income));
+        model.addAttribute("expenses",   String.format("%.2f", expenses));
+        model.addAttribute("remaining",  String.format("%.2f", remaining));
+        model.addAttribute("percent",    String.format("%.0f", percent));
+        model.addAttribute("rent",         String.format("%.2f", budget.getRent()));
+        model.addAttribute("utilities",    String.format("%.2f", budget.getUtilities()));
+        model.addAttribute("insurance",    String.format("%.2f", budget.getInsurance()));
+        model.addAttribute("groceries",    String.format("%.2f", budget.getGroceries()));
+        model.addAttribute("subscriptions",String.format("%.2f", budget.getSubscriptions()));
+        model.addAttribute("varTitles",    budget.getVariableTitle());
+        model.addAttribute("varAmounts",   budget.getVariableAmount());
+    } else {
+        model.addAttribute("hasBudget", false);
+        model.addAttribute("status", "none");
+    }
+
+    model.addAttribute("currentMonth",
+        LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
+
+    return "AlertsNotifications";
+}
+
+@GetMapping("/insights")
+public String insights(Model model) {
+    Budget budget = budgetRepository.findAll()
+            .stream()
+            .reduce((first, second) -> second)
+            .orElse(null);
+
+    double income;
+    double expenses;
+    double remaining;
+    double percent;
+    String status;
+
+    if (budget != null) {
+        income = budget.getMonthlyIncome() + budget.getOtherIncome();
+        expenses = budget.getRent() + budget.getUtilities() +
+                   budget.getInsurance() + budget.getGroceries() +
+                   budget.getSubscriptions();
+
+        // Include variable expenses
+        java.util.List<Double> varAmounts = budget.getVariableAmount();
+        if (varAmounts != null) {
+            for (Double amt : varAmounts) {
+                if (amt != null && amt > 0) expenses += amt;
+            }
+        }
+
+        remaining = income - expenses;
+        percent = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
+
+        if (remaining < 0)            status = "overspending";
+        else if (remaining < income * 0.2) status = "low";
+        else                           status = "healthy";
+    } else {
+        income = 0; expenses = 0; remaining = 0; percent = 0;
+        status = "none";
+    }
+
+    model.addAttribute("income",    String.format("%.2f", income));
+    model.addAttribute("expenses",  String.format("%.2f", expenses));
+    model.addAttribute("remaining", String.format("%.2f", remaining));
+    model.addAttribute("percent",   String.format("%.0f", percent));
+    model.addAttribute("status",    status);
+
+    return "InsightsPage";
 }
 }

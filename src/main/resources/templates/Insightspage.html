@@ -2,35 +2,305 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Insights - FINVISION</title>
+    <title>Insights – FinVision</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ── Page header ── */
+        .insights-header { margin-bottom: 1.8rem; }
+        .insights-header h2 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+        .insights-header p  { margin: 0; color: var(--text-muted, #666); font-size: 0.95rem; }
+
+        /* ── Stat cards row ── */
+        .stat-cards {
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 180px;
+            border-radius: 16px;
+            padding: 1.4rem 1.6rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+        }
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            width: 54px; height: 54px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-card .stat-label { font-size: 0.8rem; opacity: 0.88; margin-bottom: 2px; }
+        .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; }
+        .card-income  { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .card-expense { background: linear-gradient(135deg, #e74c3c, #f39c12); }
+        .card-remaining-good { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .card-remaining-warn { background: linear-gradient(135deg, #f6d365, #fda085); }
+        .card-remaining-bad  { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+
+        /* ── Budget health bar ── */
+        .health-section {
+            background: var(--card-bg, #fff);
+            border-radius: 14px;
+            padding: 1.4rem 1.6rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            margin-bottom: 1.8rem;
+        }
+        .health-section h3 { margin: 0 0 0.9rem; font-size: 1rem; color: var(--text-main, #2c3e50); }
+        .health-bar-track {
+            background: #e9ecef;
+            border-radius: 999px;
+            height: 14px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .health-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1s ease;
+        }
+        .fill-healthy  { background: linear-gradient(90deg, #11998e, #38ef7d); }
+        .fill-low      { background: linear-gradient(90deg, #f6d365, #fda085); }
+        .fill-overspend{ background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .health-labels { display: flex; justify-content: space-between; font-size: 0.78rem; color: #888; }
+
+        /* ── Status banner ── */
+        .status-banner {
+            border-radius: 12px;
+            padding: 1rem 1.3rem;
+            margin-bottom: 1.8rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .status-banner .banner-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+        .banner-healthy  { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .banner-low      { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .banner-overspend{ background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .banner-none     { background: #e2e3e5; color: #383d41; border-left: 4px solid #6c757d; }
+
+        /* ── Recommendation cards ── */
+        .rec-section { margin-bottom: 1.8rem; }
+        .rec-section h3 { margin: 0 0 1rem; font-size: 1.05rem; color: var(--text-main, #2c3e50); }
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.2rem;
+        }
+        .rec-card {
+            border-radius: 14px;
+            padding: 1.4rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.09);
+            color: #fff;
+        }
+        .rec-card .rec-bg-icon {
+            position: absolute;
+            right: -10px; bottom: -10px;
+            font-size: 5rem;
+            opacity: 0.12;
+        }
+        .rec-card .rec-top {
+            display: flex; align-items: center; gap: 0.7rem;
+            margin-bottom: 0.8rem;
+        }
+        .rec-card .rec-top .rec-icon {
+            width: 42px; height: 42px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+        .rec-card .rec-top h4 { margin: 0; font-size: 1rem; }
+        .rec-card ul {
+            margin: 0; padding-left: 1.1rem;
+            font-size: 0.85rem; line-height: 1.7;
+            opacity: 0.93;
+        }
+        .rec-saving     { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .rec-debt       { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .rec-invest     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .rec-emergency  { background: linear-gradient(135deg, #f6d365, #fda085); color: #5a3000; }
+        .rec-emergency ul, .rec-emergency .rec-top h4 { color: #5a3000; }
+    </style>
 </head>
 <body>
 
 <div class="dashboard-wrapper">
-
-    <!-- SIDEBAR -->
     <aside th:replace="~{basetemplate :: sidebar}"></aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main">
-
         <div th:replace="~{basetemplate :: topbar}"></div>
 
-        <h2>Monthly Insights</h2>
+        <!-- Header -->
+        <div class="insights-header">
+            <h2>Monthly Insights</h2>
+            <p>Personalized recommendations for saving, debt reduction, and investments.</p>
+        </div>
 
-        <p>Total Income: $<span th:text="${income}"></span></p>
-        <p>Total Expenses: $<span th:text="${expenses}"></span></p>
-        <p>Remaining: $<span th:text="${remaining}"></span></p>
+        <!-- ── Stat Cards ── -->
+        <div class="stat-cards">
 
-        <h3>Suggestions</h3>
-        <ul>
-            <li th:each="s : ${suggestions}" th:text="${s}"></li>
-        </ul>
+            <div class="stat-card card-income">
+                <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                <div>
+                    <div class="stat-label">Total Income</div>
+                    <div class="stat-value">$<span th:text="${income}">0.00</span></div>
+                </div>
+            </div>
+
+            <div class="stat-card card-expense">
+                <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                    <div class="stat-label">Total Expenses</div>
+                    <div class="stat-value">$<span th:text="${expenses}">0.00</span></div>
+                </div>
+            </div>
+
+            <div class="stat-card"
+                 th:classappend="${status == 'healthy'} ? 'card-remaining-good' : (${status == 'low'} ? 'card-remaining-warn' : 'card-remaining-bad')">
+                <div class="stat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+                <div>
+                    <div class="stat-label">Remaining</div>
+                    <div class="stat-value">$<span th:text="${remaining}">0.00</span></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Budget Health Bar ── (hidden if no budget) -->
+        <div class="health-section" th:if="${status != 'none'}">
+            <h3><i class="fa-solid fa-heart-pulse" style="color:#e74c3c; margin-right:6px;"></i>Budget Health</h3>
+            <div class="health-bar-track">
+                <div class="health-bar-fill"
+                     th:classappend="${status == 'healthy'} ? 'fill-healthy' : (${status == 'low'} ? 'fill-low' : 'fill-overspend')"
+                     th:style="'width:' + ${percent} + '%'">
+                </div>
+            </div>
+            <div class="health-labels">
+                <span>0%</span>
+                <span th:text="${percent} + '% of income spent'">0% of income spent</span>
+                <span>100%</span>
+            </div>
+        </div>
+
+        <!-- ── Status Banner ── -->
+        <div th:if="${status == 'healthy'}" class="status-banner banner-healthy">
+            <span class="banner-icon">🎉</span>
+            <div>
+                <strong>You're on track!</strong> Great job staying within your budget this month.
+                You've used <strong th:text="${percent} + '%'"></strong> of your income.
+                Keep it up and consider putting the rest toward savings or investments.
+            </div>
+        </div>
+        <div th:if="${status == 'low'}" class="status-banner banner-low">
+            <span class="banner-icon">⚠️</span>
+            <div>
+                <strong>Running low!</strong> Your remaining balance is under 20% of your income.
+                You've spent <strong th:text="${percent} + '%'"></strong> of your income.
+                Try to cut back on non-essential spending for the rest of the month.
+            </div>
+        </div>
+        <div th:if="${status == 'overspending'}" class="status-banner banner-overspend">
+            <span class="banner-icon">🚨</span>
+            <div>
+                <strong>Overspending alert!</strong> Your expenses have exceeded your income by
+                <strong>$<span th:text="${#strings.replace(remaining, '-', '')}"></span></strong>.
+                Review your spending categories and cut discretionary costs immediately.
+            </div>
+        </div>
+        <div th:if="${status == 'none'}" class="status-banner banner-none">
+            <span class="banner-icon">📋</span>
+            <div>
+                No budget data found. <a href="/budget" style="color:inherit;font-weight:700;">Set your budget</a>
+                to unlock personalized insights.
+            </div>
+        </div>
+
+        <!-- ── Recommendation Cards ── -->
+        <div class="rec-section">
+            <h3><i class="fa-solid fa-lightbulb" style="color:#f6d365; margin-right:6px;"></i>Personalized Recommendations</h3>
+            <div class="rec-grid">
+
+                <!-- Saving -->
+                <div class="rec-card rec-saving">
+                    <i class="fa-solid fa-piggy-bank rec-bg-icon"></i>
+                    <div class="rec-top">
+                        <div class="rec-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+                        <h4>Smart Saving</h4>
+                    </div>
+                    <ul>
+                        <li>Follow the <strong>50/30/20 rule</strong> — 50% needs, 30% wants, 20% savings.</li>
+                        <li>Set up <strong>automatic transfers</strong> to a savings account on payday.</li>
+                        <li>Build a <strong>3–6 month emergency fund</strong> before anything else.</li>
+                        <li>Cut unused <strong>subscriptions</strong> and redirect that money to savings.</li>
+                    </ul>
+                </div>
+
+                <!-- Debt Reduction -->
+                <div class="rec-card rec-debt">
+                    <i class="fa-solid fa-credit-card rec-bg-icon"></i>
+                    <div class="rec-top">
+                        <div class="rec-icon"><i class="fa-solid fa-credit-card"></i></div>
+                        <h4>Debt Reduction</h4>
+                    </div>
+                    <ul>
+                        <li>Use the <strong>Avalanche method</strong> — pay highest-interest debt first.</li>
+                        <li>Or try <strong>Snowball</strong> — clear smallest debts first for motivation.</li>
+                        <li>Always pay <strong>more than the minimum</strong> on credit cards.</li>
+                        <li>Avoid taking on new debt while repaying existing balances.</li>
+                    </ul>
+                </div>
+
+                <!-- Investment -->
+                <div class="rec-card rec-invest">
+                    <i class="fa-solid fa-chart-line rec-bg-icon"></i>
+                    <div class="rec-top">
+                        <div class="rec-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <h4>Investment Ideas</h4>
+                    </div>
+                    <ul>
+                        <li>Maximize your <strong>401(k) or IRA</strong> contributions first.</li>
+                        <li>Consider low-cost <strong>index funds</strong> for long-term growth.</li>
+                        <li>Start with <strong>dollar-cost averaging</strong> — invest a fixed amount monthly.</li>
+                        <li>Diversify across <strong>stocks, bonds, and real estate</strong> to reduce risk.</li>
+                    </ul>
+                </div>
+
+                <!-- Emergency Fund -->
+                <div class="rec-card rec-emergency">
+                    <i class="fa-solid fa-shield-halved rec-bg-icon"></i>
+                    <div class="rec-top">
+                        <div class="rec-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h4>Emergency Fund</h4>
+                    </div>
+                    <ul>
+                        <li>Keep 3–6 months of expenses in a <strong>high-yield savings account</strong>.</li>
+                        <li>Only use it for <strong>true emergencies</strong> — job loss, medical, repairs.</li>
+                        <li>Replenish it <strong>immediately</strong> after any withdrawal.</li>
+                        <li>Keep it <strong>separate</strong> from your everyday checking account.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
 
     </main>
+</div>
 
+<!-- CHATBOT BUTTON -->
+<div class="chatbot-btn">
+    <i class="fa-solid fa-robot"></i>
 </div>
 
 <script>
