@@ -117,6 +117,12 @@
     <!-- ══════════════════════════════════════
          FINVISION AI CHATBOT — injected on every page via darkMode fragment
          ══════════════════════════════════════ -->
+
+    <!-- Floating chatbot button (always present, managed here) -->
+    <div id="fvChatBtn" class="chatbot-btn" style="z-index:10001;">
+        <i class="fa-solid fa-robot"></i>
+    </div>
+
     <div id="fvChatPanel" class="fv-chat-panel">
 
         <!-- Header -->
@@ -335,14 +341,17 @@
         var listening = false;
         var recognition = null;
 
-        // ── Hook existing chatbot button ──
-        var btn = document.querySelector('.chatbot-btn');
+        // ── Hook chatbot button (use the one defined in this fragment) ──
+        var btn = document.getElementById('fvChatBtn')
+               || document.querySelector('.chatbot-btn');
         if (btn) {
-            // Add AI badge
-            var badge = document.createElement('span');
-            badge.className = 'fv-ai-badge';
-            badge.textContent = 'AI';
-            btn.appendChild(badge);
+            // Add AI badge if not already there
+            if (!btn.querySelector('.fv-ai-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'fv-ai-badge';
+                badge.textContent = 'AI';
+                btn.appendChild(badge);
+            }
             btn.addEventListener('click', toggle);
         }
 
