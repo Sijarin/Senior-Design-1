@@ -7,267 +7,440 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * { box-sizing: border-box; }
+
         /* ── LAYOUT ── */
         .dashboard-wrapper { display: flex; min-height: 100vh; background: var(--bg-main, #f0f2ff); }
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .content { padding: 1.8rem 2rem 2rem; flex: 1; overflow-y: auto; }
+        .content { padding: 1.8rem 2rem 3rem; flex: 1; overflow-y: auto; }
 
-        /* ── HERO BANNER ── */
+        /* ── ANIMATIONS ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+            50%       { transform: translateY(-22px) rotate(8deg) scale(1.05); }
+        }
+        @keyframes float2 {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50%       { transform: translateY(-14px) rotate(-6deg); }
+        }
+        @keyframes shimmerSlide {
+            0%   { transform: translateX(-100%) skewX(-15deg); }
+            100% { transform: translateX(350%) skewX(-15deg); }
+        }
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 18px rgba(102,126,234,0.4); }
+            50%       { box-shadow: 0 0 38px rgba(102,126,234,0.75); }
+        }
+
+        .anim-1 { animation: fadeInUp 0.55s ease both; }
+        .anim-2 { animation: fadeInUp 0.55s 0.1s ease both; }
+        .anim-3 { animation: fadeInUp 0.55s 0.2s ease both; }
+        .anim-4 { animation: fadeInUp 0.55s 0.3s ease both; }
+        .anim-5 { animation: fadeInUp 0.55s 0.4s ease both; }
+        .anim-6 { animation: fadeInUp 0.55s 0.5s ease both; }
+        .anim-7 { animation: fadeInUp 0.55s 0.6s ease both; }
+
+        /* ══ HERO BANNER ══ */
         .hero-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            border-radius: 20px;
-            padding: 2rem 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 45%, #f093fb 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 7s ease infinite, fadeInUp 0.55s ease both;
+            border-radius: 24px;
+            padding: 2.4rem 2.6rem;
             color: #fff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.8rem;
+            margin-bottom: 2rem;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 12px 48px rgba(102,126,234,0.45);
         }
-        .hero-banner::before {
-            content: '';
+        .hero-blob {
             position: absolute;
-            width: 300px; height: 300px;
-            background: rgba(255,255,255,0.06);
             border-radius: 50%;
-            top: -100px; right: -80px;
+            background: rgba(255,255,255,0.08);
+            pointer-events: none;
         }
-        .hero-banner::after {
-            content: '';
-            position: absolute;
-            width: 180px; height: 180px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 50%;
-            bottom: -60px; right: 200px;
-        }
+        .hero-blob-1 { width: 340px; height: 340px; top: -130px; right: -90px;  animation: float1 8s ease-in-out infinite; }
+        .hero-blob-2 { width: 200px; height: 200px; bottom: -80px; right: 260px; animation: float2 6s ease-in-out infinite; }
+        .hero-blob-3 { width: 110px; height: 110px; top: 15px;  right: 380px;   animation: float1 10s ease-in-out infinite reverse; }
+
         .hero-left { z-index: 1; }
-        .hero-left .greeting {
-            font-size: 0.9rem; color: rgba(255,255,255,0.8);
-            margin-bottom: 0.3rem; font-weight: 500;
-        }
-        .hero-left h1 {
-            font-size: 2rem; font-weight: 800;
-            margin-bottom: 0.4rem; line-height: 1.2;
-        }
-        .hero-left .date-tag {
+        .hero-badge {
             display: inline-flex; align-items: center; gap: 0.5rem;
             background: rgba(255,255,255,0.18);
-            border-radius: 20px;
-            padding: 0.3rem 0.9rem;
-            font-size: 0.82rem;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.28);
+            border-radius: 50px;
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem; font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.9rem;
         }
-        .hero-right { z-index: 1; text-align: right; }
-        .hero-right .hero-logo {
-            font-size: 4rem; color: rgba(255,255,255,0.2);
+        .hero-left h1 {
+            font-size: 2.5rem; font-weight: 900;
+            margin: 0 0 0.5rem; line-height: 1.1;
+            text-shadow: 0 3px 12px rgba(0,0,0,0.18);
+        }
+        .hero-subtitle {
+            font-size: 0.95rem; opacity: 0.88; margin-bottom: 1.1rem;
+        }
+        .hero-date {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px; padding: 0.4rem 1rem;
+            font-size: 0.82rem; backdrop-filter: blur(4px);
         }
 
-        /* ── STAT CARDS ── */
+        /* Savings rate ring */
+        .hero-right { z-index: 1; }
+        .score-ring-wrap { text-align: center; }
+        .score-ring {
+            position: relative; width: 115px; height: 115px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 0.6rem;
+        }
+        .score-ring svg {
+            position: absolute; top: 0; left: 0;
+        }
+        .score-ring-circle-bg  { transition: none; }
+        .score-ring-circle-val {
+            stroke-dasharray: 314.16;
+            stroke-dashoffset: 314.16;
+            stroke-linecap: round;
+            transform-origin: center;
+            transform: rotate(-90deg);
+            transition: stroke-dashoffset 1.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .score-ring-inner {
+            position: relative; z-index: 1; text-align: center;
+        }
+        .score-num { font-size: 1.55rem; font-weight: 900; display: block; line-height: 1; }
+        .score-lbl { font-size: 0.62rem; opacity: 0.78; text-transform: uppercase; letter-spacing: 1.2px; }
+        .score-title { font-size: 0.78rem; opacity: 0.82; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+
+        /* ══ STAT CARDS ══ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1.2rem;
-            margin-bottom: 1.8rem;
+            margin-bottom: 2rem;
         }
         .stat-card {
-            border-radius: 16px;
-            padding: 1.3rem 1.5rem;
+            border-radius: 22px;
+            padding: 1.5rem 1.5rem;
             color: #fff;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-            transition: transform 0.2s;
+            box-shadow: 0 6px 26px rgba(0,0,0,0.14);
+            transition: transform 0.25s, box-shadow 0.25s;
+            cursor: default;
         }
-        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+        }
+        /* Shimmer sweep */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -80%;
+            width: 55%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmerSlide 3.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        /* Decorative circle */
         .stat-card::after {
             content: '';
             position: absolute;
-            width: 100px; height: 100px;
-            background: rgba(255,255,255,0.1);
+            width: 130px; height: 130px;
+            background: rgba(255,255,255,0.08);
             border-radius: 50%;
-            bottom: -30px; right: -20px;
+            bottom: -45px; right: -30px;
+            pointer-events: none;
         }
-        .stat-card.income      { background: linear-gradient(135deg, #11998e, #38ef7d); }
-        .stat-card.expenses    { background: linear-gradient(135deg, #f5576c, #f093fb); }
-        .stat-card.savings     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .stat-card.savings-rate{ background: linear-gradient(135deg, #f7971e, #ffd200); }
-        .stat-icon {
-            font-size: 1.6rem; opacity: 0.85; margin-bottom: 0.7rem;
+        .stat-card.income       { background: linear-gradient(135deg, #0ba360, #3cba92); }
+        .stat-card.expenses     { background: linear-gradient(135deg, #f5576c, #f093fb); }
+        .stat-card.savings      { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-card.savings-rate { background: linear-gradient(135deg, #f7971e, #ffd200); }
+
+        .stat-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 1.1rem;
         }
-        .stat-label {
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.8px; opacity: 0.85; margin-bottom: 0.3rem;
+        .stat-icon-box {
+            width: 48px; height: 48px;
+            background: rgba(255,255,255,0.22);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem;
+            backdrop-filter: blur(4px);
+            flex-shrink: 0;
+        }
+        .stat-label-chip {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px; padding: 0.2rem 0.7rem;
+            font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.6px;
         }
         .stat-value {
-            font-size: 1.7rem; font-weight: 800; line-height: 1;
+            font-size: 1.85rem; font-weight: 900; line-height: 1;
+            margin-bottom: 0.3rem;
+            position: relative; z-index: 1;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.12);
         }
-        .stat-sub {
-            font-size: 0.75rem; opacity: 0.8; margin-top: 0.3rem;
-        }
-        .no-budget-note {
-            font-size: 0.82rem; opacity: 0.85; margin-top: 0.4rem;
-            font-style: italic;
-        }
+        .stat-sub { font-size: 0.75rem; opacity: 0.82; position: relative; z-index: 1; }
+        .no-budget-note { font-size: 0.8rem; opacity: 0.85; font-style: italic; position: relative; z-index: 1; }
 
-        /* ── HEALTH BAR ── */
+        /* ══ BUDGET HEALTH ══ */
         .health-section {
-            background: #fff;
-            border-radius: 16px;
-            padding: 1.4rem 1.8rem;
-            margin-bottom: 1.8rem;
-            box-shadow: 0 2px 12px rgba(102,126,234,0.08);
+            background: var(--bg-card, #fff);
+            border-radius: 22px;
+            padding: 1.6rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 22px rgba(102,126,234,0.1);
+            border-top: 4px solid #667eea;
         }
         .health-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
         }
         .health-header h3 {
-            font-size: 1rem; font-weight: 700; color: #2c3e50;
-            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1.05rem; font-weight: 800;
+            color: var(--text-main, #2c3e50);
+            display: flex; align-items: center; gap: 0.6rem;
         }
+        .health-header h3 i { color: #667eea; }
         .health-badge {
-            padding: 0.3rem 0.9rem; border-radius: 20px;
+            padding: 0.35rem 1rem; border-radius: 20px;
             font-size: 0.78rem; font-weight: 700;
+            display: inline-flex; align-items: center; gap: 0.4rem;
         }
-        .badge-healthy     { background: #d4f5ef; color: #11998e; }
-        .badge-low         { background: #fff3cd; color: #856404; }
-        .badge-overspending{ background: #ffeaea; color: #c0392b; }
-        .badge-none        { background: #f0f2ff; color: #667eea; }
+        .badge-healthy      { background: #d4f5ef; color: #0ba360; }
+        .badge-low          { background: #fff3cd; color: #e67e22; }
+        .badge-overspending { background: #ffeaea; color: #c0392b; }
+        .badge-none         { background: #f0f2ff; color: #667eea; }
         .health-bar-track {
-            height: 12px; background: #e8eaf6; border-radius: 6px; overflow: hidden;
+            height: 14px; background: #eef0fc; border-radius: 7px; overflow: hidden;
         }
         .health-bar-fill {
-            height: 100%; border-radius: 6px;
-            transition: width 1s ease;
+            height: 100%; border-radius: 7px;
+            transition: width 1.3s cubic-bezier(0.4,0,0.2,1);
         }
-        .fill-healthy      { background: linear-gradient(to right, #11998e, #38ef7d); }
+        .fill-healthy      { background: linear-gradient(to right, #0ba360, #38ef7d); }
         .fill-low          { background: linear-gradient(to right, #f7971e, #ffd200); }
         .fill-overspending { background: linear-gradient(to right, #f5576c, #f093fb); }
         .fill-none         { background: #e8eaf6; }
         .health-footer {
             display: flex; justify-content: space-between;
-            margin-top: 0.5rem; font-size: 0.78rem; color: #7f8c8d;
+            margin-top: 0.6rem; font-size: 0.78rem;
+            color: var(--text-muted, #7f8c8d);
+        }
+        .health-stats-row {
+            display: flex; gap: 1rem; margin-top: 1.1rem; flex-wrap: wrap;
+        }
+        .health-stat {
+            flex: 1; min-width: 90px;
+            background: #f4f6ff; border-radius: 14px;
+            padding: 0.75rem 1rem;
+            transition: transform 0.2s;
+        }
+        .health-stat:hover { transform: translateY(-2px); }
+        .health-stat .hs-label {
+            font-size: 0.68rem; color: #7f8c8d; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 0.25rem;
+        }
+        .health-stat .hs-value {
+            font-size: 1.05rem; font-weight: 900;
+            color: var(--text-main, #2c3e50);
         }
 
-        /* ── CHARTS ROW ── */
+        /* ══ CHARTS ══ */
         .charts-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.2rem;
-            margin-bottom: 1.8rem;
+            gap: 1.4rem;
+            margin-bottom: 2rem;
         }
         .chart-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 1.4rem 1.8rem;
-            box-shadow: 0 2px 12px rgba(102,126,234,0.08);
+            background: var(--bg-card, #fff);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 4px 22px rgba(102,126,234,0.1);
+            transition: transform 0.25s, box-shadow 0.25s;
         }
-        .chart-card h3 {
-            font-size: 0.95rem; font-weight: 700; color: #2c3e50;
-            margin-bottom: 1rem;
-            display: flex; align-items: center; gap: 0.5rem;
+        .chart-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 36px rgba(102,126,234,0.18);
         }
-        .chart-canvas-wrap {
-            position: relative; height: 200px;
+        .chart-card-header {
+            padding: 1.2rem 1.6rem 1rem;
+            display: flex; align-items: center; gap: 0.7rem;
+            border-bottom: 3px solid;
         }
+        .chart-card-header.bar-header { border-color: #667eea; }
+        .chart-card-header.pie-header { border-color: #f5576c; }
+        .ch-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff; flex-shrink: 0;
+        }
+        .bar-icon-bg { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .pie-icon-bg { background: linear-gradient(135deg,#f5576c,#f093fb); }
+        .chart-card-header h3 {
+            font-size: 0.98rem; font-weight: 800;
+            color: var(--text-main, #2c3e50);
+        }
+        .chart-card-body { padding: 1rem 1.6rem 1.6rem; }
+        .chart-canvas-wrap { position: relative; height: 215px; }
         .no-data-msg {
-            text-align: center; padding: 3rem 1rem;
-            color: #aaa; font-size: 0.9rem;
+            text-align: center; padding: 3.5rem 1rem;
+            color: #c0c0c0; font-size: 0.9rem;
         }
-        .no-data-msg i { font-size: 2.5rem; margin-bottom: 0.7rem; display: block; color: #ddd; }
+        .no-data-msg i { font-size: 2.8rem; margin-bottom: 0.7rem; display: block; color: #e0e0e0; }
 
-        /* ── QUICK LINKS ── */
-        .section-title {
-            font-size: 1.1rem; font-weight: 700; color: #2c3e50;
-            margin-bottom: 1rem;
-            display: flex; align-items: center; gap: 0.5rem;
+        /* ══ QUICK ACCESS ══ */
+        .section-header {
+            display: flex; align-items: center; gap: 0.7rem;
+            font-size: 1.1rem; font-weight: 800;
+            color: var(--text-main, #2c3e50);
+            margin-bottom: 1.2rem;
+        }
+        .section-header .sh-badge {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff; border-radius: 50px;
+            padding: 0.22rem 0.75rem; font-size: 0.7rem;
+            font-weight: 700; letter-spacing: 0.5px;
         }
         .quick-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.2rem;
-            margin-bottom: 1.8rem;
+            margin-bottom: 2rem;
         }
         .quick-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 1.4rem 1.5rem;
+            background: var(--bg-card, #fff);
+            border-radius: 22px;
+            overflow: hidden;
             text-decoration: none;
             display: flex; flex-direction: column;
-            box-shadow: 0 2px 12px rgba(102,126,234,0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
-            border-left: 4px solid transparent;
-            position: relative; overflow: hidden;
+            box-shadow: 0 4px 22px rgba(102,126,234,0.08);
+            transition: transform 0.25s, box-shadow 0.25s;
         }
         .quick-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 28px rgba(102,126,234,0.18);
+            transform: translateY(-5px);
+            box-shadow: 0 14px 40px rgba(102,126,234,0.2);
         }
-        .quick-card .qc-icon {
-            width: 48px; height: 48px;
-            border-radius: 14px;
+        .qc-header {
+            padding: 1.4rem 1.5rem;
+            display: flex; align-items: center; gap: 0.9rem;
+        }
+        .qc-icon {
+            width: 48px; height: 48px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem; color: #fff;
-            margin-bottom: 1rem;
+            font-size: 1.2rem; color: #fff; flex-shrink: 0;
         }
-        .quick-card h4 { font-size: 0.95rem; font-weight: 700; color: #2c3e50; margin-bottom: 0.3rem; }
-        .quick-card p  { font-size: 0.8rem; color: #7f8c8d; line-height: 1.5; }
-        .quick-card .qc-arrow {
-            position: absolute; bottom: 1.2rem; right: 1.2rem;
-            color: #ddd; font-size: 0.85rem;
-            transition: color 0.2s, transform 0.2s;
+        .qc-name { font-size: 0.95rem; font-weight: 800; color: var(--text-main, #2c3e50); line-height: 1.3; }
+        .qc-body { padding: 0 1.5rem 1.2rem; flex: 1; }
+        .qc-body p { font-size: 0.8rem; color: var(--text-muted, #7f8c8d); line-height: 1.55; margin: 0; }
+        .qc-footer {
+            padding: 0.7rem 1.5rem;
+            display: flex; align-items: center; justify-content: flex-end;
+            font-size: 0.8rem; font-weight: 700; color: #667eea;
+            border-top: 1px solid rgba(102,126,234,0.08);
+            gap: 0.4rem; transition: gap 0.2s;
         }
-        .quick-card:hover .qc-arrow { color: #667eea; transform: translateX(3px); }
+        .quick-card:hover .qc-footer { gap: 0.8rem; }
 
-        .qc-1 { border-left-color: #667eea; }
-        .qc-1 .qc-icon { background: linear-gradient(135deg,#667eea,#764ba2); }
-        .qc-2 { border-left-color: #11998e; }
-        .qc-2 .qc-icon { background: linear-gradient(135deg,#11998e,#38ef7d); }
-        .qc-3 { border-left-color: #4facfe; }
-        .qc-3 .qc-icon { background: linear-gradient(135deg,#4facfe,#00f2fe); }
-        .qc-4 { border-left-color: #f5576c; }
-        .qc-4 .qc-icon { background: linear-gradient(135deg,#f5576c,#f093fb); }
-        .qc-5 { border-left-color: #f7971e; }
-        .qc-5 .qc-icon { background: linear-gradient(135deg,#f7971e,#ffd200); }
-        .qc-6 { border-left-color: #43e97b; }
-        .qc-6 .qc-icon { background: linear-gradient(135deg,#43e97b,#38f9d7); }
+        .qc-1 .qc-header { background: linear-gradient(135deg,rgba(102,126,234,.08),rgba(118,75,162,.08)); }
+        .qc-1 .qc-icon   { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .qc-2 .qc-header { background: linear-gradient(135deg,rgba(11,163,96,.08),rgba(56,239,125,.08)); }
+        .qc-2 .qc-icon   { background: linear-gradient(135deg,#0ba360,#38ef7d); }
+        .qc-3 .qc-header { background: linear-gradient(135deg,rgba(79,172,254,.08),rgba(0,242,254,.08)); }
+        .qc-3 .qc-icon   { background: linear-gradient(135deg,#4facfe,#00f2fe); }
+        .qc-4 .qc-header { background: linear-gradient(135deg,rgba(245,87,108,.08),rgba(240,147,251,.08)); }
+        .qc-4 .qc-icon   { background: linear-gradient(135deg,#f5576c,#f093fb); }
+        .qc-5 .qc-header { background: linear-gradient(135deg,rgba(247,151,30,.08),rgba(255,210,0,.08)); }
+        .qc-5 .qc-icon   { background: linear-gradient(135deg,#f7971e,#ffd200); }
+        .qc-6 .qc-header { background: linear-gradient(135deg,rgba(67,233,123,.08),rgba(56,249,215,.08)); }
+        .qc-6 .qc-icon   { background: linear-gradient(135deg,#43e97b,#38f9d7); }
 
-        /* ── TIP CARD ── */
+        /* ══ TIP CARD ══ */
         .tip-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 1.4rem 1.8rem;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            border-radius: 22px;
+            padding: 1.8rem 2.2rem;
             color: #fff;
-            display: flex; align-items: center; gap: 1.5rem;
-            box-shadow: 0 4px 20px rgba(102,126,234,0.3);
+            display: flex; align-items: center; gap: 1.6rem;
+            box-shadow: 0 8px 36px rgba(0,0,0,0.28);
+            position: relative; overflow: hidden;
+        }
+        .tip-card::before {
+            content: '';
+            position: absolute;
+            width: 240px; height: 240px;
+            background: rgba(102,126,234,0.12);
+            border-radius: 50%;
+            right: -60px; top: -100px;
+            pointer-events: none;
+        }
+        .tip-card::after {
+            content: '';
+            position: absolute;
+            width: 140px; height: 140px;
+            background: rgba(240,147,251,0.08);
+            border-radius: 50%;
+            left: 30%; bottom: -70px;
+            pointer-events: none;
         }
         .tip-bulb {
-            width: 52px; height: 52px; flex-shrink: 0;
-            background: rgba(255,255,255,0.18);
-            border-radius: 50%;
+            width: 62px; height: 62px; flex-shrink: 0;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.6rem;
+            animation: pulseGlow 3s ease-in-out infinite;
+            position: relative; z-index: 1;
         }
-        .tip-text strong { display: block; font-size: 0.78rem; text-transform: uppercase;
-            letter-spacing: 1px; opacity: 0.8; margin-bottom: 0.3rem; }
-        .tip-text p { font-size: 0.92rem; line-height: 1.6; opacity: 0.95; }
+        .tip-text { position: relative; z-index: 1; }
+        .tip-text strong {
+            display: block; font-size: 0.7rem;
+            text-transform: uppercase; letter-spacing: 1.8px;
+            color: #4facfe; margin-bottom: 0.45rem;
+        }
+        .tip-text p { font-size: 0.96rem; line-height: 1.68; opacity: 0.95; margin: 0; }
 
         /* ── DARK MODE ── */
         body.dark .health-section,
         body.dark .chart-card,
-        body.dark .quick-card { background: #1e2235; }
+        body.dark .quick-card     { background: #1e2235; }
         body.dark .health-header h3,
-        body.dark .chart-card h3,
-        body.dark .quick-card h4 { color: #e0e0e0; }
-        body.dark .quick-card p,
-        body.dark .health-footer { color: #9aa; }
+        body.dark .chart-card-header h3,
+        body.dark .qc-name,
+        body.dark .section-header { color: #e0e0e0; }
+        body.dark .qc-body p,
+        body.dark .health-footer  { color: #9aa; }
         body.dark .health-bar-track { background: #2d3250; }
-        body.dark .stat-card.savings-rate { color: #2c3e50; }
+        body.dark .health-stat    { background: #252840; }
+        body.dark .health-stat .hs-value { color: #e0e0e0; }
+        body.dark .qc-footer      { border-color: rgba(255,255,255,0.06); }
 
-        /* Responsive */
-        @media (max-width: 1100px) {
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1200px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 1000px) {
             .quick-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
@@ -275,6 +448,8 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .quick-grid { grid-template-columns: 1fr; }
             .hero-right { display: none; }
+            .hero-left h1 { font-size: 1.75rem; }
+            .content { padding: 1.2rem 1rem 2rem; }
         }
     </style>
 </head>
@@ -292,28 +467,54 @@
 
         <div class="content">
 
-            <!-- ── HERO BANNER ── -->
+            <!-- ══ HERO BANNER ══ -->
             <div class="hero-banner">
+                <div class="hero-blob hero-blob-1"></div>
+                <div class="hero-blob hero-blob-2"></div>
+                <div class="hero-blob hero-blob-3"></div>
+
                 <div class="hero-left">
-                    <div class="greeting">Good to see you back,</div>
+                    <div class="hero-badge">
+                        <i class="fa-solid fa-chart-line"></i> FinVision Dashboard
+                    </div>
                     <h1 th:text="'Hello, ' + ${username} + '!'">Hello, User!</h1>
-                    <div class="date-tag">
+                    <div class="hero-subtitle" th:if="${hasBudget}">Your finances are being tracked. Keep it up!</div>
+                    <div class="hero-subtitle" th:unless="${hasBudget}">Welcome! Set your budget to get started.</div>
+                    <div class="hero-date">
                         <i class="fa-solid fa-calendar-days"></i>
                         <span th:text="${currentDate}">Today</span>
                     </div>
                 </div>
+
                 <div class="hero-right">
-                    <div class="hero-logo"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="score-ring-wrap">
+                        <div class="score-ring">
+                            <svg width="115" height="115" viewBox="0 0 115 115">
+                                <circle class="score-ring-circle-bg" cx="57.5" cy="57.5" r="50"
+                                        fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="9"/>
+                                <circle id="savingsRingCircle" class="score-ring-circle-val"
+                                        cx="57.5" cy="57.5" r="50"
+                                        fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="9"/>
+                            </svg>
+                            <div class="score-ring-inner">
+                                <span class="score-num" th:if="${hasBudget}" th:text="${savingsRate} + '%'">0%</span>
+                                <span class="score-num" th:unless="${hasBudget}">—</span>
+                                <span class="score-lbl">Saved</span>
+                            </div>
+                        </div>
+                        <div class="score-title">Savings Rate</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- ── STAT CARDS ── -->
-            <div class="stats-grid">
+            <!-- ══ STAT CARDS ══ -->
+            <div class="stats-grid anim-2">
 
-                <!-- Income -->
                 <div class="stat-card income">
-                    <div class="stat-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                    <div class="stat-label">Monthly Income</div>
+                    <div class="stat-top">
+                        <div class="stat-icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <span class="stat-label-chip">Income</span>
+                    </div>
                     <div th:if="${hasBudget}">
                         <div class="stat-value" th:text="'$' + ${income}">$0.00</div>
                         <div class="stat-sub">Total earnings this month</div>
@@ -324,10 +525,11 @@
                     </div>
                 </div>
 
-                <!-- Expenses -->
                 <div class="stat-card expenses">
-                    <div class="stat-icon"><i class="fa-solid fa-cart-shopping"></i></div>
-                    <div class="stat-label">Total Expenses</div>
+                    <div class="stat-top">
+                        <div class="stat-icon-box"><i class="fa-solid fa-cart-shopping"></i></div>
+                        <span class="stat-label-chip">Expenses</span>
+                    </div>
                     <div th:if="${hasBudget}">
                         <div class="stat-value" th:text="'$' + ${expenses}">$0.00</div>
                         <div class="stat-sub" th:text="${percent} + '% of income'">0% of income</div>
@@ -338,10 +540,11 @@
                     </div>
                 </div>
 
-                <!-- Savings -->
                 <div class="stat-card savings">
-                    <div class="stat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
-                    <div class="stat-label">Monthly Savings</div>
+                    <div class="stat-top">
+                        <div class="stat-icon-box"><i class="fa-solid fa-piggy-bank"></i></div>
+                        <span class="stat-label-chip">Savings</span>
+                    </div>
                     <div th:if="${hasBudget}">
                         <div class="stat-value" th:text="'$' + ${savings}">$0.00</div>
                         <div class="stat-sub">Income minus expenses</div>
@@ -352,10 +555,11 @@
                     </div>
                 </div>
 
-                <!-- Savings Rate -->
                 <div class="stat-card savings-rate">
-                    <div class="stat-icon"><i class="fa-solid fa-percent"></i></div>
-                    <div class="stat-label">Savings Rate</div>
+                    <div class="stat-top">
+                        <div class="stat-icon-box"><i class="fa-solid fa-percent"></i></div>
+                        <span class="stat-label-chip">Rate</span>
+                    </div>
                     <div th:if="${hasBudget}">
                         <div class="stat-value" th:text="${savingsRate} + '%'">0%</div>
                         <div class="stat-sub">Of your income saved</div>
@@ -368,14 +572,14 @@
 
             </div>
 
-            <!-- ── BUDGET HEALTH BAR ── -->
-            <div class="health-section">
+            <!-- ══ BUDGET HEALTH ══ -->
+            <div class="health-section anim-3">
                 <div class="health-header">
                     <h3><i class="fa-solid fa-heart-pulse"></i> Budget Health</h3>
-                    <span th:if="${status == 'healthy'}"    class="health-badge badge-healthy">Healthy</span>
-                    <span th:if="${status == 'low'}"        class="health-badge badge-low">Low Balance</span>
-                    <span th:if="${status == 'overspending'}" class="health-badge badge-overspending">Overspending</span>
-                    <span th:if="${status == 'none'}"       class="health-badge badge-none">No Data Yet</span>
+                    <span th:if="${status == 'healthy'}"      class="health-badge badge-healthy"><i class="fa-solid fa-circle-check"></i> Healthy</span>
+                    <span th:if="${status == 'low'}"          class="health-badge badge-low"><i class="fa-solid fa-triangle-exclamation"></i> Low Balance</span>
+                    <span th:if="${status == 'overspending'}" class="health-badge badge-overspending"><i class="fa-solid fa-circle-xmark"></i> Overspending</span>
+                    <span th:if="${status == 'none'}"         class="health-badge badge-none"><i class="fa-solid fa-circle-info"></i> No Data Yet</span>
                 </div>
                 <div class="health-bar-track">
                     <div class="health-bar-fill"
@@ -389,82 +593,129 @@
                     <span th:unless="${hasBudget}">Set a budget to see your health</span>
                     <span th:if="${hasBudget}" th:text="'$' + ${income}">$0</span>
                 </div>
+                <div th:if="${hasBudget}" class="health-stats-row">
+                    <div class="health-stat">
+                        <div class="hs-label">Monthly Income</div>
+                        <div class="hs-value" th:text="'$' + ${income}">$0</div>
+                    </div>
+                    <div class="health-stat">
+                        <div class="hs-label">Total Expenses</div>
+                        <div class="hs-value" th:text="'$' + ${expenses}">$0</div>
+                    </div>
+                    <div class="health-stat">
+                        <div class="hs-label">Remaining</div>
+                        <div class="hs-value" th:text="'$' + ${savings}">$0</div>
+                    </div>
+                    <div class="health-stat">
+                        <div class="hs-label">Budget Used</div>
+                        <div class="hs-value" th:text="${percent} + '%'">0%</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- ── CHARTS ROW ── -->
-            <div class="charts-row">
+            <!-- ══ CHARTS ══ -->
+            <div class="charts-row anim-4">
 
-                <!-- Bar Chart -->
                 <div class="chart-card">
-                    <h3><i class="fa-solid fa-chart-bar" style="color:#667eea"></i> Income vs Expenses</h3>
-                    <div th:if="${hasBudget}" class="chart-canvas-wrap">
-                        <canvas id="barChart"></canvas>
+                    <div class="chart-card-header bar-header">
+                        <div class="ch-icon bar-icon-bg"><i class="fa-solid fa-chart-bar"></i></div>
+                        <h3>Income vs Expenses</h3>
                     </div>
-                    <div th:unless="${hasBudget}" class="no-data-msg">
-                        <i class="fa-solid fa-chart-bar"></i>
-                        Set your budget to see the chart
+                    <div class="chart-card-body">
+                        <div th:if="${hasBudget}" class="chart-canvas-wrap">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                        <div th:unless="${hasBudget}" class="no-data-msg">
+                            <i class="fa-solid fa-chart-bar"></i>
+                            Set your budget to see the chart
+                        </div>
                     </div>
                 </div>
 
-                <!-- Doughnut Chart -->
                 <div class="chart-card">
-                    <h3><i class="fa-solid fa-chart-pie" style="color:#f5576c"></i> Expense Breakdown</h3>
-                    <div th:if="${hasBudget}" class="chart-canvas-wrap">
-                        <canvas id="doughnutChart"></canvas>
+                    <div class="chart-card-header pie-header">
+                        <div class="ch-icon pie-icon-bg"><i class="fa-solid fa-chart-pie"></i></div>
+                        <h3>Expense Breakdown</h3>
                     </div>
-                    <div th:unless="${hasBudget}" class="no-data-msg">
-                        <i class="fa-solid fa-chart-pie"></i>
-                        Set your budget to see the chart
+                    <div class="chart-card-body">
+                        <div th:if="${hasBudget}" class="chart-canvas-wrap">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                        <div th:unless="${hasBudget}" class="no-data-msg">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Set your budget to see the chart
+                        </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- ── QUICK ACCESS ── -->
-            <div class="section-title">
-                <i class="fa-solid fa-bolt" style="color:#f7971e"></i> Quick Access
+            <!-- ══ QUICK ACCESS ══ -->
+            <div class="section-header anim-5">
+                <i class="fa-solid fa-bolt" style="color:#f7971e"></i>
+                Quick Access
+                <span class="sh-badge">6 Features</span>
             </div>
-            <div class="quick-grid">
+            <div class="quick-grid anim-5">
+
                 <a th:href="@{/budget}" class="quick-card qc-1">
-                    <div class="qc-icon"><i class="fa-solid fa-wallet"></i></div>
-                    <h4>Set Budget</h4>
-                    <p>Define your monthly income and expense categories</p>
-                    <i class="fa-solid fa-arrow-right qc-arrow"></i>
+                    <div class="qc-header">
+                        <div class="qc-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <span class="qc-name">Set Budget</span>
+                    </div>
+                    <div class="qc-body"><p>Define your monthly income and expense categories</p></div>
+                    <div class="qc-footer">Open <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
+
                 <a th:href="@{/tracker}" class="quick-card qc-2">
-                    <div class="qc-icon"><i class="fa-solid fa-bullseye"></i></div>
-                    <h4>Goal Tracking</h4>
-                    <p>Create and monitor financial goals like emergency funds</p>
-                    <i class="fa-solid fa-arrow-right qc-arrow"></i>
+                    <div class="qc-header">
+                        <div class="qc-icon"><i class="fa-solid fa-bullseye"></i></div>
+                        <span class="qc-name">Goal Tracking</span>
+                    </div>
+                    <div class="qc-body"><p>Create and monitor financial goals like emergency funds</p></div>
+                    <div class="qc-footer">Open <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
+
                 <a th:href="@{/predictive-cash-flow}" class="quick-card qc-3">
-                    <div class="qc-icon"><i class="fa-solid fa-chart-line"></i></div>
-                    <h4>Predictive Cash Flow</h4>
-                    <p>See your 6-month financial forecast based on habits</p>
-                    <i class="fa-solid fa-arrow-right qc-arrow"></i>
+                    <div class="qc-header">
+                        <div class="qc-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <span class="qc-name">Predictive Cash Flow</span>
+                    </div>
+                    <div class="qc-body"><p>See your 6-month financial forecast based on habits</p></div>
+                    <div class="qc-footer">Open <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
+
                 <a th:href="@{/alerts}" class="quick-card qc-4">
-                    <div class="qc-icon"><i class="fa-solid fa-bell"></i></div>
-                    <h4>Alerts &amp; Notifications</h4>
-                    <p>Overspending warnings, bill reminders and saving nudges</p>
-                    <i class="fa-solid fa-arrow-right qc-arrow"></i>
+                    <div class="qc-header">
+                        <div class="qc-icon"><i class="fa-solid fa-bell"></i></div>
+                        <span class="qc-name">Alerts &amp; Notifications</span>
+                    </div>
+                    <div class="qc-body"><p>Overspending warnings, bill reminders and saving nudges</p></div>
+                    <div class="qc-footer">Open <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
+
                 <a th:href="@{/insights}" class="quick-card qc-5">
-                    <div class="qc-icon"><i class="fa-solid fa-brain"></i></div>
-                    <h4>Insights</h4>
-                    <p>AI-powered recommendations for saving and investing</p>
-                    <i class="fa-solid fa-arrow-right qc-arrow"></i>
+                    <div class="qc-header">
+                        <div class="qc-icon"><i class="fa-solid fa-brain"></i></div>
+                        <span class="qc-name">Insights</span>
+                    </div>
+                    <div class="qc-body"><p>AI-powered recommendations for saving and investing</p></div>
+                    <div class="qc-footer">Open <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
+
                 <a th:href="@{/spending-visualization}" class="quick-card qc-6">
-                    <div class="qc-icon"><i class="fa-solid fa-chart-pie"></i></div>
-                    <h4>Spending Visualization</h4>
-                    <p>Interactive charts and category breakdowns of spending</p>
-                    <i class="fa-solid fa-arrow-right qc-arrow"></i>
+                    <div class="qc-header">
+                        <div class="qc-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                        <span class="qc-name">Spending Visualization</span>
+                    </div>
+                    <div class="qc-body"><p>Interactive charts and category breakdowns of spending</p></div>
+                    <div class="qc-footer">Open <i class="fa-solid fa-arrow-right"></i></div>
                 </a>
+
             </div>
 
-            <!-- ── FINANCIAL TIP ── -->
-            <div class="tip-card">
+            <!-- ══ FINANCIAL TIP ══ -->
+            <div class="tip-card anim-7">
                 <div class="tip-bulb"><i class="fa-solid fa-lightbulb"></i></div>
                 <div class="tip-text">
                     <strong>Financial Tip of the Day</strong>
@@ -483,11 +734,12 @@
 
 <script th:inline="javascript">
 /*<![CDATA[*/
-var hasBudget   = [[${hasBudget}]];
-var income      = hasBudget ? parseFloat([[${income}]])      : 0;
-var expenses    = hasBudget ? parseFloat([[${expenses}]])    : 0;
-var pieLabels   = hasBudget ? [[${pieLabels}]]   : [];
-var pieData     = hasBudget ? [[${pieData}]]     : [];
+var hasBudget = [[${hasBudget}]];
+var income    = hasBudget ? parseFloat([[${income}]])   : 0;
+var expenses  = hasBudget ? parseFloat([[${expenses}]]) : 0;
+var pieLabels = hasBudget ? [[${pieLabels}]] : [];
+var pieData   = hasBudget ? [[${pieData}]]   : [];
+var savRate   = hasBudget ? parseFloat([[${savingsRate}]]) : 0;
 /*]]>*/
 
 // ── Hamburger ──
@@ -495,20 +747,32 @@ document.querySelector('.menu-toggle').addEventListener('click', () => {
     document.querySelector('.nav-menu').classList.toggle('show');
 });
 
+// ── Animate savings-rate ring ──
+(function() {
+    var circle = document.getElementById('savingsRingCircle');
+    if (!circle) return;
+    var circumference = 2 * Math.PI * 50; // r=50
+    circle.style.strokeDasharray  = circumference;
+    circle.style.strokeDashoffset = circumference;
+    if (hasBudget) {
+        setTimeout(function() {
+            var pct    = Math.min(Math.max(savRate, 0), 100);
+            var offset = circumference - (circumference * pct / 100);
+            circle.style.strokeDashoffset = offset;
+        }, 400);
+    }
+})();
+
 // ── Charts ──
 if (hasBudget) {
-    // Bar chart
     new Chart(document.getElementById('barChart'), {
         type: 'bar',
         data: {
             labels: ['Income', 'Expenses'],
             datasets: [{
                 data: [income, expenses],
-                backgroundColor: [
-                    'rgba(17,153,142,0.85)',
-                    'rgba(245,87,108,0.85)'
-                ],
-                borderRadius: 8,
+                backgroundColor: ['rgba(11,163,96,0.85)', 'rgba(245,87,108,0.85)'],
+                borderRadius: 10,
                 borderSkipped: false
             }]
         },
@@ -520,20 +784,14 @@ if (hasBudget) {
                 y: {
                     beginAtZero: true,
                     grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: {
-                        callback: v => '$' + v.toLocaleString()
-                    }
+                    ticks: { callback: v => '$' + v.toLocaleString() }
                 },
                 x: { grid: { display: false } }
             }
         }
     });
 
-    // Doughnut chart
-    const palette = [
-        '#667eea','#f5576c','#11998e','#f7971e','#4facfe','#43e97b',
-        '#764ba2','#f093fb','#00f2fe','#ffd200'
-    ];
+    var palette = ['#667eea','#f5576c','#11998e','#f7971e','#4facfe','#43e97b','#764ba2','#f093fb','#00f2fe','#ffd200'];
     new Chart(document.getElementById('doughnutChart'), {
         type: 'doughnut',
         data: {
@@ -543,7 +801,7 @@ if (hasBudget) {
                 backgroundColor: palette.slice(0, pieData.length),
                 borderWidth: 2,
                 borderColor: '#fff',
-                hoverOffset: 8
+                hoverOffset: 10
             }]
         },
         options: {
@@ -551,22 +809,15 @@ if (hasBudget) {
             maintainAspectRatio: false,
             cutout: '65%',
             plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { font: { size: 11 }, padding: 10, boxWidth: 14 }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ' $' + ctx.parsed.toLocaleString()
-                    }
-                }
+                legend: { position: 'right', labels: { font: { size: 11 }, padding: 10, boxWidth: 14 } },
+                tooltip: { callbacks: { label: ctx => ' $' + ctx.parsed.toLocaleString() } }
             }
         }
     });
 }
 
 // ── Financial Tips ──
-const tips = [
+var tips = [
     "The 50/30/20 rule: allocate 50% of income to needs, 30% to wants, and 20% to savings.",
     "Even saving $5 a day adds up to over $1,800 a year — every dollar counts!",
     "Build an emergency fund of 3–6 months of living expenses before investing.",
