@@ -10,12 +10,44 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.finvision.model.Budget;
+import com.finvision.model.ScannedReceipt;
 import com.finvision.repository.BudgetRepository;
+import com.finvision.repository.ScannedReceiptRepository;
+
 @Controller
 public class DashboardController {
 
     @Autowired
     private BudgetRepository budgetRepository;
+
+    @Autowired
+    private ScannedReceiptRepository receiptRepository;
+
+    // ─── Helper: sum this month's scanned receipts for a user ───────────────
+    private double receiptTotal(String username) {
+        String ym = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        return receiptRepository.findByUsernameAndYearMonth(username, ym)
+            .stream().mapToDouble(ScannedReceipt::getAmount).sum();
+    }
+
+    // ─── Helper: build pie-chart entries from receipts ──────────────────────
+    private void addReceiptsToPie(String username,
+            java.util.List<String> pieLabels, java.util.List<Double> pieData) {
+        String ym = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        java.util.Map<String, Double> byCat = new java.util.LinkedHashMap<>();
+        for (ScannedReceipt r : receiptRepository.findByUsernameAndYearMonth(username, ym)) {
+            byCat.merge(r.getCategory() != null ? r.getCategory() : "Other", r.getAmount(), Double::sum);
+        }
+        for (java.util.Map.Entry<String, Double> e : byCat.entrySet()) {
+            if (e.getValue() > 0) {
+                // Append "(receipts)" only if the category already exists in the budget pie
+                String lbl = pieLabels.contains(e.getKey())
+                        ? e.getKey() + " (receipts)" : e.getKey();
+                pieLabels.add(lbl);
+                pieData.add(e.getValue());
+            }
+        }
+    }
 
     @GetMapping("/dashboard")
     public String dashboard(Principal principal, Model model) {
@@ -36,6 +68,9 @@ public class DashboardController {
             if (varAmounts != null) {
                 for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
             }
+
+            // Add scanned receipts for this month
+            expenses += receiptTotal(username);
 
             double savings     = income - expenses;
             double savingsRate = (income == 0) ? 0 : Math.max((savings / income) * 100, 0);
@@ -58,6 +93,7 @@ public class DashboardController {
                     }
                 }
             }
+            addReceiptsToPie(username, pieLabels, pieData);
 
             model.addAttribute("hasBudget",   true);
             model.addAttribute("income",      String.format("%.2f", income));
@@ -112,6 +148,10 @@ public class DashboardController {
                 }
             }
 
+            // Add receipt breakdown for this month
+            addReceiptsToPie(username, pieLabels, pieData);
+            totalExpenses += receiptTotal(username);
+
             model.addAttribute("income", income);
             model.addAttribute("totalExpenses", totalExpenses);
             model.addAttribute("pieLabels", pieLabels);
@@ -164,6 +204,9 @@ public String predictiveCashFlow(Principal principal, Model model) {
         if (varAmounts != null) {
             for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
         }
+
+        // Add scanned receipts for this month
+        expenses += receiptTotal(username);
 
         double monthlySavings = income - expenses;
         double savingsRate    = (income == 0) ? 0 : (monthlySavings / income) * 100;
@@ -227,6 +270,9 @@ public String alerts(Principal principal, Model model) {
             for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
         }
 
+        // Add scanned receipts for this month
+        expenses += receiptTotal(username);
+
         double remaining = income - expenses;
         double percent   = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
         String status    = remaining < 0 ? "overspending" : (remaining < income * 0.2 ? "low" : "healthy");
@@ -274,13 +320,15 @@ public String insights(Principal principal, Model model) {
                    budget.getInsurance() + budget.getGroceries() +
                    budget.getSubscriptions();
 
-        // Include variable expenses
         java.util.List<Double> varAmounts = budget.getVariableAmount();
         if (varAmounts != null) {
             for (Double amt : varAmounts) {
                 if (amt != null && amt > 0) expenses += amt;
             }
         }
+
+        // Add scanned receipts for this month
+        if (username != null) expenses += receiptTotal(username);
 
         remaining = income - expenses;
         percent = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
