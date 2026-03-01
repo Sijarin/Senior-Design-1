@@ -315,46 +315,46 @@
                 </div>
 
                 <div class="banking-note">
-                    <i class="fa-solid fa-lock"></i>
-                    Stored securely and visible only to you. Click the eye icon to reveal values.
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    These numbers are auto-generated and unique to your account. Click <i class="fa-solid fa-eye" style="font-size:0.75rem;"></i> to reveal or <i class="fa-solid fa-copy" style="font-size:0.75rem;"></i> to copy.
                 </div>
 
-                <form th:action="@{/profile/update}" method="POST">
-                    <input type="hidden" name="name"  th:value="${user.name}">
-                    <input type="hidden" name="email" th:value="${user.email}">
-
-                    <div class="form-grid">
-                        <div class="field-group">
-                            <label>Account Number</label>
-                            <div class="field-wrap">
-                                <i class="fa-solid fa-hashtag field-icon"></i>
-                                <input type="password" id="accNum" name="accountNumber"
-                                       placeholder="e.g. 123456789"
-                                       th:value="${user.accountNumber}"
-                                       class="has-eye">
-                                <button type="button" class="eye-toggle" onclick="toggleMask('accNum',this)">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="field-group">
-                            <label>Routing Number</label>
-                            <div class="field-wrap">
-                                <i class="fa-solid fa-route field-icon"></i>
-                                <input type="password" id="routNum" name="routingNumber"
-                                       placeholder="e.g. 021000021"
-                                       th:value="${user.routingNumber}"
-                                       class="has-eye">
-                                <button type="button" class="eye-toggle" onclick="toggleMask('routNum',this)">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
-                            </div>
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label>Account Number</label>
+                        <div class="field-wrap">
+                            <i class="fa-solid fa-hashtag field-icon"></i>
+                            <input type="password" id="accNum" readonly
+                                   th:value="${user.accountNumber}"
+                                   class="has-eye" style="cursor:default;">
+                            <button type="button" class="eye-toggle" style="right:36px;" onclick="toggleMask('accNum',this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button type="button" class="eye-toggle" onclick="copyField('accNum')" title="Copy">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
                         </div>
                     </div>
-                    <button type="submit" class="btn-save" style="background:linear-gradient(135deg,#11998e,#38ef7d);box-shadow:0 4px 14px rgba(17,153,142,0.35);">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Banking Info
-                    </button>
-                </form>
+                    <div class="field-group">
+                        <label>Routing Number</label>
+                        <div class="field-wrap">
+                            <i class="fa-solid fa-route field-icon"></i>
+                            <input type="password" id="routNum" readonly
+                                   th:value="${user.routingNumber}"
+                                   class="has-eye" style="cursor:default;">
+                            <button type="button" class="eye-toggle" style="right:36px;" onclick="toggleMask('routNum',this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button type="button" class="eye-toggle" onclick="copyField('routNum')" title="Copy">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size:0.75rem;color:var(--text-muted,#888);margin-top:0.5rem;">
+                    <i class="fa-solid fa-circle-info" style="color:#667eea;"></i>
+                    These values are assigned once and cannot be changed.
+                </p>
             </div>
 
             <!-- ══ CHANGE PASSWORD ══ -->
@@ -460,6 +460,21 @@
         } else {
             inp.type = 'password';
             icon.className = 'fa-solid fa-eye';
+        }
+    }
+
+    function copyField(inputId) {
+        const inp = document.getElementById(inputId);
+        const prev = inp.type;
+        inp.type = 'text';
+        inp.select();
+        document.execCommand('copy');
+        inp.type = prev;
+        // Brief visual feedback
+        const btn = inp.parentElement.querySelector('[onclick*="copy"]');
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-check" style="color:#0ba360"></i>';
+            setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i>'; }, 1500);
         }
     }
 
