@@ -321,25 +321,26 @@ body {
 
 .chatbot-btn {
     position: fixed;
-    bottom: 25px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    background: #667eea;
+    bottom: 30px;
+    right: 30px;
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-radius: 50%;
-    font-size: 26px;
+    font-size: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-    transition: transform 0.25s ease;
+    box-shadow: 0 8px 30px rgba(102,126,234,0.55), 0 2px 8px rgba(0,0,0,0.18);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
     z-index: 999;
 }
 
 .chatbot-btn:hover {
-    transform: scale(1.07);
+    transform: scale(1.12);
+    box-shadow: 0 12px 40px rgba(102,126,234,0.7), 0 4px 12px rgba(0,0,0,0.22);
 }
 
 /* Login page — centered card with form, inputs, and links */
