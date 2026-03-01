@@ -13,18 +13,22 @@ public class User {
     @Indexed(unique = true)
     private String username;
 
-    private String name;
     private String password;
-    private String email;
+    private String email; // Optional — can be used later for notifications or password reset links
     private String securityQuestion;
     private String securityAnswer;
+
+    // Profile fields
+    private String name;
+    private String accountNumber;
+    private String routingNumber;
+    private String profilePhoto; // base64 data URL
 
     // ---------- Constructors ----------
     public User() {}
 
-    public User(String username, String name, String password, String email, String securityQuestion, String securityAnswer) {
+    public User(String username, String password, String email, String securityQuestion, String securityAnswer) {
         this.username = username;
-        this.name = name;
         this.password = password;
         this.email = email;
         this.securityQuestion = securityQuestion;
@@ -46,14 +50,6 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getPassword() {
@@ -87,4 +83,16 @@ public class User {
     public void setSecurityAnswer(String securityAnswer) {
         this.securityAnswer = securityAnswer;
     }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+
+    public String getRoutingNumber() { return routingNumber; }
+    public void setRoutingNumber(String routingNumber) { this.routingNumber = routingNumber; }
+
+    public String getProfilePhoto() { return profilePhoto; }
+    public void setProfilePhoto(String profilePhoto) { this.profilePhoto = profilePhoto; }
 }
