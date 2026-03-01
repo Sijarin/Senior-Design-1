@@ -32,17 +32,22 @@ public class BudgetController {
             Principal principal,
             Model model) {
 
-        Budget budget = new Budget();
-
-        // Prevent null principal
-        if (principal != null) {
-            budget.setUsername(principal.getName());
-        }
+        String username = (principal != null) ? principal.getName() : null;
 
         String currentMonth = java.time.LocalDate.now()
                 .format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy"));
-        budget.setMonth(currentMonth);
         model.addAttribute("currentMonth", currentMonth);
+
+        // Upsert: update existing budget for this user+month, or create new
+        Budget budget = null;
+        if (username != null) {
+            budget = budgetRepository.findByUsernameAndMonth(username, currentMonth).orElse(null);
+        }
+        if (budget == null) {
+            budget = new Budget();
+            budget.setUsername(username);
+            budget.setMonth(currentMonth);
+        }
 
         budget.setMonthlyIncome(monthlyIncome);
         budget.setOtherIncome(otherIncome);
@@ -51,16 +56,15 @@ public class BudgetController {
         budget.setInsurance(insurance);
         budget.setGroceries(groceries);
         budget.setSubscriptions(subscriptions);
-
-        // Prevent null list errors
-        budget.setVariableTitle(
-                variableTitle != null ? variableTitle : Collections.emptyList());
-
-        budget.setVariableAmount(
-                variableAmount != null ? variableAmount : Collections.emptyList());
+        budget.setVariableTitle(variableTitle != null ? variableTitle : Collections.emptyList());
+        budget.setVariableAmount(variableAmount != null ? variableAmount : Collections.emptyList());
 
         budgetRepository.save(budget);
 
+        // Pass saved values back so form stays pre-filled
+        model.addAttribute("budget", budget);
+        model.addAttribute("varTitles", budget.getVariableTitle());
+        model.addAttribute("varAmounts", budget.getVariableAmount());
         model.addAttribute("success", "Budget saved successfully!");
         return "BudgetSet";
     }

@@ -286,7 +286,8 @@
                                 <span class="currency-symbol">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
                                        name="monthlyIncome" id="monthlyIncome"
-                                       placeholder="0" required class="income-input">
+                                       placeholder="0" required class="income-input"
+                                       th:value="${budget != null and budget.monthlyIncome > 0} ? ${budget.monthlyIncome} : ''">
                             </div>
                         </div>
                         <div class="input-group">
@@ -295,7 +296,8 @@
                                 <span class="currency-symbol">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
                                        name="otherIncome" id="otherIncome"
-                                       placeholder="0" class="income-input">
+                                       placeholder="0" class="income-input"
+                                       th:value="${budget != null and budget.otherIncome > 0} ? ${budget.otherIncome} : ''">
                             </div>
                         </div>
                     </div>
@@ -317,7 +319,8 @@
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
-                                       name="rent" placeholder="0" class="expense-input">
+                                       name="rent" placeholder="0" class="expense-input"
+                                       th:value="${budget != null and budget.rent > 0} ? ${budget.rent} : ''">
                             </div>
                         </div>
 
@@ -327,7 +330,8 @@
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
-                                       name="utilities" placeholder="0" class="expense-input">
+                                       name="utilities" placeholder="0" class="expense-input"
+                                       th:value="${budget != null and budget.utilities > 0} ? ${budget.utilities} : ''">
                             </div>
                         </div>
 
@@ -337,7 +341,8 @@
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
-                                       name="insurance" placeholder="0" class="expense-input">
+                                       name="insurance" placeholder="0" class="expense-input"
+                                       th:value="${budget != null and budget.insurance > 0} ? ${budget.insurance} : ''">
                             </div>
                         </div>
 
@@ -347,7 +352,8 @@
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
-                                       name="groceries" placeholder="0" class="expense-input">
+                                       name="groceries" placeholder="0" class="expense-input"
+                                       th:value="${budget != null and budget.groceries > 0} ? ${budget.groceries} : ''">
                             </div>
                         </div>
 
@@ -357,7 +363,8 @@
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
                                 <input type="text" inputmode="numeric" pattern="[0-9]*"
-                                       name="subscriptions" placeholder="0" class="expense-input">
+                                       name="subscriptions" placeholder="0" class="expense-input"
+                                       th:value="${budget != null and budget.subscriptions > 0} ? ${budget.subscriptions} : ''">
                             </div>
                         </div>
 
@@ -373,7 +380,24 @@
                         Miscellaneous Expenses
                     </div>
 
-                    <div id="varContainer"></div>
+                    <div id="varContainer">
+                        <!-- Pre-fill existing variable rows for returning users -->
+                        <div th:if="${varTitles != null and !varTitles.isEmpty()}"
+                             th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}"
+                             class="var-row">
+                            <input type="text" name="variableTitle"
+                                   th:value="${varTitles[i]}" placeholder="Expense name">
+                            <div class="exp-input-wrap" style="flex:1">
+                                <span class="sym">$</span>
+                                <input type="number" name="variableAmount" min="0" step="0.01"
+                                       th:value="${varAmounts != null and varAmounts.size() > i} ? ${varAmounts[i]} : 0"
+                                       placeholder="0" class="expense-input">
+                            </div>
+                            <button type="button" class="btn-remove-row" onclick="removeRow(this)">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
 
                     <button type="button" class="btn-add-expense" onclick="addRow()">
                         <i class="fa-solid fa-plus"></i> Add Expense
