@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Profile Settings - FINVISION</title>
+    <title>Profile - FINVISION</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -10,59 +10,110 @@
 
 <div class="dashboard-wrapper">
 
-    <!-- SIDEBAR -->
     <aside th:replace="~{basetemplate :: sidebar}"></aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main">
 
         <div th:replace="~{basetemplate :: topbar}"></div>
 
         <div class="profile-container">
-            <h1>Profile Settings</h1>
 
-            <!-- Personal Information -->
-            <section class="profile-card">
-                <h2>Personal Information</h2>
-                <form method="post" th:action="@{/profile/update}">
-                    <label>Name:</label>
-                    <input type="text" name="name" th:value="${user.name}" required>
+            <!-- Instagram-style header -->
+            <div class="profile-ig-header">
+                <div class="profile-avatar-lg">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="profile-ig-meta">
+                    <div class="profile-ig-row1">
+                        <span class="profile-ig-uname" th:text="${user.username}">username</span>
+                        <button class="btn-ig-action" onclick="toggleSection('edit-personal')">Edit Profile</button>
+                        <button class="btn-ig-action" onclick="toggleSection('edit-password')">Change Password</button>
+                    </div>
+                    <p class="profile-ig-fullname"
+                       th:text="${user.name != null and !#strings.isEmpty(user.name)} ? ${user.name} : ''"></p>
+                    <p class="profile-ig-email" th:text="${user.email != null} ? ${user.email} : ''"></p>
+                </div>
+            </div>
 
-                    <label>Email:</label>
-                    <input type="email" name="email" th:value="${user.email}" required>
+            <div th:if="${success}" class="profile-msg success" th:text="${success}"></div>
+            <div th:if="${error}"   class="profile-msg error"   th:text="${error}"></div>
 
-                    <label>Username:</label>
-                    <input type="text" name="username" th:value="${user.username}" required>
+            <!-- Personal Information (hidden by default) -->
+            <div id="edit-personal" class="profile-section-toggle">
+                <section class="profile-card">
+                    <h3><i class="fa-solid fa-user-pen"></i> Personal Information</h3>
+                    <form method="post" th:action="@{/profile/update}">
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Full Name</span></div>
+                            <div class="settings-field">
+                                <input type="text" name="name" th:value="${user.name}" placeholder="Enter your full name">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Email</span></div>
+                            <div class="settings-field">
+                                <input type="email" name="email" th:value="${user.email}" placeholder="Enter your email">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Username</span></div>
+                            <div class="settings-field">
+                                <input type="text" name="username" th:value="${user.username}" required>
+                            </div>
+                        </div>
+                        <div class="settings-actions">
+                            <button type="submit" class="btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
 
-                    <button type="submit" class="btn-primary">Save Changes</button>
-                </form>
-            </section>
+            <!-- Security (hidden by default) -->
+            <div id="edit-password" class="profile-section-toggle">
+                <section class="profile-card">
+                    <h3><i class="fa-solid fa-lock"></i> Security</h3>
+                    <form method="post" th:action="@{/profile/password}">
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Current Password</span></div>
+                            <div class="settings-field">
+                                <input type="password" name="currentPassword" placeholder="Enter current password">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>New Password</span></div>
+                            <div class="settings-field">
+                                <input type="password" name="newPassword" placeholder="Enter new password">
+                            </div>
+                        </div>
+                        <div class="settings-row">
+                            <div class="settings-label"><span>Confirm Password</span></div>
+                            <div class="settings-field">
+                                <input type="password" name="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        <div class="settings-actions">
+                            <button type="submit" class="btn-primary">Update Password</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
 
-            <!-- Security -->
-            <section class="profile-card">
-                <h2>Security</h2>
-                <form method="post" th:action="@{/profile/password}">
-                    <label>Current Password:</label>
-                    <input type="password" name="currentPassword">
-
-                    <label>New Password:</label>
-                    <input type="password" name="newPassword">
-
-                    <label>Confirm New Password:</label>
-                    <input type="password" name="confirmPassword">
-
-                    <button type="submit" class="btn-primary">Update Password</button>
-                </form>
-            </section>
-
-            <!-- Danger Zone -->
+            <!-- Danger Zone (always visible) -->
             <section class="profile-card danger-zone">
-                <h2>Danger Zone</h2>
-                <p>Deleting your account is permanent and cannot be undone.</p>
-                <form method="post" th:action="@{/profile/delete}">
-                    <button type="submit" class="btn-danger">Delete Account</button>
-                </form>
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
+                <div class="settings-row">
+                    <div class="settings-label">
+                        <span>Delete Account</span>
+                        <small>Permanent and cannot be undone</small>
+                    </div>
+                    <div class="settings-field">
+                        <form method="post" th:action="@{/profile/delete}">
+                            <button type="submit" class="btn-danger">Delete Account</button>
+                        </form>
+                    </div>
+                </div>
             </section>
+
         </div>
 
     </main>
@@ -75,6 +126,11 @@
     menuToggle.addEventListener('click', () => {
         navMenu.classList.toggle('show');
     });
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('open');
+    }
 </script>
 
 <th:block th:replace="~{basetemplate :: darkMode}"></th:block>
