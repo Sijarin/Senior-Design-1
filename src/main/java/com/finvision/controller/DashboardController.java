@@ -4,15 +4,20 @@ package com.finvision.controller;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.finvision.model.Budget;
+import com.finvision.model.Bill;
 import com.finvision.model.ScannedReceipt;
 import com.finvision.repository.BudgetRepository;
+import com.finvision.repository.BillRepository;
 import com.finvision.repository.ScannedReceiptRepository;
+import com.finvision.service.BillService;
 
 @Controller
 public class DashboardController {
@@ -22,6 +27,15 @@ public class DashboardController {
 
     @Autowired
     private ScannedReceiptRepository receiptRepository;
+
+    @Autowired
+    private BillRepository billRepository;
+
+    @Autowired
+    private BillService billService;
+
+    private static final DateTimeFormatter UI_DATE = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("MMMM yyyy");
 
     // ─── Helper: sum this month's scanned receipts for a user ───────────────
     private double receiptTotal(String username) {
@@ -49,6 +63,76 @@ public class DashboardController {
         }
     }
 
+    private String formatDueDate(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        try {
+            return LocalDate.parse(raw).format(UI_DATE);
+        } catch (DateTimeParseException ignored) {
+            return raw;
+        }
+    }
+
+    private Budget resolveBudgetForCurrentMonth(String username) {
+        String month = LocalDate.now().format(MONTH_FMT);
+        return budgetRepository.findByUsernameAndMonth(username, month)
+                .orElseGet(() -> budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null));
+    }
+
+    private double billTotalForCurrentMonth(String username) {
+        if (username == null || username.isBlank()) return 0;
+        LocalDate now = LocalDate.now();
+        return billRepository.findByUsernameOrderByDueDateAsc(username).stream()
+                .filter(b -> b.getDueDate() != null
+                        && b.getDueDate().getYear() == now.getYear()
+                        && b.getDueDate().getMonth() == now.getMonth())
+                .mapToDouble(Bill::getAmount)
+                .sum();
+    }
+
+    private String bucketForBillCategory(String category) {
+        String c = (category == null) ? "" : category.trim().toLowerCase();
+        if (c.contains("utility") || c.contains("water") || c.contains("electric")
+                || c.contains("internet") || c.contains("gas") || c.contains("power")) return "Utilities";
+        if (c.contains("rent") || c.contains("housing") || c.contains("mortgage")) return "Rent";
+        if (c.contains("insurance")) return "Insurance";
+        if (c.contains("grocery") || c.contains("food")) return "Groceries";
+        if (c.contains("subscription") || c.contains("streaming")) return "Subscriptions";
+        if (c.isBlank()) return "Other Bills";
+        return category.trim();
+    }
+
+    private void addBillsToPieAndGetTotal(String username,
+            java.util.List<String> pieLabels, java.util.List<Double> pieData, double[] totalOut) {
+        if (username == null || username.isBlank()) {
+            totalOut[0] = 0;
+            return;
+        }
+        LocalDate now = LocalDate.now();
+        java.util.Map<String, Double> byCat = new java.util.LinkedHashMap<>();
+        double sum = 0;
+        for (Bill b : billRepository.findByUsernameOrderByDueDateAsc(username)) {
+            if (b.getDueDate() == null
+                    || b.getDueDate().getYear() != now.getYear()
+                    || b.getDueDate().getMonth() != now.getMonth()) continue;
+            double amt = b.getAmount();
+            if (amt <= 0) continue;
+            sum += amt;
+            byCat.merge(bucketForBillCategory(b.getCategory()), amt, Double::sum);
+        }
+        for (java.util.Map.Entry<String, Double> e : byCat.entrySet()) {
+            if (e.getValue() > 0) {
+                String label = e.getKey();
+                int idx = pieLabels.indexOf(label);
+                if (idx >= 0) pieData.set(idx, pieData.get(idx) + e.getValue());
+                else {
+                    pieLabels.add(label);
+                    pieData.add(e.getValue());
+                }
+            }
+        }
+        totalOut[0] = sum;
+    }
+
     @GetMapping("/dashboard")
     public String dashboard(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : "User";
@@ -56,7 +140,7 @@ public class DashboardController {
         model.addAttribute("currentDate",
             LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")));
 
-        Budget budget = budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null);
+        Budget budget = resolveBudgetForCurrentMonth(username);
 
         if (budget != null) {
             double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -69,8 +153,9 @@ public class DashboardController {
                 for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
             }
 
-            // Add scanned receipts for this month
+            // Add scanned receipts + bill manager amounts for this month
             expenses += receiptTotal(username);
+            expenses += billTotalForCurrentMonth(username);
 
             double savings     = income - expenses;
             double savingsRate = (income == 0) ? 0 : Math.max((savings / income) * 100, 0);
@@ -94,6 +179,8 @@ public class DashboardController {
                 }
             }
             addReceiptsToPie(username, pieLabels, pieData);
+            double[] billTotal = new double[1];
+            addBillsToPieAndGetTotal(username, pieLabels, pieData, billTotal);
 
             model.addAttribute("hasBudget",   true);
             model.addAttribute("income",      String.format("%.2f", income));
@@ -115,9 +202,7 @@ public class DashboardController {
     @GetMapping("/spending-visualization")
     public String spendingVisualization(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : null;
-        Budget budget = (username != null)
-            ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
-            : null;
+        Budget budget = (username != null) ? resolveBudgetForCurrentMonth(username) : null;
 
         if (budget != null) {
             double income = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -148,9 +233,12 @@ public class DashboardController {
                 }
             }
 
-            // Add receipt breakdown for this month
+            // Add receipt + bill breakdown for this month
             addReceiptsToPie(username, pieLabels, pieData);
             totalExpenses += receiptTotal(username);
+            double[] billTotal = new double[1];
+            addBillsToPieAndGetTotal(username, pieLabels, pieData, billTotal);
+            totalExpenses += billTotal[0];
 
             model.addAttribute("income", income);
             model.addAttribute("totalExpenses", totalExpenses);
@@ -176,12 +264,12 @@ public class DashboardController {
         model.addAttribute("currentMonth", currentMonth);
 
         if (principal != null) {
-            Budget existing = budgetRepository
-                    .findTopByUsernameOrderByIdDesc(principal.getName()).orElse(null);
+            Budget existing = resolveBudgetForCurrentMonth(principal.getName());
             if (existing != null) {
                 model.addAttribute("budget", existing);
                 model.addAttribute("varTitles",  existing.getVariableTitle());
                 model.addAttribute("varAmounts", existing.getVariableAmount());
+                model.addAttribute("varDueDates", existing.getVariableDueDate());
             }
         }
         return "BudgetSet";
@@ -190,9 +278,7 @@ public class DashboardController {
 @GetMapping("/predictive-cash-flow")
 public String predictiveCashFlow(Principal principal, Model model) {
     String username = (principal != null) ? principal.getName() : null;
-    Budget budget = (username != null)
-        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
-        : null;
+    Budget budget = (username != null) ? resolveBudgetForCurrentMonth(username) : null;
 
     if (budget != null) {
         double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -205,8 +291,9 @@ public String predictiveCashFlow(Principal principal, Model model) {
             for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
         }
 
-        // Add scanned receipts for this month
+        // Add scanned receipts + bill manager amounts for this month
         expenses += receiptTotal(username);
+        expenses += billTotalForCurrentMonth(username);
 
         double monthlySavings = income - expenses;
         double savingsRate    = (income == 0) ? 0 : (monthlySavings / income) * 100;
@@ -253,11 +340,25 @@ public String predictiveCashFlow(Principal principal, Model model) {
 }
 
 @GetMapping("/alerts")
-public String alerts(Principal principal, Model model) {
+public String alerts(@RequestParam(required = false) String editBillId,
+                     Principal principal, Model model) {
     String username = (principal != null) ? principal.getName() : null;
-    Budget budget = (username != null)
-        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
-        : null;
+    Budget budget = (username != null) ? resolveBudgetForCurrentMonth(username) : null;
+    BillService.AlertsBillView billView = (username != null)
+            ? billService.buildAlertsBillView(username)
+            : new BillService.AlertsBillView(
+                    java.util.Collections.emptyList(),
+                    java.util.Collections.emptyList(),
+                    java.util.Collections.emptyList(),
+                    java.util.Collections.emptyList(),
+                    java.util.Collections.emptyList(),
+                    0, 0, 0, "$0.00", "$0.00"
+            );
+
+    Bill editingBill = null;
+    if (username != null && editBillId != null && !editBillId.isBlank()) {
+        editingBill = billRepository.findByIdAndUsername(editBillId, username).orElse(null);
+    }
 
     if (budget != null) {
         double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -270,8 +371,9 @@ public String alerts(Principal principal, Model model) {
             for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
         }
 
-        // Add scanned receipts for this month
+        // Add scanned receipts + bill manager amounts for this month
         expenses += receiptTotal(username);
+        expenses += billTotalForCurrentMonth(username);
 
         double remaining = income - expenses;
         double percent   = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
@@ -283,17 +385,18 @@ public String alerts(Principal principal, Model model) {
         model.addAttribute("expenses",   String.format("%.2f", expenses));
         model.addAttribute("remaining",  String.format("%.2f", remaining));
         model.addAttribute("percent",    String.format("%.0f", percent));
-        model.addAttribute("rent",         String.format("%.2f", budget.getRent()));
-        model.addAttribute("utilities",    String.format("%.2f", budget.getUtilities()));
-        model.addAttribute("insurance",    String.format("%.2f", budget.getInsurance()));
-        model.addAttribute("groceries",    String.format("%.2f", budget.getGroceries()));
-        model.addAttribute("subscriptions",String.format("%.2f", budget.getSubscriptions()));
-        model.addAttribute("varTitles",    budget.getVariableTitle());
-        model.addAttribute("varAmounts",   budget.getVariableAmount());
     } else {
         model.addAttribute("hasBudget", false);
         model.addAttribute("status", "none");
     }
+
+    model.addAttribute("billView", billView);
+    model.addAttribute("editingBill", editingBill);
+    model.addAttribute("defaultReminderBefore", java.util.List.of(7, 3, 1, 0));
+    model.addAttribute("defaultOverdueAfter", java.util.List.of(1, 3));
+    model.addAttribute("activeBillReminders", username != null
+            ? billService.buildActiveReminderItems(username)
+            : java.util.Collections.emptyList());
 
     model.addAttribute("currentMonth",
         LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
@@ -304,9 +407,7 @@ public String alerts(Principal principal, Model model) {
 @GetMapping("/insights")
 public String insights(Principal principal, Model model) {
     String username = (principal != null) ? principal.getName() : null;
-    Budget budget = (username != null)
-        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
-        : null;
+    Budget budget = (username != null) ? resolveBudgetForCurrentMonth(username) : null;
 
     double income;
     double expenses;
@@ -327,8 +428,11 @@ public String insights(Principal principal, Model model) {
             }
         }
 
-        // Add scanned receipts for this month
-        if (username != null) expenses += receiptTotal(username);
+        // Add scanned receipts + bill manager amounts for this month
+        if (username != null) {
+            expenses += receiptTotal(username);
+            expenses += billTotalForCurrentMonth(username);
+        }
 
         remaining = income - expenses;
         percent = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);

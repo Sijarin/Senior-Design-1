@@ -1,7 +1,9 @@
 package com.finvision.controller;
 
-import com.finvision.model.User;
-import com.finvision.repository.UserRepository;
+import java.security.Principal;
+import java.util.Base64;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -11,9 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
-import java.util.Base64;
-import java.util.concurrent.ThreadLocalRandom;
+import com.finvision.model.User;
+import com.finvision.repository.UserRepository;
 
 @Controller
 public class ProfileController {
@@ -48,7 +49,7 @@ public class ProfileController {
         return "profile";
     }
 
-    @PostMapping("/profile/update")
+    @PostMapping("/profile/edit")
     public String updateProfile(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
@@ -68,7 +69,7 @@ public class ProfileController {
         return "profile";
     }
 
-    @PostMapping("/profile/password")
+    @PostMapping("/profile/change-password")
     public String changePassword(
             @RequestParam String currentPassword,
             @RequestParam String newPassword,
