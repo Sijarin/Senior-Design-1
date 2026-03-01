@@ -24,10 +24,7 @@ public class DashboardController {
         model.addAttribute("currentDate",
             LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")));
 
-        Budget budget = budgetRepository.findAll()
-                .stream()
-                .reduce((first, second) -> second)
-                .orElse(null);
+        Budget budget = budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null);
 
         if (budget != null) {
             double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -45,7 +42,6 @@ public class DashboardController {
             double percent     = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
             String status      = savings < 0 ? "overspending" : (savings < income * 0.2 ? "low" : "healthy");
 
-            // Pie chart data
             java.util.List<String> pieLabels = new java.util.ArrayList<>();
             java.util.List<Double> pieData   = new java.util.ArrayList<>();
             if (budget.getRent()          > 0) { pieLabels.add("Rent");          pieData.add(budget.getRent()); }
@@ -81,11 +77,11 @@ public class DashboardController {
     }
 
     @GetMapping("/spending-visualization")
-    public String spendingVisualization(Model model) {
-        Budget budget = budgetRepository.findAll()
-                .stream()
-                .reduce((first, second) -> second)
-                .orElse(null);
+    public String spendingVisualization(Principal principal, Model model) {
+        String username = (principal != null) ? principal.getName() : null;
+        Budget budget = (username != null)
+            ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
+            : null;
 
         if (budget != null) {
             double income = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -134,19 +130,29 @@ public class DashboardController {
     }
 
     @GetMapping("/budget")
-    public String budget(Model model) {
+    public String budget(Principal principal, Model model) {
         String currentMonth = LocalDate.now()
                 .format(DateTimeFormatter.ofPattern("MMMM yyyy"));
         model.addAttribute("currentMonth", currentMonth);
+
+        if (principal != null) {
+            Budget existing = budgetRepository
+                    .findTopByUsernameOrderByIdDesc(principal.getName()).orElse(null);
+            if (existing != null) {
+                model.addAttribute("budget", existing);
+                model.addAttribute("varTitles",  existing.getVariableTitle());
+                model.addAttribute("varAmounts", existing.getVariableAmount());
+            }
+        }
         return "BudgetSet";
     }
 
 @GetMapping("/predictive-cash-flow")
-public String predictiveCashFlow(Model model) {
-    Budget budget = budgetRepository.findAll()
-            .stream()
-            .reduce((first, second) -> second)
-            .orElse(null);
+public String predictiveCashFlow(Principal principal, Model model) {
+    String username = (principal != null) ? principal.getName() : null;
+    Budget budget = (username != null)
+        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
+        : null;
 
     if (budget != null) {
         double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -204,11 +210,11 @@ public String predictiveCashFlow(Model model) {
 }
 
 @GetMapping("/alerts")
-public String alerts(Model model) {
-    Budget budget = budgetRepository.findAll()
-            .stream()
-            .reduce((first, second) -> second)
-            .orElse(null);
+public String alerts(Principal principal, Model model) {
+    String username = (principal != null) ? principal.getName() : null;
+    Budget budget = (username != null)
+        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
+        : null;
 
     if (budget != null) {
         double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
@@ -250,11 +256,11 @@ public String alerts(Model model) {
 }
 
 @GetMapping("/insights")
-public String insights(Model model) {
-    Budget budget = budgetRepository.findAll()
-            .stream()
-            .reduce((first, second) -> second)
-            .orElse(null);
+public String insights(Principal principal, Model model) {
+    String username = (principal != null) ? principal.getName() : null;
+    Budget budget = (username != null)
+        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
+        : null;
 
     double income;
     double expenses;
