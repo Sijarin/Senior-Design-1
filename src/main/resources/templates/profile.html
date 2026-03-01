@@ -2,134 +2,480 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Profile - FINVISION</title>
+    <title>Profile – FinVision</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        .profile-page { padding: 1.8rem 2rem 3rem; max-width: 860px; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .anim-1 { animation: fadeInUp 0.5s ease both; }
+        .anim-2 { animation: fadeInUp 0.5s 0.1s ease both; }
+        .anim-3 { animation: fadeInUp 0.5s 0.2s ease both; }
+        .anim-4 { animation: fadeInUp 0.5s 0.3s ease both; }
+        .anim-5 { animation: fadeInUp 0.5s 0.4s ease both; }
+
+        /* ── Hero ── */
+        .profile-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            border-radius: 24px;
+            padding: 2.2rem 2.5rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(102,126,234,0.4);
+        }
+        .profile-hero::before {
+            content: ''; position: absolute;
+            width: 280px; height: 280px;
+            background: rgba(255,255,255,0.07); border-radius: 50%;
+            top: -100px; right: -60px; pointer-events: none;
+        }
+        .profile-hero::after {
+            content: ''; position: absolute;
+            width: 140px; height: 140px;
+            background: rgba(255,255,255,0.06); border-radius: 50%;
+            bottom: -50px; right: 200px; pointer-events: none;
+        }
+
+        /* Avatar */
+        .hero-avatar-wrap { position: relative; flex-shrink: 0; z-index: 1; }
+        .hero-avatar {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.6);
+            object-fit: cover; display: block;
+        }
+        .hero-avatar-placeholder {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900; color: #fff;
+        }
+        .hero-avatar-edit {
+            position: absolute; bottom: 2px; right: 2px;
+            width: 30px; height: 30px; background: #fff;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 0.75rem; color: #667eea;
+            cursor: pointer; border: 2px solid #667eea;
+            transition: background 0.2s, color 0.2s;
+        }
+        .hero-avatar-edit:hover { background: #667eea; color: #fff; }
+        #photoInput { display: none; }
+
+        .hero-info { z-index: 1; }
+        .hero-name { font-size: 1.75rem; font-weight: 900; margin-bottom: 0.25rem; text-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .hero-uname { font-size: 0.9rem; opacity: 0.85; margin-bottom: 0.5rem; }
+        .hero-email-row { font-size: 0.82rem; opacity: 0.8; display: flex; align-items: center; gap: 0.4rem; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50px; padding: 0.3rem 0.85rem;
+            font-size: 0.75rem; font-weight: 700; margin-top: 0.6rem;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── Section card ── */
+        .pf-card {
+            background: var(--bg-card, #fff);
+            border-radius: 20px;
+            padding: 1.6rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+            margin-bottom: 1.4rem;
+        }
+        .pf-card-title {
+            display: flex; align-items: center; gap: 0.65rem;
+            font-size: 1rem; font-weight: 800;
+            color: var(--text-main, #2c3e50);
+            margin-bottom: 1.4rem; padding-bottom: 0.9rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .card-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; color: #fff; flex-shrink: 0;
+        }
+
+        /* ── Form ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+        .form-grid.single { grid-template-columns: 1fr; }
+        .field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .field-group label {
+            font-size: 0.75rem; font-weight: 700;
+            color: var(--text-muted, #666);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .field-wrap { position: relative; }
+        .field-icon {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: #667eea; font-size: 0.9rem; pointer-events: none;
+        }
+        .field-wrap input {
+            width: 100%;
+            padding: 0.72rem 0.85rem 0.72rem 2.2rem;
+            border: 2px solid #e8eaf6; border-radius: 11px;
+            font-size: 0.95rem; font-weight: 500;
+            background: var(--bg-input, #fff);
+            color: var(--text-main, #2c3e50);
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .field-wrap input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.14); }
+        .field-wrap input.has-eye { padding-right: 2.5rem; }
+        .eye-toggle {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: #aaa; font-size: 0.9rem; padding: 0; transition: color 0.2s;
+        }
+        .eye-toggle:hover { color: #667eea; }
+
+        /* Banking note */
+        .banking-note {
+            background: rgba(102,126,234,0.07); border-left: 4px solid #667eea;
+            border-radius: 10px; padding: 0.8rem 1rem;
+            font-size: 0.8rem; color: var(--text-muted, #555);
+            margin-bottom: 1.1rem;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .banking-note i { color: #667eea; flex-shrink: 0; }
+
+        /* Buttons */
+        .btn-save {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.72rem 1.6rem;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff; border: none; border-radius: 11px;
+            font-size: 0.92rem; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(102,126,234,0.5); }
+        .btn-danger {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.72rem 1.6rem;
+            background: linear-gradient(135deg,#e74c3c,#c0392b);
+            color: #fff; border: none; border-radius: 11px;
+            font-size: 0.92rem; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(231,76,60,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(231,76,60,0.45); }
+
+        /* Alerts */
+        .alert {
+            display: flex; align-items: center; gap: 0.7rem;
+            padding: 0.85rem 1.1rem; border-radius: 11px;
+            font-size: 0.88rem; font-weight: 600; margin-bottom: 1.1rem;
+        }
+        .alert-success { background: #d4f5ef; color: #0ba360; border-left: 4px solid #0ba360; }
+        .alert-error   { background: #ffeaea; color: #c0392b; border-left: 4px solid #c0392b; }
+
+        /* Danger */
+        .danger-card {
+            background: #fff5f5; border: 2px solid #ffc9c9;
+            border-radius: 20px; padding: 1.6rem 2rem; margin-bottom: 1.4rem;
+        }
+        .danger-card .pf-card-title { border-color: #ffd0d0; }
+        .danger-text { font-size: 0.88rem; color: #c0392b; margin-bottom: 1.2rem; line-height: 1.6; }
+
+        /* Dark mode */
+        body.dark .pf-card  { background: #1e2235; }
+        body.dark .pf-card-title { color: #e0e0e0; border-color: #2d3250; }
+        body.dark .field-wrap input { background: #252840; border-color: #3a3f6e; color: #e0e0e0; }
+        body.dark .field-group label { color: #9aa; }
+        body.dark .banking-note { background: rgba(102,126,234,0.1); color: #9aa; }
+        body.dark .danger-card { background: #2d1c1c; border-color: #6b3030; }
+        body.dark .danger-text { color: #f48080; }
+
+        @media (max-width: 650px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .profile-hero { flex-direction: column; text-align: center; padding: 1.8rem; }
+            .hero-email-row { justify-content: center; }
+        }
+    </style>
 </head>
 <body>
-
 <div class="dashboard-wrapper">
 
     <aside th:replace="~{basetemplate :: sidebar}"></aside>
 
     <main class="main">
-
         <div th:replace="~{basetemplate :: topbar}"></div>
 
-        <div class="profile-container">
+        <div class="profile-page">
 
-            <!-- Instagram-style header -->
-            <div class="profile-ig-header">
-                <div class="profile-avatar-lg">
-                    <i class="fa-solid fa-user"></i>
-                </div>
-                <div class="profile-ig-meta">
-                    <div class="profile-ig-row1">
-                        <span class="profile-ig-uname" th:text="${user.username}">username</span>
-                        <button class="btn-ig-action" onclick="toggleSection('edit-personal')">Edit Profile</button>
-                        <button class="btn-ig-action" onclick="toggleSection('edit-password')">Change Password</button>
+            <!-- ══ HERO ══ -->
+            <div class="profile-hero anim-1">
+                <div class="hero-avatar-wrap">
+                    <img th:if="${user.profilePhoto != null and !#strings.isEmpty(user.profilePhoto)}"
+                         th:src="${user.profilePhoto}" alt="Photo" class="hero-avatar">
+                    <div th:unless="${user.profilePhoto != null and !#strings.isEmpty(user.profilePhoto)}"
+                         class="hero-avatar-placeholder"
+                         th:text="${user.name != null and !#strings.isEmpty(user.name)}
+                                   ? ${#strings.toUpperCase(#strings.substring(user.name,0,1))}
+                                   : ${#strings.toUpperCase(#strings.substring(user.username,0,1))}">U</div>
+
+                    <div class="hero-avatar-edit" onclick="document.getElementById('photoInput').click()" title="Change Photo">
+                        <i class="fa-solid fa-camera"></i>
                     </div>
-                    <p class="profile-ig-fullname"
-                       th:text="${user.name != null and !#strings.isEmpty(user.name)} ? ${user.name} : ''"></p>
-                    <p class="profile-ig-email" th:text="${user.email != null} ? ${user.email} : ''"></p>
-                </div>
-            </div>
-
-            <div th:if="${success}" class="profile-msg success" th:text="${success}"></div>
-            <div th:if="${error}"   class="profile-msg error"   th:text="${error}"></div>
-
-            <!-- Personal Information (hidden by default) -->
-            <div id="edit-personal" class="profile-section-toggle">
-                <section class="profile-card">
-                    <h3><i class="fa-solid fa-user-pen"></i> Personal Information</h3>
-                    <form method="post" th:action="@{/profile/update}">
-                        <div class="settings-row">
-                            <div class="settings-label"><span>Full Name</span></div>
-                            <div class="settings-field">
-                                <input type="text" name="name" th:value="${user.name}" placeholder="Enter your full name">
-                            </div>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-label"><span>Email</span></div>
-                            <div class="settings-field">
-                                <input type="email" name="email" th:value="${user.email}" placeholder="Enter your email">
-                            </div>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-label"><span>Username</span></div>
-                            <div class="settings-field">
-                                <input type="text" name="username" th:value="${user.username}" required>
-                            </div>
-                        </div>
-                        <div class="settings-actions">
-                            <button type="submit" class="btn-primary">Save Changes</button>
-                        </div>
+                    <form id="photoForm" th:action="@{/profile/photo}" method="POST" enctype="multipart/form-data">
+                        <input type="file" id="photoInput" name="photo" accept="image/*"
+                               onchange="document.getElementById('photoForm').submit()">
                     </form>
-                </section>
-            </div>
+                </div>
 
-            <!-- Security (hidden by default) -->
-            <div id="edit-password" class="profile-section-toggle">
-                <section class="profile-card">
-                    <h3><i class="fa-solid fa-lock"></i> Security</h3>
-                    <form method="post" th:action="@{/profile/password}">
-                        <div class="settings-row">
-                            <div class="settings-label"><span>Current Password</span></div>
-                            <div class="settings-field">
-                                <input type="password" name="currentPassword" placeholder="Enter current password">
-                            </div>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-label"><span>New Password</span></div>
-                            <div class="settings-field">
-                                <input type="password" name="newPassword" placeholder="Enter new password">
-                            </div>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-label"><span>Confirm Password</span></div>
-                            <div class="settings-field">
-                                <input type="password" name="confirmPassword" placeholder="Confirm new password">
-                            </div>
-                        </div>
-                        <div class="settings-actions">
-                            <button type="submit" class="btn-primary">Update Password</button>
-                        </div>
-                    </form>
-                </section>
-            </div>
-
-            <!-- Danger Zone (always visible) -->
-            <section class="profile-card danger-zone">
-                <h3><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</h3>
-                <div class="settings-row">
-                    <div class="settings-label">
-                        <span>Delete Account</span>
-                        <small>Permanent and cannot be undone</small>
+                <div class="hero-info">
+                    <div class="hero-name"
+                         th:text="${user.name != null and !#strings.isEmpty(user.name)} ? ${user.name} : ${user.username}">
+                        User</div>
+                    <div class="hero-uname"><i class="fa-solid fa-at" style="opacity:0.7"></i>
+                        &nbsp;<span th:text="${user.username}">username</span></div>
+                    <div class="hero-email-row"
+                         th:if="${user.email != null and !#strings.isEmpty(user.email)}">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span th:text="${user.email}">email@example.com</span>
                     </div>
-                    <div class="settings-field">
-                        <form method="post" th:action="@{/profile/delete}">
-                            <button type="submit" class="btn-danger">Delete Account</button>
-                        </form>
+                    <div class="hero-badge">
+                        <i class="fa-solid fa-shield-halved"></i> FinVision Member
                     </div>
                 </div>
-            </section>
+            </div>
+
+            <!-- Photo alerts -->
+            <div th:if="${photoSuccess}" class="alert alert-success anim-2">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${photoSuccess}"></span>
+            </div>
+            <div th:if="${photoError}" class="alert alert-error anim-2">
+                <i class="fa-solid fa-circle-xmark"></i> <span th:text="${photoError}"></span>
+            </div>
+
+            <!-- ══ PERSONAL INFORMATION ══ -->
+            <div class="pf-card anim-2">
+                <div class="pf-card-title">
+                    <div class="card-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    Personal Information
+                </div>
+
+                <div th:if="${updateSuccess}" class="alert alert-success">
+                    <i class="fa-solid fa-circle-check"></i> <span th:text="${updateSuccess}"></span>
+                </div>
+
+                <form th:action="@{/profile/update}" method="POST">
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="name">Full Name</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-id-card field-icon"></i>
+                                <input type="text" id="name" name="name" placeholder="Your full name"
+                                       th:value="${user.name}">
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label for="email">Email Address</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-envelope field-icon"></i>
+                                <input type="email" id="email" name="email" placeholder="email@example.com"
+                                       th:value="${user.email}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-grid single" style="margin-bottom:1.4rem;">
+                        <div class="field-group">
+                            <label>Username (read-only)</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-at field-icon"></i>
+                                <input type="text" th:value="${user.username}" disabled
+                                       style="opacity:0.55;cursor:not-allowed;">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+
+            <!-- ══ BANKING INFORMATION ══ -->
+            <div class="pf-card anim-3">
+                <div class="pf-card-title">
+                    <div class="card-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d);">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+                    Banking Information
+                </div>
+
+                <div class="banking-note">
+                    <i class="fa-solid fa-lock"></i>
+                    Stored securely and visible only to you. Click the eye icon to reveal values.
+                </div>
+
+                <form th:action="@{/profile/update}" method="POST">
+                    <input type="hidden" name="name"  th:value="${user.name}">
+                    <input type="hidden" name="email" th:value="${user.email}">
+
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label>Account Number</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-hashtag field-icon"></i>
+                                <input type="password" id="accNum" name="accountNumber"
+                                       placeholder="e.g. 123456789"
+                                       th:value="${user.accountNumber}"
+                                       class="has-eye">
+                                <button type="button" class="eye-toggle" onclick="toggleMask('accNum',this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>Routing Number</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-route field-icon"></i>
+                                <input type="password" id="routNum" name="routingNumber"
+                                       placeholder="e.g. 021000021"
+                                       th:value="${user.routingNumber}"
+                                       class="has-eye">
+                                <button type="button" class="eye-toggle" onclick="toggleMask('routNum',this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save" style="background:linear-gradient(135deg,#11998e,#38ef7d);box-shadow:0 4px 14px rgba(17,153,142,0.35);">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Banking Info
+                    </button>
+                </form>
+            </div>
+
+            <!-- ══ CHANGE PASSWORD ══ -->
+            <div class="pf-card anim-4">
+                <div class="pf-card-title">
+                    <div class="card-icon" style="background:linear-gradient(135deg,#f7971e,#ffd200);">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    Change Password
+                </div>
+
+                <div th:if="${passwordSuccess}" class="alert alert-success">
+                    <i class="fa-solid fa-circle-check"></i> <span th:text="${passwordSuccess}"></span>
+                </div>
+                <div th:if="${passwordError}" class="alert alert-error">
+                    <i class="fa-solid fa-circle-xmark"></i> <span th:text="${passwordError}"></span>
+                </div>
+
+                <form th:action="@{/profile/password}" method="POST">
+                    <div class="form-grid single">
+                        <div class="field-group">
+                            <label>Current Password</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-key field-icon"></i>
+                                <input type="password" id="curPwd" name="currentPassword"
+                                       placeholder="Enter your current password" class="has-eye" required>
+                                <button type="button" class="eye-toggle" onclick="toggleMask('curPwd',this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label>New Password</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-lock field-icon"></i>
+                                <input type="password" id="newPwd" name="newPassword"
+                                       placeholder="Min. 6 characters" class="has-eye"
+                                       oninput="checkMatch()" required>
+                                <button type="button" class="eye-toggle" onclick="toggleMask('newPwd',this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>Confirm New Password</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-lock field-icon"></i>
+                                <input type="password" id="confirmPwd" name="confirmPassword"
+                                       placeholder="Repeat new password" class="has-eye"
+                                       oninput="checkMatch()" required>
+                                <button type="button" class="eye-toggle" onclick="toggleMask('confirmPwd',this)">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="matchMsg" style="font-size:0.8rem;margin-bottom:1rem;display:none;"></div>
+                    <button type="submit" class="btn-save" style="background:linear-gradient(135deg,#f7971e,#f4600c);box-shadow:0 4px 14px rgba(247,151,30,0.4);">
+                        <i class="fa-solid fa-shield-halved"></i> Update Password
+                    </button>
+                </form>
+            </div>
+
+            <!-- ══ DANGER ZONE ══ -->
+            <div class="danger-card anim-5">
+                <div class="pf-card-title">
+                    <div class="card-icon" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    Danger Zone
+                </div>
+                <div class="danger-text">
+                    Deleting your account is <strong>permanent and cannot be undone.</strong>
+                    All budget data, goals, and profile information will be erased forever.
+                </div>
+                <form method="POST" th:action="@{/profile/delete}"
+                      onsubmit="return confirm('Are you absolutely sure? This action cannot be undone.')">
+                    <button type="submit" class="btn-danger">
+                        <i class="fa-solid fa-trash"></i> Delete My Account
+                    </button>
+                </form>
+            </div>
 
         </div>
-
     </main>
-
 </div>
 
+<div class="chatbot-btn"><i class="fa-solid fa-robot"></i></div>
+
 <script>
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    menuToggle.addEventListener('click', () => {
-        navMenu.classList.toggle('show');
+    document.querySelector('.menu-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.toggle('show');
     });
 
-    function toggleSection(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('open');
+    function toggleMask(inputId, btn) {
+        const inp  = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            icon.className = 'fa-solid fa-eye-slash';
+        } else {
+            inp.type = 'password';
+            icon.className = 'fa-solid fa-eye';
+        }
+    }
+
+    function checkMatch() {
+        const np  = document.getElementById('newPwd').value;
+        const cp  = document.getElementById('confirmPwd').value;
+        const msg = document.getElementById('matchMsg');
+        if (!cp) { msg.style.display = 'none'; return; }
+        msg.style.display = 'block';
+        if (np === cp) {
+            msg.style.color = '#0ba360';
+            msg.innerHTML = '<i class="fa-solid fa-circle-check"></i> Passwords match';
+        } else {
+            msg.style.color = '#e74c3c';
+            msg.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Passwords do not match';
+        }
     }
 </script>
 
