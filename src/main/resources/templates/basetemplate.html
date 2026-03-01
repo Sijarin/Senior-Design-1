@@ -27,20 +27,20 @@
 
 </aside>
 
-<!-- Shared topbar: dark mode toggle + profile icon -->
+<!-- Shared topbar: dark mode toggle + profile avatar -->
 <div th:fragment="topbar" class="topbar">
     <div></div>
     <div class="topbar-right">
         <button id="darkModeToggle" class="topbar-dark-toggle">
             <i id="darkModeIcon" class="fa-solid fa-moon"></i>
         </button>
-        <div class="profile-icon-wrapper">
-            <div class="profile-icon">
-                <a th:href="@{/profile}">
-                    <i class="fa-solid fa-user"></i>
-                </a>
-            </div>
-        </div>
+        <a th:href="@{/profile}" class="topbar-avatar-link" title="My Profile">
+            <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+                 th:src="${profilePhoto}" alt="Profile" class="topbar-avatar-img">
+            <span th:unless="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+                  class="topbar-avatar-initials"
+                  th:text="${userInitial != null} ? ${userInitial} : 'U'">U</span>
+        </a>
     </div>
 </div>
 
