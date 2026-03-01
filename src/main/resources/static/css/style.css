@@ -404,37 +404,237 @@ body {
     text-decoration: underline;
 }
 
-/* Profile page — user info cards, danger zone, and action buttons */
+/* Profile page — header card, settings rows, danger zone, buttons */
 .profile-container {
     padding: 30px;
-    max-width: 800px;
-    margin: auto;
+    max-width: 750px;
+    margin: 0 auto;
 }
 
+/* Instagram-style profile header */
+.profile-ig-header {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    padding: 20px 8px 24px 8px;
+    margin-bottom: 12px;
+}
+
+.profile-avatar-lg {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 38px;
+    flex-shrink: 0;
+}
+
+.profile-ig-meta {
+    flex: 1;
+}
+
+.profile-ig-row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.profile-ig-uname {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-main);
+}
+
+.btn-ig-action {
+    padding: 5px 14px;
+    background: transparent;
+    border: 1px solid var(--border-card);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.2s;
+}
+
+.btn-ig-action:hover {
+    background: var(--border-card);
+}
+
+.profile-ig-fullname {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0 0 3px 0;
+}
+
+.profile-ig-email {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Collapsible edit sections */
+.profile-section-toggle {
+    display: none;
+}
+
+.profile-section-toggle.open {
+    display: block;
+}
+
+/* Section cards */
 .profile-card {
     background: var(--bg-card);
-    padding: 20px;
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border: 1px solid var(--border-card);
+    overflow: hidden;
 }
 
-.danger-zone {
-    border: 1px solid red;
-}
-
-.btn-primary {
+.profile-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
     padding: 10px 16px;
-    margin-top: 10px;
+    border-bottom: 1px solid var(--border-card);
+    margin: 0;
+}
+
+.profile-card h3 i {
+    color: #667eea;
+    margin-right: 8px;
+}
+
+/* Two-column settings row */
+.settings-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-card);
+    gap: 12px;
+}
+
+.settings-row:last-of-type {
+    border-bottom: none;
+}
+
+.settings-label {
+    flex: 0 0 130px;
+}
+
+.settings-label span {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.settings-label small {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.settings-field {
+    flex: 1;
+}
+
+.settings-field input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: var(--bg-input);
+    color: var(--text-input);
+    transition: border-color 0.2s;
+}
+
+.settings-field input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 16px;
+}
+
+/* Danger zone */
+.danger-zone {
+    border: 1px solid #e74c3c;
+}
+
+.danger-zone h3 {
+    color: #e74c3c;
+    border-bottom-color: #f5b7b1;
+}
+
+.danger-zone h3 i {
+    color: #e74c3c;
+}
+
+/* Buttons */
+.btn-primary {
+    padding: 9px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.88;
 }
 
 .btn-danger {
-    background: red;
-    color: #fff;
+    padding: 9px 20px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-danger:hover {
+    opacity: 0.88;
+}
+
+/* Feedback messages */
+.profile-msg {
     padding: 10px 16px;
     border-radius: 8px;
-    border: none;
-    cursor: pointer;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-msg.success {
+    background: #eafaf1;
+    color: #1e8449;
+    border: 1px solid #a9dfbf;
+}
+
+.profile-msg.error {
+    background: #fdedec;
+    color: #c0392b;
+    border: 1px solid #f5b7b1;
 }
 
 /* Global inputs — applies theme variables to all input, textarea, and select elements */
