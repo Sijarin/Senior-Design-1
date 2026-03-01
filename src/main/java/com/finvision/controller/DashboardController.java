@@ -1,30 +1,82 @@
 package com.finvision.controller;
 
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.finvision.model.Budget;
-import com.finvision.model.User;
 import com.finvision.repository.BudgetRepository;
-import com.finvision.repository.UserRepository;
-
 @Controller
 public class DashboardController {
 
     @Autowired
     private BudgetRepository budgetRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @GetMapping("/dashboard")
-    public String dashboard() {
+    public String dashboard(Principal principal, Model model) {
+        String username = (principal != null) ? principal.getName() : "User";
+        model.addAttribute("username", username);
+        model.addAttribute("currentDate",
+            LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")));
+
+        Budget budget = budgetRepository.findAll()
+                .stream()
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        if (budget != null) {
+            double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
+            double expenses = budget.getRent() + budget.getUtilities() +
+                              budget.getInsurance() + budget.getGroceries() +
+                              budget.getSubscriptions();
+
+            java.util.List<Double> varAmounts = budget.getVariableAmount();
+            if (varAmounts != null) {
+                for (Double amt : varAmounts) { if (amt != null && amt > 0) expenses += amt; }
+            }
+
+            double savings     = income - expenses;
+            double savingsRate = (income == 0) ? 0 : Math.max((savings / income) * 100, 0);
+            double percent     = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
+            String status      = savings < 0 ? "overspending" : (savings < income * 0.2 ? "low" : "healthy");
+
+            // Pie chart data
+            java.util.List<String> pieLabels = new java.util.ArrayList<>();
+            java.util.List<Double> pieData   = new java.util.ArrayList<>();
+            if (budget.getRent()          > 0) { pieLabels.add("Rent");          pieData.add(budget.getRent()); }
+            if (budget.getUtilities()     > 0) { pieLabels.add("Utilities");     pieData.add(budget.getUtilities()); }
+            if (budget.getInsurance()     > 0) { pieLabels.add("Insurance");     pieData.add(budget.getInsurance()); }
+            if (budget.getGroceries()     > 0) { pieLabels.add("Groceries");     pieData.add(budget.getGroceries()); }
+            if (budget.getSubscriptions() > 0) { pieLabels.add("Subscriptions"); pieData.add(budget.getSubscriptions()); }
+            java.util.List<String> varTitles = budget.getVariableTitle();
+            if (varTitles != null && varAmounts != null) {
+                for (int i = 0; i < Math.min(varTitles.size(), varAmounts.size()); i++) {
+                    if (varAmounts.get(i) != null && varAmounts.get(i) > 0) {
+                        pieLabels.add(varTitles.get(i));
+                        pieData.add(varAmounts.get(i));
+                    }
+                }
+            }
+
+            model.addAttribute("hasBudget",   true);
+            model.addAttribute("income",      String.format("%.2f", income));
+            model.addAttribute("expenses",    String.format("%.2f", expenses));
+            model.addAttribute("savings",     String.format("%.2f", savings));
+            model.addAttribute("savingsRate", String.format("%.0f", savingsRate));
+            model.addAttribute("percent",     String.format("%.0f", percent));
+            model.addAttribute("status",      status);
+            model.addAttribute("pieLabels",   pieLabels);
+            model.addAttribute("pieData",     pieData);
+        } else {
+            model.addAttribute("hasBudget", false);
+            model.addAttribute("status", "none");
+        }
+
         return "Dashboard";
     }
 
@@ -87,13 +139,6 @@ public class DashboardController {
                 .format(DateTimeFormatter.ofPattern("MMMM yyyy"));
         model.addAttribute("currentMonth", currentMonth);
         return "BudgetSet";
-    }
-
-    @GetMapping("/profile")
-    public String profile(Authentication authentication, Model model) {
-        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
-        model.addAttribute("user", user);
-        return "profile";
     }
 
 @GetMapping("/predictive-cash-flow")
