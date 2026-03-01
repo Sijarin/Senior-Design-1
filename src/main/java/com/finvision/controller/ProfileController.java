@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.Base64;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Controller
 public class ProfileController {
@@ -28,6 +29,21 @@ public class ProfileController {
         if (principal == null) return "redirect:/login";
         User user = userRepository.findByUsername(principal.getName()).orElse(null);
         if (user == null) return "redirect:/login";
+
+        // Auto-generate unique 10-digit numbers on first visit
+        boolean changed = false;
+        if (user.getAccountNumber() == null || user.getAccountNumber().isBlank()) {
+            user.setAccountNumber(String.format("%010d",
+                ThreadLocalRandom.current().nextLong(1_000_000_000L, 10_000_000_000L)));
+            changed = true;
+        }
+        if (user.getRoutingNumber() == null || user.getRoutingNumber().isBlank()) {
+            user.setRoutingNumber(String.format("%010d",
+                ThreadLocalRandom.current().nextLong(1_000_000_000L, 10_000_000_000L)));
+            changed = true;
+        }
+        if (changed) userRepository.save(user);
+
         model.addAttribute("user", user);
         return "profile";
     }
@@ -36,8 +52,6 @@ public class ProfileController {
     public String updateProfile(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
-            @RequestParam(required = false) String accountNumber,
-            @RequestParam(required = false) String routingNumber,
             Principal principal, Model model) {
 
         if (principal == null) return "redirect:/login";
@@ -46,8 +60,7 @@ public class ProfileController {
 
         user.setName(name != null ? name.trim() : "");
         user.setEmail(email != null ? email.trim() : "");
-        user.setAccountNumber(accountNumber != null ? accountNumber.trim() : "");
-        user.setRoutingNumber(routingNumber != null ? routingNumber.trim() : "");
+        // accountNumber and routingNumber are auto-generated and never overwritten
         userRepository.save(user);
 
         model.addAttribute("user", user);
