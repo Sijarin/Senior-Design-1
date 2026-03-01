@@ -3,125 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Set Budget - FINVISION</title>
+    <title>Set Budget – FinVision</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Page layout ── */
+        .budget-page { padding: 1.5rem 1.8rem 3rem; max-width: 900px; }
+
+        /* ── Page header ── */
+        .budget-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 18px;
+            padding: 1.6rem 2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 6px 24px rgba(102,126,234,0.35);
+        }
+        .budget-hero .hero-icon {
+            width: 60px; height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; flex-shrink: 0;
+        }
+        .budget-hero h2 { margin: 0 0 0.2rem; font-size: 1.4rem; }
+        .budget-hero p  { margin: 0; font-size: 0.88rem; opacity: 0.88; }
+
+        /* ── Section card ── */
+        .budget-card {
+            background: var(--bg-card, #fff);
+            border-radius: 16px;
+            padding: 1.5rem 1.6rem;
+            box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+            margin-bottom: 1.4rem;
+        }
+        .budget-card .card-title {
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 1rem; font-weight: 700;
+            color: var(--text-main, #2c3e50);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .budget-card .card-title .title-icon {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; color: #fff;
+            flex-shrink: 0;
+        }
+
+        /* ── Income row ── */
+        .income-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .input-group {
+            display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .input-group label {
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-muted, #666); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .input-wrap {
+            position: relative;
+        }
+        .input-wrap .currency-symbol {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            font-size: 0.95rem; color: #667eea; font-weight: 700;
+        }
+        .input-wrap input {
+            width: 100%;
+            padding: 0.7rem 0.8rem 0.7rem 1.8rem;
+            border: 2px solid #e8eaf6;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            background: var(--bg-input, #fff);
+            color: var(--text-input, #000);
+        }
+        .input-wrap input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+        }
+
+        /* ── Fixed expense cards grid ── */
+        .expense-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+            gap: 1rem;
+        }
+        .expense-item {
+            border-radius: 12px;
+            padding: 1rem 0.9rem;
+            background: var(--bg-card, #fff);
+            border: 2px solid #eef0f8;
+            display: flex; flex-direction: column; gap: 0.5rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .expense-item:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+        }
+        .expense-item .exp-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff; margin-bottom: 0.3rem;
+        }
+        .expense-item label {
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--text-muted, #666); text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .expense-item input {
+            width: 100%;
+            padding: 0.5rem 0.6rem 0.5rem 1.5rem;
+            border: 1.5px solid #e8eaf6;
+            border-radius: 8px;
+            font-size: 0.95rem; font-weight: 600;
+            background: var(--bg-input, #fff);
+            color: var(--text-input, #000);
+            transition: border-color 0.2s;
+        }
+        .expense-item input:focus { outline: none; border-color: #667eea; }
+        .expense-item .exp-input-wrap { position: relative; }
+        .expense-item .exp-input-wrap .sym {
+            position: absolute; left: 7px; top: 50%; transform: translateY(-50%);
+            font-size: 0.85rem; color: #667eea; font-weight: 700;
+        }
+
+        /* Icon accent colors */
+        .ic-rent   { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .ic-util   { background: linear-gradient(135deg,#f7971e,#ffd200); }
+        .ic-ins    { background: linear-gradient(135deg,#11998e,#38ef7d); }
+        .ic-groc   { background: linear-gradient(135deg,#fc4a1a,#f7b733); }
+        .ic-subs   { background: linear-gradient(135deg,#4facfe,#00f2fe); }
+
+        /* ── Variable expenses ── */
+        .var-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 0.8rem;
+            align-items: end;
+            margin-bottom: 0.8rem;
+        }
+        .var-row input {
+            width: 100%;
+            padding: 0.65rem 0.8rem;
+            border: 2px solid #e8eaf6;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            background: var(--bg-input, #fff);
+            color: var(--text-input, #000);
+            transition: border-color 0.25s;
+        }
+        .var-row input:focus { outline: none; border-color: #667eea; }
+        .var-row label {
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--text-muted,#666); text-transform: uppercase; letter-spacing: 0.4px;
+            margin-bottom: 0.35rem; display: block;
+        }
+        .btn-remove {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg,#e74c3c,#c0392b);
+            color: #fff; border: none; cursor: pointer;
+            font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: transform 0.2s;
+        }
+        .btn-remove:hover { transform: scale(1.1); }
+        .btn-add-expense {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            background: transparent;
+            color: #667eea;
+            font-size: 0.88rem; font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            margin-top: 0.4rem;
+        }
+        .btn-add-expense:hover { background: #667eea; color: #fff; }
+
+        /* ── Live summary bar ── */
+        .summary-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 1.2rem 1.6rem;
+            display: flex; gap: 1.5rem; flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1.4rem;
+            box-shadow: 0 4px 18px rgba(102,126,234,0.3);
+            color: #fff;
+        }
+        .summary-bar .sum-item { flex: 1; min-width: 120px; text-align: center; }
+        .summary-bar .sum-label { font-size: 0.75rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-bar .sum-value { font-size: 1.25rem; font-weight: 700; margin-top: 2px; }
+        .summary-bar .sum-divider { width: 1px; background: rgba(255,255,255,0.25); align-self: stretch; }
+        .sum-remaining-positive { color: #b3f7d4; }
+        .sum-remaining-negative { color: #ffb3b3; }
+
+        /* ── Save button ── */
+        .btn-save {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 1.05rem; font-weight: 700;
+            cursor: pointer; letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(102,126,234,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 22px rgba(102,126,234,0.5);
+        }
+
+        /* ── Success message ── */
+        .success-msg {
+            background: linear-gradient(135deg,#d4edda,#c3e6cb);
+            color: #155724;
+            border-left: 5px solid #28a745;
+            border-radius: 10px;
+            padding: 0.9rem 1.2rem;
+            margin-bottom: 1.4rem;
+            display: flex; align-items: center; gap: 0.7rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .income-grid { grid-template-columns: 1fr; }
+            .expense-grid { grid-template-columns: 1fr 1fr; }
+            .var-row { grid-template-columns: 1fr 1fr auto; }
+        }
+    </style>
 </head>
 <body>
-
 <div class="dashboard-wrapper">
 
-    <!-- SIDEBAR -->
     <aside th:replace="~{basetemplate :: sidebar}"></aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main">
-
         <div th:replace="~{basetemplate :: topbar}"></div>
 
-        <div class="budget-container">
+        <div class="budget-page">
 
-            <h2>Set Your Budget For this Month - <span th:text="${currentMonth}">February 2026</span></h2>
+            <!-- ── Hero Header ── -->
+            <div class="budget-hero">
+                <div class="hero-icon"><i class="fa-solid fa-sliders"></i></div>
+                <div>
+                    <h2>Set Your Monthly Budget</h2>
+                    <p>Plan your income and expenses for <strong th:text="${currentMonth}">this month</strong> to stay financially on track.</p>
+                </div>
+            </div>
 
-            <form th:action="@{/budget}" method="POST">
+            <!-- ── Success message (shown after save) ── -->
+            <div th:if="${success}" class="success-msg">
+                <i class="fa-solid fa-circle-check fa-lg"></i>
+                <span th:text="${success}">Budget saved!</span>
+            </div>
 
-                <!-- Income Section -->
-                <div class="budget-section">
-                    <h3>INCOME</h3>
+            <form th:action="@{/budget}" method="POST" id="budgetForm">
 
-                    <div class="budget-form-row">
-                        <label for="monthlyIncome">Monthly Income</label>
-                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="monthlyIncome" id="monthlyIncome" required>
+                <!-- ══ INCOME ══ -->
+                <div class="budget-card">
+                    <div class="card-title">
+                        <div class="title-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d);">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        Income
+                    </div>
+                    <div class="income-grid">
+                        <div class="input-group">
+                            <label for="monthlyIncome">Monthly Income</label>
+                            <div class="input-wrap">
+                                <span class="currency-symbol">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="monthlyIncome" id="monthlyIncome"
+                                       placeholder="0" required class="income-input">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="otherIncome">Other Income <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+                            <div class="input-wrap">
+                                <span class="currency-symbol">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="otherIncome" id="otherIncome"
+                                       placeholder="0" class="income-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ FIXED EXPENSES ══ -->
+                <div class="budget-card">
+                    <div class="card-title">
+                        <div class="title-icon" style="background:linear-gradient(135deg,#e74c3c,#f39c12);">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        Fixed Expenses
+                    </div>
+                    <div class="expense-grid">
+
+                        <div class="expense-item">
+                            <div class="exp-icon ic-rent"><i class="fa-solid fa-house"></i></div>
+                            <label>Rent / Mortgage</label>
+                            <div class="exp-input-wrap">
+                                <span class="sym">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="rent" placeholder="0" class="expense-input">
+                            </div>
+                        </div>
+
+                        <div class="expense-item">
+                            <div class="exp-icon ic-util"><i class="fa-solid fa-bolt"></i></div>
+                            <label>Utilities</label>
+                            <div class="exp-input-wrap">
+                                <span class="sym">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="utilities" placeholder="0" class="expense-input">
+                            </div>
+                        </div>
+
+                        <div class="expense-item">
+                            <div class="exp-icon ic-ins"><i class="fa-solid fa-shield-halved"></i></div>
+                            <label>Insurance</label>
+                            <div class="exp-input-wrap">
+                                <span class="sym">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="insurance" placeholder="0" class="expense-input">
+                            </div>
+                        </div>
+
+                        <div class="expense-item">
+                            <div class="exp-icon ic-groc"><i class="fa-solid fa-cart-shopping"></i></div>
+                            <label>Groceries</label>
+                            <div class="exp-input-wrap">
+                                <span class="sym">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="groceries" placeholder="0" class="expense-input">
+                            </div>
+                        </div>
+
+                        <div class="expense-item">
+                            <div class="exp-icon ic-subs"><i class="fa-solid fa-tv"></i></div>
+                            <label>Subscriptions</label>
+                            <div class="exp-input-wrap">
+                                <span class="sym">$</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                       name="subscriptions" placeholder="0" class="expense-input">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ══ VARIABLE / MISC EXPENSES ══ -->
+                <div class="budget-card">
+                    <div class="card-title">
+                        <div class="title-icon" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);">
+                            <i class="fa-solid fa-tag"></i>
+                        </div>
+                        Miscellaneous Expenses
                     </div>
 
-                    <div class="budget-form-row">
-                        <label for="otherIncome">Other Income</label>
-                        <input type="text" inputmode="numeric" pattern="[0-9]*" name="otherIncome" id="otherIncome">
+                    <div id="varContainer"></div>
+
+                    <button type="button" class="btn-add-expense" onclick="addRow()">
+                        <i class="fa-solid fa-plus"></i> Add Expense
+                    </button>
+                </div>
+
+                <!-- ══ LIVE SUMMARY BAR ══ -->
+                <div class="summary-bar">
+                    <div class="sum-item">
+                        <div class="sum-label"><i class="fa-solid fa-wallet"></i> Total Income</div>
+                        <div class="sum-value" id="sumIncome">$0</div>
+                    </div>
+                    <div class="sum-divider"></div>
+                    <div class="sum-item">
+                        <div class="sum-label"><i class="fa-solid fa-receipt"></i> Total Expenses</div>
+                        <div class="sum-value" id="sumExpenses">$0</div>
+                    </div>
+                    <div class="sum-divider"></div>
+                    <div class="sum-item">
+                        <div class="sum-label"><i class="fa-solid fa-piggy-bank"></i> Remaining</div>
+                        <div class="sum-value" id="sumRemaining">$0</div>
                     </div>
                 </div>
 
-                <!-- Fixed Expenses Section -->
-                <div class="budget-section">
-                    <h3>Fixed Expenses</h3>
-
-                    <table class="budget-table">
-                        <tr>
-                            <th>Category</th>
-                            <th>Planned Amount</th>
-                        </tr>
-                        <tr>
-                            <td>Rent / Mortgage</td>
-                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="rent"></td>
-                        </tr>
-                        <tr>
-                            <td>Utilities</td>
-                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="utilities"></td>
-                        </tr>
-                        <tr>
-                            <td>Insurance</td>
-                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="insurance"></td>
-                        </tr>
-                        <tr>
-                            <td>Groceries</td>
-                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="groceries"></td>
-                        </tr>
-                        <tr>
-                            <td>Subscriptions</td>
-                            <td><input type="text" inputmode="numeric" pattern="[0-9]*" name="subscriptions"></td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- Variable Expenses Section -->
-                <div class="budget-section">
-                    <h3>Miscellaneous Expenses</h3>
-
-                    <table class="budget-table" id="variableTable">
-                        <tr>
-                            <th>Title</th>
-                            <th>Amount</th>
-                            <th>Action</th>
-                        </tr>
-                    </table>
-
-                    <br>
-                    <button type="button" class="budget-btn" onclick="addRow()">Add Expense</button>
-                </div>
-
-                <br>
-                <button type="submit" class="budget-btn">Save</button>
+                <!-- ══ SAVE BUTTON ══ -->
+                <button type="submit" class="btn-save">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Budget
+                </button>
 
             </form>
-
         </div>
-
     </main>
+</div>
 
+<!-- CHATBOT BUTTON -->
+<div class="chatbot-btn">
+    <i class="fa-solid fa-robot"></i>
 </div>
 
 <script>
+    // Sidebar hamburger
     const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    menuToggle.addEventListener('click', () => {
-        navMenu.classList.toggle('show');
-    });
+    const navMenu    = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => navMenu.classList.toggle('show'));
 
-    function addRow() {
-        const table = document.getElementById("variableTable");
-        const row = table.insertRow();
+    // ── Live summary calculation ──
+    function getVal(el) { return parseFloat(el.value) || 0; }
 
-        const cell1 = row.insertCell(0);
-        const cell2 = row.insertCell(1);
-        const cell3 = row.insertCell(2);
+    function recalc() {
+        const incomeInputs  = document.querySelectorAll('.income-input');
+        const expenseInputs = document.querySelectorAll('.expense-input');
+        const varAmounts    = document.querySelectorAll('.var-amount');
 
-        cell1.innerHTML = '<input type="text" name="variableTitle" required>';
-        cell2.innerHTML = '<input type="text" inputmode="numeric" pattern="[0-9]*" name="variableAmount" placeholder="0" required>';
-        cell3.innerHTML = '<button type="button" class="budget-btn remove-btn" onclick="removeRow(this)">X</button>';
+        let totalIncome  = 0;
+        let totalExpense = 0;
+
+        incomeInputs.forEach(i  => totalIncome  += getVal(i));
+        expenseInputs.forEach(e => totalExpense += getVal(e));
+        varAmounts.forEach(v    => totalExpense += getVal(v));
+
+        const remaining = totalIncome - totalExpense;
+
+        document.getElementById('sumIncome').textContent   = '$' + totalIncome.toFixed(2);
+        document.getElementById('sumExpenses').textContent = '$' + totalExpense.toFixed(2);
+        const remEl = document.getElementById('sumRemaining');
+        remEl.textContent = (remaining < 0 ? '-$' : '$') + Math.abs(remaining).toFixed(2);
+        remEl.className = 'sum-value ' + (remaining >= 0 ? 'sum-remaining-positive' : 'sum-remaining-negative');
     }
 
-    function removeRow(button) {
-        const row = button.parentNode.parentNode;
-        row.parentNode.removeChild(row);
+    document.getElementById('budgetForm').addEventListener('input', recalc);
+
+    // ── Variable expense rows ──
+    let rowCount = 0;
+    function addRow() {
+        rowCount++;
+        const container = document.getElementById('varContainer');
+        const div = document.createElement('div');
+        div.className = 'var-row';
+        div.id = 'varRow_' + rowCount;
+        div.innerHTML = `
+            <div>
+                <label>Expense Name</label>
+                <input type="text" name="variableTitle" placeholder="e.g. Dining Out" required>
+            </div>
+            <div>
+                <label>Amount ($)</label>
+                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                       name="variableAmount" placeholder="0"
+                       class="var-amount" required oninput="recalc()">
+            </div>
+            <button type="button" class="btn-remove" onclick="removeRow('varRow_${rowCount}')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>`;
+        container.appendChild(div);
+    }
+
+    function removeRow(id) {
+        const row = document.getElementById(id);
+        if (row) { row.remove(); recalc(); }
     }
 </script>
 

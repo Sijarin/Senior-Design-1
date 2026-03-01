@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Predictive Cash Flow – FinVision</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ── Page header ── */
+        .page-header { margin-bottom: 1.8rem; }
+        .page-header h2 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+        .page-header p  { margin: 0; color: var(--text-muted,#666); font-size: 0.95rem; }
+
+        /* ── Stat summary cards ── */
+        .stat-row {
+            display: flex; gap: 1.1rem; flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+        }
+        .stat-card {
+            flex: 1; min-width: 160px;
+            border-radius: 16px; padding: 1.3rem 1.4rem;
+            color: #fff; display: flex; align-items: center; gap: 0.9rem;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+            position: relative; overflow: hidden;
+        }
+        .stat-card .sc-bg {
+            position: absolute; right: -10px; bottom: -10px;
+            font-size: 5rem; opacity: 0.1;
+        }
+        .stat-card .sc-icon {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; flex-shrink: 0;
+        }
+        .stat-card .sc-label { font-size: 0.78rem; opacity: 0.88; margin-bottom: 2px; }
+        .stat-card .sc-value { font-size: 1.35rem; font-weight: 700; }
+        .sc-income   { background: linear-gradient(135deg,#11998e,#38ef7d); }
+        .sc-expense  { background: linear-gradient(135deg,#e74c3c,#f39c12); }
+        .sc-saving-pos { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .sc-saving-neg { background: linear-gradient(135deg,#c0392b,#e74c3c); }
+        .sc-saving-neu { background: linear-gradient(135deg,#95a5a6,#7f8c8d); }
+        .sc-rate     { background: linear-gradient(135deg,#4facfe,#00f2fe); color: #003d5e; }
+
+        /* ── Trajectory banner ── */
+        .trajectory-banner {
+            border-radius: 14px; padding: 1.2rem 1.5rem;
+            display: flex; align-items: center; gap: 1rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            font-size: 0.92rem; line-height: 1.6;
+        }
+        .trajectory-banner .traj-icon {
+            font-size: 2.2rem; flex-shrink: 0;
+        }
+        .traj-positive { background: linear-gradient(135deg,#d4edda,#c3e6cb); color: #155724; border-left: 5px solid #28a745; }
+        .traj-negative { background: linear-gradient(135deg,#f8d7da,#f5c6cb); color: #721c24; border-left: 5px solid #dc3545; }
+        .traj-neutral  { background: linear-gradient(135deg,#e2e3e5,#d6d8db); color: #383d41; border-left: 5px solid #6c757d; }
+        .traj-none     { background: linear-gradient(135deg,#e2e3e5,#d6d8db); color: #383d41; border-left: 5px solid #6c757d; }
+
+        /* ── Chart card ── */
+        .chart-card {
+            background: var(--card-bg,#fff);
+            border-radius: 16px;
+            padding: 1.5rem 1.6rem;
+            box-shadow: 0 3px 16px rgba(0,0,0,0.08);
+            margin-bottom: 1.8rem;
+        }
+        .chart-card h3 {
+            margin: 0 0 1.2rem; font-size: 1rem;
+            color: var(--text-main,#2c3e50);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        /* ── Section title ── */
+        .section-title {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1.05rem; font-weight: 700;
+            color: var(--text-main,#2c3e50);
+            margin: 0 0 1rem;
+        }
+
+        /* ── Month forecast cards ── */
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1.1rem;
+            margin-bottom: 1.8rem;
+        }
+        .month-card {
+            border-radius: 14px; padding: 1.2rem 1.1rem;
+            color: #fff; position: relative; overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.11);
+        }
+        .month-card .mc-bg {
+            position: absolute; right: -10px; bottom: -8px;
+            font-size: 4rem; opacity: 0.1;
+        }
+        .month-card .mc-num {
+            font-size: 0.72rem; font-weight: 700;
+            background: rgba(255,255,255,0.22); border-radius: 999px;
+            padding: 2px 9px; display: inline-block; margin-bottom: 0.6rem;
+        }
+        .month-card .mc-month { font-size: 0.82rem; opacity: 0.85; margin-bottom: 2px; }
+        .month-card .mc-balance { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .month-card .mc-detail { font-size: 0.75rem; opacity: 0.82; line-height: 1.5; }
+        .mc-pos-1 { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .mc-pos-2 { background: linear-gradient(135deg,#11998e,#38ef7d); color:#003d2e; }
+        .mc-pos-3 { background: linear-gradient(135deg,#4facfe,#00f2fe); color:#003d5e; }
+        .mc-pos-4 { background: linear-gradient(135deg,#f093fb,#f5576c); }
+        .mc-pos-5 { background: linear-gradient(135deg,#f6d365,#fda085); color:#5a2d00; }
+        .mc-pos-6 { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); color:#003060; }
+        .mc-neg   { background: linear-gradient(135deg,#c0392b,#e74c3c); }
+
+        /* ── Assumption note ── */
+        .assumption-note {
+            background: var(--card-bg,#fff);
+            border-radius: 12px; padding: 1rem 1.4rem;
+            font-size: 0.82rem; color: var(--text-muted,#666);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+
+        /* ── No budget ── */
+        .no-data-msg {
+            text-align: center; padding: 3rem 2rem;
+            background: var(--card-bg,#fff); border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            color: var(--text-main,#2c3e50);
+        }
+        .no-data-msg a { color: #667eea; font-weight: 700; }
+    </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <main class="main">
+        <div th:replace="~{basetemplate :: topbar}"></div>
+
+        <!-- ── Header ── -->
+        <div class="page-header">
+            <h2>Predictive Cash Flow</h2>
+            <p>Forecasts future balances based on current habits &mdash; <span th:text="${currentMonth}">this month</span>.</p>
+        </div>
+
+        <!-- ══ NO BUDGET ══ -->
+        <div th:if="${!hasBudget}" class="no-data-msg">
+            <i class="fa-solid fa-chart-line fa-3x" style="color:#667eea; margin-bottom:0.8rem;"></i>
+            <p style="margin:0.5rem 0 0;">No budget data found.<br>
+               <a href="/budget">Set your budget</a> to unlock your 6-month cash flow forecast.</p>
+        </div>
+
+        <!-- ══ HAS BUDGET ══ -->
+        <th:block th:if="${hasBudget}">
+
+            <!-- ── Stat Cards ── -->
+            <div class="stat-row">
+
+                <div class="stat-card sc-income">
+                    <i class="fa-solid fa-wallet sc-bg"></i>
+                    <div class="sc-icon"><i class="fa-solid fa-wallet"></i></div>
+                    <div>
+                        <div class="sc-label">Monthly Income</div>
+                        <div class="sc-value">$<span th:text="${income}"></span></div>
+                    </div>
+                </div>
+
+                <div class="stat-card sc-expense">
+                    <i class="fa-solid fa-receipt sc-bg"></i>
+                    <div class="sc-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <div>
+                        <div class="sc-label">Monthly Expenses</div>
+                        <div class="sc-value">$<span th:text="${expenses}"></span></div>
+                    </div>
+                </div>
+
+                <div class="stat-card"
+                     th:classappend="${trajectory == 'positive'} ? 'sc-saving-pos' : (${trajectory == 'negative'} ? 'sc-saving-neg' : 'sc-saving-neu')">
+                    <i class="fa-solid fa-piggy-bank sc-bg"></i>
+                    <div class="sc-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+                    <div>
+                        <div class="sc-label">Monthly Net</div>
+                        <div class="sc-value">$<span th:text="${monthlySavings}"></span></div>
+                    </div>
+                </div>
+
+                <div class="stat-card sc-rate">
+                    <i class="fa-solid fa-percent sc-bg"></i>
+                    <div class="sc-icon"><i class="fa-solid fa-percent"></i></div>
+                    <div>
+                        <div class="sc-label">Savings Rate</div>
+                        <div class="sc-value"><span th:text="${savingsRate}"></span>%</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ── Trajectory Banner ── -->
+            <div th:if="${trajectory == 'positive'}" class="trajectory-banner traj-positive">
+                <span class="traj-icon">📈</span>
+                <div>
+                    <strong>Positive Trajectory!</strong> At your current rate, you'll accumulate
+                    <strong>$<span th:text="${sixMonthTotal}"></span></strong> in savings over the next 6 months.
+                    Your <strong th:text="${savingsRate} + '%'"></strong> savings rate puts you on a strong financial path.
+                    Consider investing your surplus for long-term growth.
+                </div>
+            </div>
+            <div th:if="${trajectory == 'negative'}" class="trajectory-banner traj-negative">
+                <span class="traj-icon">📉</span>
+                <div>
+                    <strong>Negative Trajectory!</strong> At your current rate, you'll accumulate
+                    <strong>$<span th:text="${#strings.replace(sixMonthTotal,'-','')}"></span></strong> in debt over 6 months.
+                    Reduce monthly expenses or increase income to reverse this trend before it compounds.
+                </div>
+            </div>
+            <div th:if="${trajectory == 'neutral'}" class="trajectory-banner traj-neutral">
+                <span class="traj-icon">⚖️</span>
+                <div>
+                    <strong>Break-Even.</strong> Your income exactly covers your expenses.
+                    Try to find any expense to trim — even $50/month saved compounds significantly over time.
+                </div>
+            </div>
+
+            <!-- ── Line Chart ── -->
+            <div class="chart-card">
+                <h3>
+                    <i class="fa-solid fa-chart-line" style="color:#667eea;"></i>
+                    6-Month Balance Forecast
+                </h3>
+                <canvas id="forecastChart" height="110"></canvas>
+            </div>
+
+            <!-- ── Month-by-Month Cards ── -->
+            <p class="section-title">
+                <i class="fa-solid fa-calendar-days" style="color:#764ba2;"></i>
+                Month-by-Month Breakdown
+            </p>
+            <div class="months-grid">
+                <div th:each="i : ${#numbers.sequence(0, monthLabels.size() - 1)}"
+                     class="month-card"
+                     th:classappend="${#strings.startsWith(projectedBalances[i], '-')} ? 'mc-neg' :
+                                     (${i == 0} ? 'mc-pos-1' :
+                                     (${i == 1} ? 'mc-pos-2' :
+                                     (${i == 2} ? 'mc-pos-3' :
+                                     (${i == 3} ? 'mc-pos-4' :
+                                     (${i == 4} ? 'mc-pos-5' : 'mc-pos-6')))))">
+                    <i class="fa-solid fa-calendar-check mc-bg"></i>
+                    <div class="mc-num">Month <span th:text="${i + 1}"></span></div>
+                    <div class="mc-month" th:text="${monthLabels[i]}">Month</div>
+                    <div class="mc-balance">$<span th:text="${projectedBalances[i]}"></span></div>
+                    <div class="mc-detail">
+                        Income: $<span th:text="${monthlyIncomes[i]}"></span><br>
+                        Expenses: $<span th:text="${monthlyExpenses[i]}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Assumption note ── -->
+            <div class="assumption-note">
+                <i class="fa-solid fa-circle-info" style="color:#667eea; font-size:1rem;"></i>
+                <span>Forecast assumes consistent monthly income and expenses based on your current budget.
+                Cumulative balance starts from month 1 and compounds forward.</span>
+            </div>
+
+        </th:block>
+    </main>
+</div>
+
+<!-- CHATBOT BUTTON -->
+<div class="chatbot-btn">
+    <i class="fa-solid fa-robot"></i>
+</div>
+
+<script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    menuToggle.addEventListener('click', () => { navMenu.classList.toggle('show'); });
+</script>
+
+<!-- Chart.js (only when budget exists) -->
+<th:block th:if="${hasBudget}">
+<script th:inline="javascript">
+/*<![CDATA[*/
+var labels   = [[${monthLabels}]];
+var balances = [[${projectedBalances}]].map(Number);
+var incomes  = [[${monthlyIncomes}]].map(Number);
+var expenses = [[${monthlyExpenses}]].map(Number);
+var positive = [[${trajectory}]] === 'positive';
+
+var ctx = document.getElementById('forecastChart').getContext('2d');
+
+// Gradient fill for balance line
+var grad = ctx.createLinearGradient(0, 0, 0, 300);
+if (positive) {
+    grad.addColorStop(0, 'rgba(102,126,234,0.35)');
+    grad.addColorStop(1, 'rgba(102,126,234,0.02)');
+} else {
+    grad.addColorStop(0, 'rgba(231,76,60,0.35)');
+    grad.addColorStop(1, 'rgba(231,76,60,0.02)');
+}
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Cumulative Balance',
+                data: balances,
+                borderColor: positive ? '#667eea' : '#e74c3c',
+                backgroundColor: grad,
+                borderWidth: 3,
+                pointBackgroundColor: positive ? '#667eea' : '#e74c3c',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Monthly Income',
+                data: incomes,
+                borderColor: '#27ae60',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 3],
+                pointRadius: 3,
+                tension: 0.2
+            },
+            {
+                label: 'Monthly Expenses',
+                data: expenses,
+                borderColor: '#f39c12',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 3],
+                pointRadius: 3,
+                tension: 0.2
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: { boxWidth: 14, padding: 14 }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        return ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits:2});
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                ticks: {
+                    callback: function(v) { return '$' + v.toLocaleString(); }
+                }
+            }
+        }
+    }
+});
+/*]]>*/
+</script>
+</th:block>
+
+<th:block th:replace="~{basetemplate :: darkMode}"></th:block>
+</body>
+</html>
