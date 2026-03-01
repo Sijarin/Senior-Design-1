@@ -69,39 +69,245 @@
         .alert-neutral .alert-icon-wrap { background: #95a5a6; color: #fff; }
         .alert-neutral .alert-badge     { background: #95a5a6; color: #fff; }
 
-        /* ── Bill reminder cards ── */
+        /* ── Bill manager ── */
+        .bill-msg {
+            margin-bottom: 0.8rem; padding: 0.7rem 0.9rem;
+            border-radius: 10px; font-size: 0.86rem; font-weight: 600;
+        }
+        .bill-msg.ok { background: #e8f7ef; color: #166534; border-left: 4px solid #22c55e; }
+        .bill-msg.err { background: #fde8e8; color: #991b1b; border-left: 4px solid #ef4444; }
+        .bill-msg.tip { background: #eff6ff; color: #1d4ed8; border-left: 4px solid #3b82f6; }
+
+        .bill-form-card {
+            background: var(--card-bg,#fff);
+            border-radius: 14px; padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1.2rem;
+        }
+        .bill-form-toggle {
+            border: none;
+            border-radius: 9px;
+            padding: 0.62rem 0.95rem;
+            background: linear-gradient(135deg,#4f46e5,#7c3aed);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.84rem;
+            cursor: pointer;
+            margin-bottom: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            list-style: none;
+        }
+        .bill-form-toggle::-webkit-details-marker { display: none; }
+        .bill-form-toggle::marker { content: ""; }
+        .bill-form-toggle i { transition: transform 0.18s ease; }
+        details[open] > .bill-form-toggle i { transform: rotate(45deg); }
+
+        .bill-form-panel {
+            margin-bottom: 0.9rem;
+        }
+        .bill-form-panel[open] .bill-form-toggle {
+            background: linear-gradient(135deg,#4338ca,#6d28d9);
+        }
+        .bill-form-title {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        .bill-form-title h4 { margin: 0; font-size: 1rem; color: var(--text-main,#2c3e50); }
+        .bill-form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(160px, 1fr));
+            gap: 0.7rem;
+        }
+        .bill-form-grid .full { grid-column: 1 / -1; }
+        .bill-form-grid label {
+            display: block; margin-bottom: 0.26rem;
+            font-size: 0.73rem; font-weight: 700; letter-spacing: 0.3px;
+            text-transform: uppercase; color: var(--text-muted,#666);
+        }
+        .bill-form-grid input,
+        .bill-form-grid select,
+        .bill-form-grid textarea {
+            width: 100%; border: 1px solid #dbe3f5; border-radius: 8px;
+            padding: 0.52rem 0.58rem; background: var(--bg-input,#fff);
+            color: var(--text-main,#2c3e50); font-size: 0.85rem;
+        }
+        .bill-form-grid textarea { min-height: 80px; resize: vertical; }
+        .reminder-pills { display: flex; flex-wrap: wrap; gap: 0.45rem 0.7rem; margin-top: 0.2rem; }
+        .reminder-pills label {
+            margin: 0; text-transform: none; font-size: 0.78rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+        }
+        .bill-form-actions { margin-top: 0.9rem; display: flex; gap: 0.6rem; }
+        .btn-bill {
+            border: none; border-radius: 8px; cursor: pointer;
+            padding: 0.55rem 0.85rem; font-size: 0.82rem; font-weight: 700;
+        }
+        .btn-bill.primary { background: #4f46e5; color: #fff; }
+        .btn-bill.neutral { background: #e5e7eb; color: #111827; text-decoration: none; display: inline-flex; align-items: center; }
+
+        .active-reminders {
+            background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
+            border-radius: 12px; padding: 0.75rem 0.85rem; margin-bottom: 1rem;
+        }
+        .active-reminders ul { margin: 0.45rem 0 0; padding-left: 1rem; }
+        .active-reminders li { margin: 0.2rem 0; font-size: 0.82rem; }
+
+        .bill-summary {
+            background: var(--card-bg,#fff);
+            border: 1px solid rgba(79,70,229,0.15);
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .bill-summary-top {
+            display: flex; justify-content: space-between; align-items: center; gap: 0.8rem;
+            margin-bottom: 0.45rem;
+        }
+        .bill-summary-top strong { font-size: 0.9rem; color: var(--text-main,#1f2937); }
+        .bill-summary-top span { font-size: 0.8rem; color: var(--text-muted,#64748b); }
+        .bill-progress-track {
+            height: 9px; border-radius: 999px; background: #e5e7eb; overflow: hidden;
+        }
+        .bill-progress-fill {
+            height: 100%; background: linear-gradient(90deg,#16a34a,#22c55e);
+            border-radius: 999px;
+        }
+        .bill-summary-amounts {
+            margin-top: 0.55rem;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem;
+            font-size: 0.82rem;
+        }
+        .bill-summary-amounts div {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+            padding: 0.45rem 0.55rem;
+        }
+        .bill-summary-amounts strong { color: var(--text-main,#1f2937); }
+
+        .bill-section { margin-bottom: 1.3rem; }
+        .bill-section h4 {
+            margin: 0 0 0.55rem; font-size: 0.95rem; color: var(--text-main,#1f2937);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
         .bills-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.9rem;
         }
         .bill-card {
-            border-radius: 14px; padding: 1.2rem 1.1rem;
-            color: #fff; position: relative; overflow: hidden;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            display: flex; flex-direction: column; gap: 0.5rem;
+            border-radius: 16px; padding: 1rem;
+            position: relative; overflow: hidden;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(17,24,39,0.16);
+            border: 1px solid rgba(255,255,255,0.18);
+            backdrop-filter: blur(2px);
         }
-        .bill-card .bill-bg { position:absolute;right:-10px;bottom:-10px;font-size:4.5rem;opacity:0.12; }
-        .bill-card .bill-icon {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255,255,255,0.25);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; margin-bottom: 0.3rem;
+        .bill-card::after {
+            content: "";
+            position: absolute;
+            width: 140px; height: 140px;
+            right: -45px; bottom: -45px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.14);
+            pointer-events: none;
         }
-        .bill-card .bill-name  { font-size: 0.8rem; opacity: 0.88; }
-        .bill-card .bill-amount{ font-size: 1.3rem; font-weight: 700; }
-        .bill-card .bill-due   {
-            font-size: 0.72rem; background: rgba(255,255,255,0.22);
-            border-radius: 999px; padding: 2px 9px; display: inline-block;
-            margin-top: 0.2rem; width: fit-content;
+        .bill-card.focus-target {
+            outline: 3px solid rgba(255,255,255,0.88);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(79,70,229,0.25), 0 12px 30px rgba(17,24,39,0.24);
         }
-        .bc-rent    { background: linear-gradient(135deg,#667eea,#764ba2); }
-        .bc-util    { background: linear-gradient(135deg,#f7971e,#ffd200); color: #4a2c00; }
-        .bc-ins     { background: linear-gradient(135deg,#11998e,#38ef7d); color: #003d2e; }
-        .bc-groc    { background: linear-gradient(135deg,#fc4a1a,#f7b733); }
-        .bc-subs    { background: linear-gradient(135deg,#4facfe,#00f2fe); color: #003d5e; }
-        .bc-custom  { background: linear-gradient(135deg,#a18cd1,#fbc2eb); color: #3d004a; }
+        .bill-card.card-red    { background: linear-gradient(135deg,#ef4444,#b91c1c); }
+        .bill-card.card-yellow { background: linear-gradient(135deg,#facc15,#fb923c); color: #3b2200; }
+        .bill-card.card-blue   { background: linear-gradient(135deg,#3b82f6,#06b6d4); }
+        .bill-card.card-green  { background: linear-gradient(135deg,#16a34a,#22c55e); color: #053a1c; }
+
+        .bill-card.card-yellow .bill-meta strong,
+        .bill-card.card-yellow .bill-name,
+        .bill-card.card-yellow .bill-amount,
+        .bill-card.card-green .bill-name,
+        .bill-card.card-green .bill-amount,
+        .bill-card.card-green .bill-meta strong {
+            color: inherit;
+        }
+        .bill-head { display: flex; justify-content: space-between; gap: 0.6rem; align-items: start; }
+        .bill-name-wrap { display: flex; align-items: center; gap: 0.45rem; }
+        .bill-name { margin: 0; font-size: 1.03rem; font-weight: 900; line-height: 1.15; }
+        .bill-icon { font-size: 1.08rem; }
+        .bill-amount {
+            font-size: 1.25rem; font-weight: 800; margin-top: 0.35rem;
+            color: #fff;
+        }
+        .bill-due-line { font-size: 0.84rem; font-weight: 700; margin-top: 0.25rem; }
+        .bill-due-date { font-size: 0.74rem; color: rgba(255,255,255,0.86); margin-top: 0.12rem; }
+        .bill-card.card-yellow .bill-due-date,
+        .bill-card.card-green .bill-due-date {
+            color: rgba(10,10,10,0.7);
+        }
+
+        .bill-badge {
+            font-size: 0.68rem; padding: 0.2rem 0.52rem; border-radius: 999px; font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.22);
+            color: #fff;
+        }
+        .bill-badge.red { background: rgba(127,29,29,0.25); color: #fff; }
+        .bill-badge.yellow { background: rgba(255,255,255,0.36); color: #3b2200; border-color: rgba(59,34,0,0.22); }
+        .bill-badge.blue { background: rgba(30,64,175,0.24); color: #fff; }
+        .bill-badge.green { background: rgba(6,78,59,0.24); color: #fff; }
+
+        .bill-meta { margin-top: 0.45rem; font-size: 0.77rem; color: rgba(255,255,255,0.92); line-height: 1.45; }
+        .bill-meta strong { color: #fff; }
+        .bill-card.card-yellow .bill-meta,
+        .bill-card.card-green .bill-meta {
+            color: rgba(17,24,39,0.86);
+        }
+
+        .bill-actions {
+            margin-top: 0.68rem;
+            display: flex; justify-content: space-between; align-items: center; gap: 0.55rem;
+        }
+        .bill-pay-form { display: inline-flex; align-items: center; gap: 0.34rem; }
+        .btn-mini {
+            border: none; border-radius: 8px; padding: 0.42rem 0.63rem;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
+        }
+        .btn-mini.paid { background: rgba(15,118,110,0.95); color: #fff; box-shadow: 0 4px 10px rgba(15,118,110,0.35); }
+        .btn-mini.unpaid { background: rgba(255,255,255,0.88); color: #111827; }
+
+        .bill-menu { position: relative; }
+        .bill-menu-btn {
+            width: 30px; height: 30px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.22); cursor: pointer; color: #fff;
+        }
+        .bill-card.card-yellow .bill-menu-btn,
+        .bill-card.card-green .bill-menu-btn { color: #1f2937; border-color: rgba(17,24,39,0.22); background: rgba(255,255,255,0.45); }
+        .bill-menu-list {
+            position: absolute; right: 0; top: 34px;
+            min-width: 140px; background: #fff;
+            border: 1px solid #dbe3f5; border-radius: 8px;
+            box-shadow: 0 8px 22px rgba(15,23,42,0.14);
+            display: none; z-index: 5;
+            padding: 0.35rem;
+        }
+        .bill-menu.open .bill-menu-list { display: block; }
+        .bill-menu-item {
+            display: block; width: 100%;
+            text-align: left;
+            border: none; background: transparent;
+            font-size: 0.76rem; padding: 0.35rem 0.45rem;
+            border-radius: 6px; color: #1f2937; text-decoration: none;
+            cursor: pointer;
+        }
+        .bill-menu-item:hover { background: #f1f5f9; }
+        .bill-menu-item.danger { color: #b91c1c; }
+
+        .mini-note { font-size: 0.72rem; color: rgba(255,255,255,0.92); margin-top: 0.32rem; }
+        .bill-card.card-yellow .mini-note,
+        .bill-card.card-green .mini-note { color: rgba(17,24,39,0.8); }
+
         .no-bills-msg {
             text-align:center; padding: 2rem;
             background: var(--card-bg,#fff);
@@ -109,6 +315,15 @@
             color: var(--text-main,#2c3e50); margin-bottom: 2rem;
         }
         .no-bills-msg a { color:#667eea; font-weight:700; }
+
+        @media (max-width: 880px) {
+            .bill-form-grid { grid-template-columns: 1fr 1fr; }
+            .bill-form-grid .full { grid-column: 1 / -1; }
+        }
+        @media (max-width: 620px) {
+            .bill-form-grid { grid-template-columns: 1fr; }
+            .bill-summary-amounts { grid-template-columns: 1fr; }
+        }
 
         /* ── Savings nudge cards ── */
         .nudges-grid {
@@ -237,65 +452,243 @@
             <i class="fa-solid fa-file-invoice-dollar" style="color:#667eea;"></i> Bill Reminders
         </p>
 
-        <div th:if="${hasBudget}" class="bills-grid">
+        <div th:if="${billMessage}" class="bill-msg ok" th:text="${billMessage}">Saved.</div>
+        <div th:if="${billError}" class="bill-msg err" th:text="${billError}">Error.</div>
+        <div th:if="${billSuggestion}" class="bill-msg tip" th:text="${billSuggestion}">Suggestion.</div>
 
-            <div th:if="${rent != '0.00'}" class="bill-card bc-rent">
-                <i class="fa-solid fa-house bill-bg"></i>
-                <div class="bill-icon"><i class="fa-solid fa-house"></i></div>
-                <div class="bill-name">Rent / Mortgage</div>
-                <div class="bill-amount">$<span th:text="${rent}"></span></div>
-                <div class="bill-due">Due: 1st of month</div>
-            </div>
-
-            <div th:if="${utilities != '0.00'}" class="bill-card bc-util">
-                <i class="fa-solid fa-bolt bill-bg"></i>
-                <div class="bill-icon"><i class="fa-solid fa-bolt"></i></div>
-                <div class="bill-name">Utilities</div>
-                <div class="bill-amount">$<span th:text="${utilities}"></span></div>
-                <div class="bill-due">Due: 15th of month</div>
-            </div>
-
-            <div th:if="${insurance != '0.00'}" class="bill-card bc-ins">
-                <i class="fa-solid fa-shield-halved bill-bg"></i>
-                <div class="bill-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                <div class="bill-name">Insurance</div>
-                <div class="bill-amount">$<span th:text="${insurance}"></span></div>
-                <div class="bill-due">Due: 10th of month</div>
-            </div>
-
-            <div th:if="${groceries != '0.00'}" class="bill-card bc-groc">
-                <i class="fa-solid fa-cart-shopping bill-bg"></i>
-                <div class="bill-icon"><i class="fa-solid fa-cart-shopping"></i></div>
-                <div class="bill-name">Groceries</div>
-                <div class="bill-amount">$<span th:text="${groceries}"></span></div>
-                <div class="bill-due">Ongoing monthly</div>
-            </div>
-
-            <div th:if="${subscriptions != '0.00'}" class="bill-card bc-subs">
-                <i class="fa-solid fa-tv bill-bg"></i>
-                <div class="bill-icon"><i class="fa-solid fa-tv"></i></div>
-                <div class="bill-name">Subscriptions</div>
-                <div class="bill-amount">$<span th:text="${subscriptions}"></span></div>
-                <div class="bill-due">Auto-renews monthly</div>
-            </div>
-
-            <!-- Variable / custom expenses -->
-            <th:block th:if="${varTitles != null}"
-                      th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
-                <div th:if="${varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
-                    <i class="fa-solid fa-tag bill-bg"></i>
-                    <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
-                    <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
-                    <div class="bill-amount">$<span th:text="${#numbers.formatDecimal(varAmounts[i],1,2)}"></span></div>
-                    <div class="bill-due">Custom expense</div>
+        <details class="bill-form-panel" th:if="${editingBill != null or billError != null}" open>
+            <summary class="bill-form-toggle"><i class="fa-solid fa-plus"></i> Add Bill</summary>
+            <form class="bill-form-card"
+                  th:with="beforeVals=${editingBill != null ? editingBill.reminderDaysBefore : defaultReminderBefore},
+                           overdueVals=${editingBill != null ? editingBill.overdueReminderDaysAfter : defaultOverdueAfter}"
+                  th:action="${editingBill != null} ? @{/alerts/bills/{id}/edit(id=${editingBill.id})} : @{/alerts/bills}"
+                  method="POST">
+                <div class="bill-form-title">
+                    <h4 th:text="${editingBill != null} ? 'Edit Bill' : 'Add Bill'">Add Bill</h4>
+                    <a th:if="${editingBill != null}" th:href="@{/alerts}" class="btn-bill neutral">Cancel Edit</a>
                 </div>
-            </th:block>
+                <div class="bill-form-grid">
+                    <div>
+                        <label>Bill Name</label>
+                        <input type="text" name="billName" required
+                               th:value="${editingBill != null ? editingBill.billName : ''}">
+                    </div>
+                    <div>
+                        <label>Amount Type</label>
+                        <select name="amountType">
+                            <option value="fixed" th:selected="${editingBill == null or editingBill.amountType == null or editingBill.amountType.equalsIgnoreCase('fixed')}">Fixed</option>
+                            <option value="variable" th:selected="${editingBill != null and editingBill.amountType != null and editingBill.amountType.equalsIgnoreCase('variable')}">Variable</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Amount</label>
+                        <input type="number" step="0.01" min="0" name="amount" required
+                               th:value="${editingBill != null ? editingBill.amount : ''}">
+                    </div>
 
+                    <div>
+                        <label>Estimated Amount (Variable)</label>
+                        <input type="number" step="0.01" min="0" name="estimatedAmount"
+                               th:value="${editingBill != null and editingBill.estimatedAmount != null ? editingBill.estimatedAmount : ''}">
+                    </div>
+                    <div>
+                        <label>Due Date</label>
+                        <input type="date" name="dueDate" required
+                               th:value="${editingBill != null and editingBill.dueDate != null ? editingBill.dueDate : ''}">
+                    </div>
+                    <div>
+                        <label>Frequency</label>
+                        <select name="frequency">
+                            <option value="one-time" th:selected="${editingBill == null or editingBill.frequency == null or editingBill.frequency.equalsIgnoreCase('one-time')}">One-time</option>
+                            <option value="weekly" th:selected="${editingBill != null and editingBill.frequency != null and editingBill.frequency.equalsIgnoreCase('weekly')}">Weekly</option>
+                            <option value="monthly" th:selected="${editingBill != null and editingBill.frequency != null and editingBill.frequency.equalsIgnoreCase('monthly')}">Monthly</option>
+                            <option value="yearly" th:selected="${editingBill != null and editingBill.frequency != null and editingBill.frequency.equalsIgnoreCase('yearly')}">Yearly</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Category</label>
+                        <input type="text" name="category"
+                               th:value="${editingBill != null ? editingBill.category : ''}">
+                    </div>
+                    <div class="full">
+                        <label>Notes</label>
+                        <textarea name="notes" th:text="${editingBill != null ? editingBill.notes : ''}"></textarea>
+                    </div>
+
+                    <div class="full">
+                        <label>Reminder Timings (Before Due)</label>
+                        <div class="reminder-pills">
+                            <label><input type="checkbox" name="reminderBefore" value="7" th:checked="${#lists.contains(beforeVals, 7)}"> 7 days before</label>
+                            <label><input type="checkbox" name="reminderBefore" value="3" th:checked="${#lists.contains(beforeVals, 3)}"> 3 days before</label>
+                            <label><input type="checkbox" name="reminderBefore" value="1" th:checked="${#lists.contains(beforeVals, 1)}"> 1 day before</label>
+                            <label><input type="checkbox" name="reminderBefore" value="0" th:checked="${#lists.contains(beforeVals, 0)}"> Due day</label>
+                        </div>
+                    </div>
+                    <div class="full">
+                        <label>Overdue Reminders</label>
+                        <div class="reminder-pills">
+                            <label><input type="checkbox" name="overdueAfter" value="1" th:checked="${#lists.contains(overdueVals, 1)}"> 1 day after</label>
+                            <label><input type="checkbox" name="overdueAfter" value="3" th:checked="${#lists.contains(overdueVals, 3)}"> 3 days after</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="bill-form-actions">
+                    <button type="submit" class="btn-bill primary"
+                            th:text="${editingBill != null} ? 'Update Bill' : 'Add Bill'">Add Bill</button>
+                </div>
+            </form>
+        </details>
+
+        <details class="bill-form-panel" th:unless="${editingBill != null or billError != null}">
+            <summary class="bill-form-toggle"><i class="fa-solid fa-plus"></i> Add Bill</summary>
+            <form class="bill-form-card"
+                  th:with="beforeVals=${defaultReminderBefore}, overdueVals=${defaultOverdueAfter}"
+                  th:action="@{/alerts/bills}" method="POST">
+                <div class="bill-form-title">
+                    <h4>Add Bill</h4>
+                </div>
+                <div class="bill-form-grid">
+                    <div>
+                        <label>Bill Name</label>
+                        <input type="text" name="billName" required>
+                    </div>
+                    <div>
+                        <label>Amount Type</label>
+                        <select name="amountType">
+                            <option value="fixed" selected>Fixed</option>
+                            <option value="variable">Variable</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Amount</label>
+                        <input type="number" step="0.01" min="0" name="amount" required>
+                    </div>
+                    <div>
+                        <label>Estimated Amount (Variable)</label>
+                        <input type="number" step="0.01" min="0" name="estimatedAmount">
+                    </div>
+                    <div>
+                        <label>Due Date</label>
+                        <input type="date" name="dueDate" required>
+                    </div>
+                    <div>
+                        <label>Frequency</label>
+                        <select name="frequency">
+                            <option value="one-time" selected>One-time</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Category</label>
+                        <input type="text" name="category">
+                    </div>
+                    <div class="full">
+                        <label>Notes</label>
+                        <textarea name="notes"></textarea>
+                    </div>
+                    <div class="full">
+                        <label>Reminder Timings (Before Due)</label>
+                        <div class="reminder-pills">
+                            <label><input type="checkbox" name="reminderBefore" value="7" checked> 7 days before</label>
+                            <label><input type="checkbox" name="reminderBefore" value="3" checked> 3 days before</label>
+                            <label><input type="checkbox" name="reminderBefore" value="1" checked> 1 day before</label>
+                            <label><input type="checkbox" name="reminderBefore" value="0" checked> Due day</label>
+                        </div>
+                    </div>
+                    <div class="full">
+                        <label>Overdue Reminders</label>
+                        <div class="reminder-pills">
+                            <label><input type="checkbox" name="overdueAfter" value="1" checked> 1 day after</label>
+                            <label><input type="checkbox" name="overdueAfter" value="3" checked> 3 days after</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="bill-form-actions">
+                    <button type="submit" class="btn-bill primary">Add Bill</button>
+                </div>
+            </form>
+        </details>
+
+        <div class="active-reminders" th:if="${activeBillReminders != null and !activeBillReminders.isEmpty()}">
+            <strong><i class="fa-solid fa-bell"></i> Reminders Triggered Today</strong>
+            <ul>
+                <li th:each="r : ${activeBillReminders}">
+                    <span th:text="${r.name}">Rent</span> —
+                    <span th:text="${r.trigger}">Due in 1 day</span>
+                    (<span th:text="${r.amount}">$0.00</span>, due <span th:text="${r.dueDate}">04/01/2026</span>)
+                </li>
+            </ul>
         </div>
 
-        <div th:if="${!hasBudget}" class="no-bills-msg">
+        <div class="bill-summary">
+            <div class="bill-summary-top">
+                <strong th:text="${billView.paidThisMonthCount + ' of ' + billView.dueThisMonthCount + ' bills paid this month'}">0 of 0 bills paid this month</strong>
+                <span th:text="${billView.paidPercent + '% complete'}">0% complete</span>
+            </div>
+            <div class="bill-progress-track">
+                <div class="bill-progress-fill" th:style="'width:' + ${billView.paidPercent} + '%'"></div>
+            </div>
+            <div class="bill-summary-amounts">
+                <div>Bills due this week: <strong th:text="${billView.dueThisWeekAmount}">$0.00</strong></div>
+                <div>Bills due this month: <strong th:text="${billView.dueThisMonthAmount}">$0.00</strong></div>
+            </div>
+        </div>
+
+        <div th:if="${billView != null and (billView.overdue.isEmpty() and billView.dueSoon.isEmpty() and billView.upcoming.isEmpty() and billView.paidThisMonth.isEmpty())}" class="no-bills-msg">
             <i class="fa-solid fa-file-invoice-dollar fa-2x" style="color:#667eea; margin-bottom:0.6rem;"></i>
-            <p>No bills to display. <a href="/budget">Set your budget</a> to see your bill reminders.</p>
+            <p>No bills yet. Add your first bill to start reminders and track payment progress.</p>
+        </div>
+
+        <div class="bill-section" th:if="${billView != null and billView.byMonth != null and !billView.byMonth.isEmpty()}">
+            <div th:each="monthGroup : ${billView.byMonth}">
+                <h4><i class="fa-solid fa-calendar-days" style="color:#2563eb;"></i> <span th:text="${monthGroup.label}">March 2026</span></h4>
+                <div class="bills-grid">
+                    <div class="bill-card"
+                         th:each="card : ${monthGroup.bills}"
+                         th:id="${'bill-' + card.id}"
+                         th:classappend="${' card-' + card.statusColor}">
+                    <div class="bill-head">
+                        <div>
+                            <div class="bill-name-wrap">
+                                <span class="bill-icon" th:text="${card.categoryIcon}">📄</span>
+                                <h4 class="bill-name" th:text="${card.name}">Bill Name</h4>
+                            </div>
+                            <div class="bill-amount" th:text="${card.amount}">$0.00</div>
+                            <div class="bill-due-line" th:text="${card.dueText}">Due in 5 days</div>
+                            <div class="bill-due-date" th:text="${card.dueDate}">04/01/2026</div>
+                        </div>
+                        <span class="bill-badge" th:classappend="${' ' + card.statusColor}" th:text="${card.statusLabel}">Overdue</span>
+                    </div>
+                    <div class="bill-meta">
+                        <div><strong>Outstanding:</strong> <span th:text="${card.outstandingAmount}">$0.00</span></div>
+                        <div><strong>Paid:</strong> <span th:text="${card.paidAmount}">$0.00</span></div>
+                        <div><strong>Frequency:</strong> <span th:text="${card.frequency}">monthly</span> | <strong>Type:</strong> <span th:text="${card.amountType}">fixed</span></div>
+                        <div><strong>Category:</strong> <span th:text="${card.category}">Utilities</span></div>
+                        <div th:if="${!#strings.isEmpty(card.snoozedUntil)}"><strong>Snoozed Until:</strong> <span th:text="${card.snoozedUntil}">04/02/2026</span></div>
+                    </div>
+                    <div class="bill-actions">
+                        <form th:if="${!card.paid}" class="bill-pay-form" th:action="@{/alerts/bills/{id}/paid(id=${card.id})}" method="POST">
+                            <button type="submit" class="btn-mini paid">Mark Paid</button>
+                        </form>
+                        <form th:if="${card.paid}" th:action="@{/alerts/bills/{id}/unpaid(id=${card.id})}" method="POST">
+                            <button type="submit" class="btn-mini unpaid">Mark Unpaid</button>
+                        </form>
+                        <div class="bill-menu">
+                            <button type="button" class="bill-menu-btn">⋮</button>
+                            <div class="bill-menu-list">
+                                <a class="bill-menu-item" th:href="@{/alerts(editBillId=${card.id})}">Edit</a>
+                                <form th:action="@{/alerts/bills/{id}/snooze(id=${card.id})}" method="POST"><input type="hidden" name="snoozeDays" value="1"><button type="submit" class="bill-menu-item">Snooze 1 day</button></form>
+                                <form th:action="@{/alerts/bills/{id}/snooze(id=${card.id})}" method="POST"><input type="hidden" name="snoozeDays" value="3"><button type="submit" class="bill-menu-item">Snooze 3 days</button></form>
+                                <form th:action="@{/alerts/bills/{id}/delete(id=${card.id})}" method="POST"><button type="submit" class="bill-menu-item danger">Delete</button></form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
         </div>
 
         <!-- ══════════════════════════════
@@ -360,6 +753,41 @@
     menuToggle.addEventListener('click', () => {
         navMenu.classList.toggle('show');
     });
+
+    (function() {
+        document.querySelectorAll('.bill-menu-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const menu = btn.closest('.bill-menu');
+                if (!menu) return;
+                document.querySelectorAll('.bill-menu.open').forEach(function(other) {
+                    if (other !== menu) other.classList.remove('open');
+                });
+                menu.classList.toggle('open');
+            });
+        });
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.bill-menu.open').forEach(function(menu) {
+                menu.classList.remove('open');
+            });
+        });
+    })();
+
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const focusBillId = params.get('focusBillId');
+        if (!focusBillId) return;
+
+        const card = document.getElementById('bill-' + focusBillId);
+        if (!card) return;
+
+        card.classList.add('focus-target');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.setTimeout(function() {
+            card.classList.remove('focus-target');
+        }, 3200);
+    })();
 </script>
 
 <th:block th:replace="~{basetemplate :: darkMode}"></th:block>

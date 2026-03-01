@@ -102,6 +102,40 @@
         <button id="darkModeToggle" class="topbar-dark-toggle">
             <i id="darkModeIcon" class="fa-solid fa-moon"></i>
         </button>
+        <div class="topbar-bell-wrap">
+            <button id="billBellToggle" class="topbar-bell-btn" type="button" title="Bill reminders">
+                <i class="fa-solid fa-bell"></i>
+                <span th:if="${billReminderCount > 0}" class="topbar-bell-badge" th:text="${billReminderCount}">0</span>
+            </button>
+            <div id="billBellDropdown" class="topbar-bell-dropdown">
+                <div class="bell-dd-header">
+                    <span>Bill Reminders</span>
+                    <strong th:text="${billReminderCount + ' due date(s)'}">0 due date(s)</strong>
+                </div>
+
+                <div th:if="${billReminderCount == 0}" class="bell-dd-empty">
+                    No active reminders today. Add bills in Alerts &amp; Notifications.
+                </div>
+
+                <div th:if="${billReminderCount > 0}" class="bell-dd-list">
+                    <div th:each="item : ${billReminderItems}" class="bell-dd-item">
+                        <a th:href="@{/alerts(focusBillId=${item.billId})}" class="bell-dd-link">
+                            <div class="bell-dd-row">
+                                <strong th:text="${item.name}">Bill</strong>
+                                <span th:text="${item.amount}">$0.00</span>
+                            </div>
+                            <div class="bell-dd-row bell-dd-meta">
+                                <span th:text="${'Due: ' + item.dueDate}">Due: 04/01/2026</span>
+                                <span class="bell-dd-badge">Active</span>
+                            </div>
+                            <div class="bell-dd-row bell-dd-sub">
+                                <span th:text="${item.trigger}">Due in 7 day(s)</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
         <a th:href="@{/profile}" class="topbar-avatar-link" title="My Profile">
             <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
                  th:src="${profilePhoto}" alt="Profile" class="topbar-avatar-img">
@@ -110,6 +144,24 @@
                   th:text="${userInitial != null} ? ${userInitial} : 'U'">U</span>
         </a>
     </div>
+    <script>
+    (function() {
+        var btn = document.getElementById('billBellToggle');
+        var menu = document.getElementById('billBellDropdown');
+        if (!btn || !menu) return;
+
+        btn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            menu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.classList.remove('show');
+            }
+        });
+    })();
+    </script>
 </div>
 
 <th:block th:fragment="darkMode">
