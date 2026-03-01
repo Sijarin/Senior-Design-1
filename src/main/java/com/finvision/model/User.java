@@ -13,16 +13,18 @@ public class User {
     @Indexed(unique = true)
     private String username;
 
+    private String name;
     private String password;
-    private String email; // Optional — can be used later for notifications or password reset links
+    private String email;
     private String securityQuestion;
     private String securityAnswer;
 
     // ---------- Constructors ----------
     public User() {}
 
-    public User(String username, String password, String email, String securityQuestion, String securityAnswer) {
+    public User(String username, String name, String password, String email, String securityQuestion, String securityAnswer) {
         this.username = username;
+        this.name = name;
         this.password = password;
         this.email = email;
         this.securityQuestion = securityQuestion;
@@ -44,6 +46,14 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPassword() {

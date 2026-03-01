@@ -2,7 +2,9 @@ package com.finvision.controller;
 
 import com.finvision.model.User;
 import com.finvision.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,43 +24,42 @@ public class AuthController {
     // ---------- LOGIN ----------
     @GetMapping("/login")
     public String login() {
-        return "login"; // loads login.html
+        return "login";
     }
 
     // ---------- REGISTER ----------
     @GetMapping("/register")
     public String register() {
-        return "register"; // loads register.html
+        return "register";
     }
 
     @PostMapping("/register")
     public String registerUser(@RequestParam String username,
+                               @RequestParam String email,
                                @RequestParam String password,
                                @RequestParam(required = false) String confirmPassword,
+                               @RequestParam(required = false) String securityQuestion,
+                               @RequestParam(required = false) String securityAnswer,
                                Model model) {
 
-        // Check if passwords match
         if (confirmPassword != null && !password.equals(confirmPassword)) {
             model.addAttribute("error", "Passwords do not match.");
             return "register";
         }
 
-        // Check if username exists
         if (userRepository.findByUsername(username).isPresent()) {
             model.addAttribute("error", "Username already exists.");
             return "register";
         }
 
-        // Save new user
         User user = new User();
         user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-
-        // TODO: Set security question/answer if added in register.html
-        // user.setSecurityQuestion(securityQuestion);
-        // user.setSecurityAnswer(securityAnswer);
-
+        user.setSecurityQuestion(securityQuestion);
+        user.setSecurityAnswer(securityAnswer);
         userRepository.save(user);
+
         return "redirect:/login?registered=true";
     }
 
@@ -108,5 +109,66 @@ public class AuthController {
 
         model.addAttribute("success", "Password reset successful! You can now log in.");
         return "login";
+    }
+
+    // ---------- PROFILE UPDATE ----------
+    @PostMapping("/profile/update")
+    public String updateProfile(@RequestParam String name,
+                                @RequestParam String email,
+                                @RequestParam String username,
+                                Authentication authentication, Model model) {
+
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user == null) return "redirect:/login";
+
+        user.setName(name);
+        user.setEmail(email);
+        user.setUsername(username);
+        userRepository.save(user);
+
+        model.addAttribute("user", user);
+        model.addAttribute("success", "Profile updated successfully.");
+        return "profile";
+    }
+
+    // ---------- PASSWORD CHANGE ----------
+    @PostMapping("/profile/password")
+    public String updatePassword(@RequestParam String currentPassword,
+                                 @RequestParam String newPassword,
+                                 @RequestParam String confirmPassword,
+                                 Authentication authentication, Model model) {
+
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user == null) return "redirect:/login";
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            model.addAttribute("user", user);
+            model.addAttribute("error", "Current password is incorrect.");
+            return "profile";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            model.addAttribute("user", user);
+            model.addAttribute("error", "New passwords do not match.");
+            return "profile";
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        model.addAttribute("user", user);
+        model.addAttribute("success", "Password updated successfully.");
+        return "profile";
+    }
+
+    // ---------- DELETE ACCOUNT ----------
+    @PostMapping("/profile/delete")
+    public String deleteAccount(Authentication authentication, HttpServletRequest request) {
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user != null) {
+            userRepository.delete(user);
+        }
+        request.getSession().invalidate();
+        return "redirect:/login?deleted=true";
     }
 }
