@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt Scanner – FinVision</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Tesseract.js v5 — client-side OCR, no API key needed -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        .page-wrap { padding: 1.8rem 2rem 3rem; max-width: 1000px; }
+
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .a1{animation:fadeInUp .5s ease both}
+        .a2{animation:fadeInUp .5s .1s ease both}
+        .a3{animation:fadeInUp .5s .2s ease both}
+        .a4{animation:fadeInUp .5s .3s ease both}
+
+        /* ── Hero ── */
+        .rs-hero {
+            background: linear-gradient(135deg,#0ba360 0%,#38ef7d 50%,#4facfe 100%);
+            border-radius: 24px; padding: 2.2rem 2.5rem;
+            color: #fff; display: flex; align-items: center; gap: 1.8rem;
+            margin-bottom: 2rem; position: relative; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(11,163,96,0.35);
+        }
+        .rs-hero::before {
+            content:''; position:absolute; width:260px; height:260px;
+            background:rgba(255,255,255,0.07); border-radius:50%;
+            top:-90px; right:-60px; pointer-events:none;
+        }
+        .rs-hero-icon {
+            width:72px; height:72px; flex-shrink:0;
+            background:rgba(255,255,255,0.2); border-radius:22px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:2rem; backdrop-filter:blur(6px);
+            border:2px solid rgba(255,255,255,0.3);
+        }
+        .rs-hero-text h1 { font-size:2rem; font-weight:900; margin:0 0 .35rem; }
+        .rs-hero-text p  { font-size:.92rem; opacity:.9; margin:0 0 1rem; }
+        .rs-stats { display:flex; gap:1.5rem; flex-wrap:wrap; }
+        .rs-stat {
+            background:rgba(255,255,255,0.18); border-radius:14px;
+            padding:.5rem 1.1rem; text-align:center;
+            backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.25);
+        }
+        .rs-stat .sv { font-size:1.3rem; font-weight:900; display:block; }
+        .rs-stat .sl { font-size:.68rem; opacity:.85; text-transform:uppercase; letter-spacing:.5px; }
+
+        /* ── Two-column grid ── */
+        .rs-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; margin-bottom:1.4rem; }
+
+        /* ── Card ── */
+        .rs-card {
+            background:var(--bg-card,#fff); border-radius:20px;
+            padding:1.6rem; box-shadow:0 4px 20px rgba(0,0,0,0.07);
+        }
+        .rs-card-title {
+            display:flex; align-items:center; gap:.65rem;
+            font-size:1rem; font-weight:800;
+            color:var(--text-main,#2c3e50);
+            margin-bottom:1.3rem; padding-bottom:.85rem;
+            border-bottom:2px solid #f0f0f0;
+        }
+        .rs-card-icon {
+            width:34px; height:34px; border-radius:10px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:.88rem; color:#fff; flex-shrink:0;
+        }
+
+        /* ── Drop zone ── */
+        .drop-zone {
+            border:2.5px dashed #c5cae9; border-radius:16px;
+            padding:2rem 1rem; text-align:center;
+            cursor:pointer; transition:border-color .25s, background .25s;
+            background:#f8f9ff; position:relative;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color:#667eea; background:#eef0fc;
+        }
+        .drop-zone input[type=file] {
+            position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+        }
+        .dz-icon { font-size:2.6rem; color:#c5cae9; margin-bottom:.7rem; }
+        .drop-zone:hover .dz-icon, .drop-zone.drag-over .dz-icon { color:#667eea; }
+        .dz-text { font-size:.88rem; color:#7f8c8d; }
+        .dz-text strong { color:#667eea; }
+
+        /* ── Image preview ── */
+        #previewWrap { display:none; margin-top:1rem; text-align:center; }
+        #previewImg  { max-width:100%; max-height:220px; border-radius:12px;
+                       box-shadow:0 4px 16px rgba(0,0,0,0.12); }
+        .preview-actions { display:flex; gap:.6rem; justify-content:center; margin-top:.8rem; flex-wrap:wrap; }
+
+        /* ── OCR progress ── */
+        #ocrStatus { display:none; margin-top:1rem; }
+        .ocr-bar-track {
+            height:8px; background:#eef0fc; border-radius:4px; overflow:hidden; margin:.6rem 0;
+        }
+        .ocr-bar-fill {
+            height:100%; background:linear-gradient(to right,#667eea,#764ba2);
+            border-radius:4px; width:0%; transition:width .3s;
+        }
+        .ocr-log { font-size:.75rem; color:#7f8c8d; min-height:1em; }
+
+        /* ── Amount chips (detected values) ── */
+        #amountChips { display:none; margin-top:.8rem; }
+        .chip-label { font-size:.75rem; color:#667eea; font-weight:700; margin-bottom:.4rem; }
+        .amt-chips  { display:flex; flex-wrap:wrap; gap:.5rem; }
+        .amt-chip {
+            padding:.28rem .85rem; border-radius:50px;
+            border:1.5px solid #667eea; background:#f0f2ff;
+            color:#667eea; font-size:.82rem; font-weight:700; cursor:pointer;
+            transition:background .2s, color .2s;
+        }
+        .amt-chip:hover { background:#667eea; color:#fff; }
+
+        /* ── Form fields ── */
+        .field { margin-bottom:1rem; }
+        .field label { display:block; font-size:.75rem; font-weight:700;
+                       color:var(--text-muted,#666); text-transform:uppercase;
+                       letter-spacing:.5px; margin-bottom:.35rem; }
+        .field-wrap { position:relative; }
+        .fi { position:absolute; left:12px; top:50%; transform:translateY(-50%);
+              color:#667eea; font-size:.88rem; pointer-events:none; }
+        .field-wrap input, .field-wrap select, .field-wrap textarea {
+            width:100%; padding:.72rem .85rem .72rem 2.2rem;
+            border:2px solid #e8eaf6; border-radius:11px;
+            font-size:.93rem; font-weight:500;
+            background:var(--bg-input,#fff); color:var(--text-main,#2c3e50);
+            transition:border-color .25s, box-shadow .25s;
+        }
+        .field-wrap textarea { padding:.72rem .85rem .72rem 2.2rem; resize:vertical; min-height:70px; }
+        .field-wrap input:focus, .field-wrap select:focus, .field-wrap textarea:focus {
+            outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.14);
+        }
+        .field-wrap select { appearance:none; }
+
+        .amt-input-wrap { position:relative; }
+        .amt-prefix { position:absolute; left:12px; top:50%; transform:translateY(-50%);
+                      color:#0ba360; font-weight:900; font-size:1rem; }
+        #amountInput { padding-left:1.8rem; font-size:1.1rem; font-weight:800; color:#0ba360; }
+
+        .btn-scan {
+            width:100%; padding:.72rem; border:none; border-radius:11px; cursor:pointer;
+            font-size:.93rem; font-weight:700; display:flex; align-items:center;
+            justify-content:center; gap:.5rem; margin-bottom:.8rem;
+            background:linear-gradient(135deg,#667eea,#764ba2);
+            color:#fff; box-shadow:0 4px 14px rgba(102,126,234,.35);
+            transition:transform .2s, box-shadow .2s;
+        }
+        .btn-scan:hover { transform:translateY(-2px); box-shadow:0 7px 20px rgba(102,126,234,.5); }
+        .btn-scan:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+        .btn-add {
+            width:100%; padding:.8rem; border:none; border-radius:11px; cursor:pointer;
+            font-size:.95rem; font-weight:800;
+            background:linear-gradient(135deg,#0ba360,#38ef7d);
+            color:#fff; box-shadow:0 4px 14px rgba(11,163,96,.35);
+            display:flex; align-items:center; justify-content:center; gap:.5rem;
+            transition:transform .2s, box-shadow .2s;
+        }
+        .btn-add:hover { transform:translateY(-2px); box-shadow:0 7px 20px rgba(11,163,96,.5); }
+
+        /* ── History table ── */
+        .history-section { margin-bottom:1.4rem; }
+        .history-empty {
+            text-align:center; padding:2.5rem; color:#c0c0c0; font-size:.9rem;
+        }
+        .history-empty i { display:block; font-size:2.5rem; margin-bottom:.7rem; color:#e0e0e0; }
+        .receipt-list { display:flex; flex-direction:column; gap:.7rem; }
+        .receipt-row {
+            display:flex; align-items:center; gap:1rem;
+            background:var(--bg-card,#fff); border-radius:14px;
+            padding:.85rem 1.1rem; box-shadow:0 2px 10px rgba(0,0,0,.06);
+            border-left:4px solid #667eea; transition:transform .2s;
+        }
+        .receipt-row:hover { transform:translateX(3px); }
+        .rr-thumb {
+            width:44px; height:44px; border-radius:10px; flex-shrink:0;
+            object-fit:cover; background:#f0f2ff;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.1rem; color:#667eea; overflow:hidden;
+        }
+        .rr-thumb img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+        .rr-info { flex:1; min-width:0; }
+        .rr-merchant { font-size:.9rem; font-weight:800; color:var(--text-main,#2c3e50);
+                       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .rr-meta { font-size:.73rem; color:#7f8c8d; margin-top:.1rem; }
+        .rr-amount { font-size:1.05rem; font-weight:900; color:#0ba360; flex-shrink:0; }
+        .rr-del {
+            width:30px; height:30px; border-radius:8px; border:none;
+            background:#ffeaea; color:#c0392b; font-size:.78rem;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; transition:background .2s;
+        }
+        .rr-del:hover { background:#f5576c; color:#fff; }
+
+        /* Category color strips */
+        .cat-Groceries     { border-left-color:#0ba360; }
+        .cat-Dining        { border-left-color:#f7971e; }
+        .cat-Shopping      { border-left-color:#667eea; }
+        .cat-Transport     { border-left-color:#4facfe; }
+        .cat-Healthcare    { border-left-color:#f5576c; }
+        .cat-Entertainment { border-left-color:#764ba2; }
+        .cat-Utilities     { border-left-color:#11998e; }
+        .cat-Other         { border-left-color:#bdbdbd; }
+
+        /* ── Dark mode ── */
+        body.dark .rs-card   { background:#1e2235; }
+        body.dark .rs-card-title { color:#e0e0e0; border-color:#2d3250; }
+        body.dark .drop-zone { background:#1a1d30; border-color:#3a3f6e; }
+        body.dark .dz-text   { color:#9aa; }
+        body.dark .field-wrap input,
+        body.dark .field-wrap select,
+        body.dark .field-wrap textarea { background:#252840; border-color:#3a3f6e; color:#e0e0e0; }
+        body.dark .receipt-row { background:#1e2235; }
+        body.dark .rr-merchant { color:#e0e0e0; }
+        body.dark .amt-chip   { background:#252840; }
+        body.dark .ocr-bar-track { background:#252840; }
+
+        @media(max-width:768px) {
+            .rs-grid { grid-template-columns:1fr; }
+            .page-wrap { padding:1.2rem 1rem 2rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <main class="main">
+        <div th:replace="~{basetemplate :: topbar}"></div>
+
+        <div class="page-wrap">
+
+            <!-- ══ HERO ══ -->
+            <div class="rs-hero a1">
+                <div class="rs-hero-icon"><i class="fa-solid fa-receipt"></i></div>
+                <div class="rs-hero-text">
+                    <h1>Receipt Scanner</h1>
+                    <p>Upload a photo of any receipt — AI reads the amount automatically. Every scanned receipt updates your dashboard, budget, and all reports.</p>
+                    <div class="rs-stats">
+                        <div class="rs-stat">
+                            <span class="sv" th:text="${receiptCount}">0</span>
+                            <span class="sl">Total Receipts</span>
+                        </div>
+                        <div class="rs-stat">
+                            <span class="sv" th:text="'$' + ${monthTotal}">$0.00</span>
+                            <span class="sl">This Month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ SCAN + FORM ══ -->
+            <div class="rs-grid a2">
+
+                <!-- Left: Upload & OCR -->
+                <div class="rs-card">
+                    <div class="rs-card-title">
+                        <div class="rs-card-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        Upload Receipt Image
+                    </div>
+
+                    <!-- Drop zone -->
+                    <div class="drop-zone" id="dropZone">
+                        <input type="file" id="receiptFileInput" accept="image/*" capture="environment">
+                        <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <div class="dz-text">
+                            <strong>Click or drag &amp; drop</strong><br>
+                            JPG, PNG, WEBP — or use camera on mobile
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div id="previewWrap">
+                        <img id="previewImg" alt="Receipt preview">
+                        <div class="preview-actions">
+                            <button type="button" class="btn-scan" id="scanBtn" onclick="runOCR()">
+                                <i class="fa-solid fa-magnifying-glass"></i> Scan with AI
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- OCR status -->
+                    <div id="ocrStatus">
+                        <div class="ocr-log" id="ocrLog">Initialising...</div>
+                        <div class="ocr-bar-track"><div class="ocr-bar-fill" id="ocrBar"></div></div>
+                    </div>
+
+                    <!-- Detected amounts -->
+                    <div id="amountChips">
+                        <div class="chip-label"><i class="fa-solid fa-wand-magic-sparkles"></i> Detected amounts — click to use:</div>
+                        <div class="amt-chips" id="chipRow"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Add Receipt Form -->
+                <div class="rs-card">
+                    <div class="rs-card-title">
+                        <div class="rs-card-icon" style="background:linear-gradient(135deg,#0ba360,#38ef7d);">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        Add Receipt
+                    </div>
+
+                    <form th:action="@{/receipt-scan/add}" method="POST" enctype="multipart/form-data" id="addForm">
+                        <!-- Hidden: pass the thumbnail data -->
+                        <input type="hidden" name="receiptImageB64" id="thumbB64">
+
+                        <div class="field">
+                            <label>Merchant / Store Name</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-store fi"></i>
+                                <input type="text" name="merchantName" id="merchantInput"
+                                       placeholder="e.g. Walmart, Starbucks…">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Total Amount</label>
+                            <div class="field-wrap amt-input-wrap">
+                                <span class="amt-prefix">$</span>
+                                <input type="number" name="amount" id="amountInput"
+                                       step="0.01" min="0.01" required placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Category</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-tag fi"></i>
+                                <select name="category" id="categorySelect" required>
+                                    <option value="">— Select category —</option>
+                                    <option value="Groceries">Groceries</option>
+                                    <option value="Dining">Dining</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Date</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-calendar fi"></i>
+                                <input type="date" name="dateStr" id="dateInput"
+                                       th:value="${todayStr}" required>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Notes (optional)</label>
+                            <div class="field-wrap">
+                                <i class="fa-solid fa-note-sticky fi" style="top:14px;transform:none;"></i>
+                                <textarea name="notes" id="notesInput" placeholder="Any extra detail…"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Hidden file field — JS copies selected file here -->
+                        <input type="file" name="receiptImage" id="hiddenFile" style="display:none" accept="image/*">
+
+                        <button type="submit" class="btn-add">
+                            <i class="fa-solid fa-circle-plus"></i> Add to Expenses
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ══ RECEIPT HISTORY ══ -->
+            <div class="rs-card a3 history-section">
+                <div class="rs-card-title">
+                    <div class="rs-card-icon" style="background:linear-gradient(135deg,#f7971e,#ffd200);">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    Receipt History
+                    <span style="margin-left:auto;font-size:.75rem;font-weight:600;color:#7f8c8d;"
+                          th:text="${receiptCount} + ' receipts'">0 receipts</span>
+                </div>
+
+                <div th:if="${#lists.isEmpty(receipts)}" class="history-empty">
+                    <i class="fa-solid fa-receipt"></i>
+                    No receipts scanned yet. Add your first one above!
+                </div>
+
+                <div th:unless="${#lists.isEmpty(receipts)}" class="receipt-list">
+                    <div th:each="r : ${receipts}"
+                         th:class="'receipt-row cat-' + ${r.category}">
+
+                        <!-- Thumbnail or icon -->
+                        <div class="rr-thumb">
+                            <img th:if="${r.imageData != null and !#strings.isEmpty(r.imageData)}"
+                                 th:src="${r.imageData}" alt="receipt">
+                            <i th:unless="${r.imageData != null and !#strings.isEmpty(r.imageData)}"
+                               class="fa-solid fa-receipt"></i>
+                        </div>
+
+                        <div class="rr-info">
+                            <div class="rr-merchant" th:text="${r.merchantName}">Store</div>
+                            <div class="rr-meta">
+                                <i class="fa-solid fa-tag" style="font-size:.65rem;"></i>
+                                <span th:text="${r.category}">Category</span>
+                                &nbsp;·&nbsp;
+                                <i class="fa-solid fa-calendar-days" style="font-size:.65rem;"></i>
+                                <span th:text="${r.dateStr}">Date</span>
+                                <span th:if="${r.notes != null and !#strings.isEmpty(r.notes)}">
+                                    &nbsp;·&nbsp;<span th:text="${r.notes}">Note</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="rr-amount" th:text="'$' + ${#numbers.formatDecimal(r.amount,1,'COMMA',2,'POINT')}">$0.00</div>
+
+                        <form th:action="@{/receipt-scan/delete/{id}(id=${r.id})}" method="POST"
+                              onsubmit="return confirm('Delete this receipt?')">
+                            <button type="submit" class="rr-del" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /page-wrap -->
+    </main>
+</div>
+
+<div class="chatbot-btn"><i class="fa-solid fa-robot"></i></div>
+
+<script>
+// ── Drag-and-drop + file preview ──
+const dropZone   = document.getElementById('dropZone');
+const fileInput  = document.getElementById('receiptFileInput');
+const hiddenFile = document.getElementById('hiddenFile');
+const previewWrap = document.getElementById('previewWrap');
+const previewImg  = document.getElementById('previewImg');
+
+let selectedFile = null;
+
+fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(file) {
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        previewImg.src = ev.target.result;
+        previewWrap.style.display = 'block';
+        document.getElementById('ocrStatus').style.display = 'none';
+        document.getElementById('amountChips').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+
+    // Also pass the file to the hidden input for form upload
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    hiddenFile.files = dt.files;
+}
+
+// ── Tesseract OCR ──
+async function runOCR() {
+    if (!selectedFile) { alert('Please upload a receipt image first.'); return; }
+
+    const scanBtn   = document.getElementById('scanBtn');
+    const ocrStatus = document.getElementById('ocrStatus');
+    const ocrBar    = document.getElementById('ocrBar');
+    const ocrLog    = document.getElementById('ocrLog');
+    const chipsDiv  = document.getElementById('amountChips');
+    const chipRow   = document.getElementById('chipRow');
+
+    scanBtn.disabled = true;
+    scanBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanning…';
+    ocrStatus.style.display = 'block';
+    chipsDiv.style.display  = 'none';
+    chipRow.innerHTML = '';
+
+    try {
+        const worker = await Tesseract.createWorker('eng', 1, {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    const pct = Math.round((m.progress || 0) * 100);
+                    ocrBar.style.width = pct + '%';
+                    ocrLog.textContent = 'Reading receipt… ' + pct + '%';
+                } else {
+                    ocrLog.textContent = m.status || 'Working…';
+                }
+            }
+        });
+
+        const { data: { text } } = await worker.recognize(selectedFile);
+        await worker.terminate();
+
+        ocrLog.textContent = 'Scan complete!';
+        ocrBar.style.width = '100%';
+
+        // Extract dollar amounts (e.g. $12.34 or 12.34)
+        const raw    = text.match(/\$?\s*\d{1,5}[.,]\d{2}/g) || [];
+        const unique = [...new Set(raw.map(s => parseFloat(s.replace(/[$,\s]/g,'').replace(',','.')).toFixed(2)))];
+        unique.sort((a, b) => b - a); // largest first (likely the total)
+
+        if (unique.length > 0) {
+            chipsDiv.style.display = 'block';
+            unique.forEach(v => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'amt-chip';
+                chip.textContent = '$' + v;
+                chip.onclick = () => {
+                    document.getElementById('amountInput').value = v;
+                    chip.style.background = '#0ba360';
+                    chip.style.color      = '#fff';
+                    chip.style.borderColor= '#0ba360';
+                };
+                chipRow.appendChild(chip);
+            });
+            // Auto-fill with largest amount
+            document.getElementById('amountInput').value = unique[0];
+        } else {
+            ocrLog.textContent = 'No amounts detected — please enter manually.';
+        }
+
+        // Try to guess merchant from first non-empty line
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+        if (lines.length > 0 && !document.getElementById('merchantInput').value) {
+            document.getElementById('merchantInput').value = lines[0].substring(0, 40);
+        }
+
+    } catch (err) {
+        ocrLog.textContent = 'OCR failed — please enter the amount manually.';
+        console.error(err);
+    }
+
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Scan with AI';
+}
+
+// ── Hamburger ──
+document.querySelector('.menu-toggle').addEventListener('click', () => {
+    document.querySelector('.nav-menu').classList.toggle('show');
+});
+</script>
+
+<th:block th:replace="~{basetemplate :: darkMode}"></th:block>
+</body>
+</html>
