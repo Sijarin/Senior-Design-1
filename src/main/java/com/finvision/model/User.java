@@ -23,6 +23,7 @@ public class User {
     private String accountNumber;
     private String routingNumber;
     private String profilePhoto; // base64 data URL
+    private String pin; // BCrypt-hashed 4-digit PIN for account recovery
 
     // ---------- Constructors ----------
     public User() {}
@@ -95,4 +96,7 @@ public class User {
 
     public String getProfilePhoto() { return profilePhoto; }
     public void setProfilePhoto(String profilePhoto) { this.profilePhoto = profilePhoto; }
+
+    public String getPin() { return pin; }
+    public void setPin(String pin) { this.pin = pin; }
 }

@@ -19,7 +19,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Disable only if you’re still prototyping
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register", "/forgot-password", "/reset-password", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/login", "/register", "/forgot-password", "/reset-password", "/verify-identity", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

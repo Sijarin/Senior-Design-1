@@ -4,7 +4,6 @@ import com.finvision.model.User;
 import com.finvision.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,154 +20,164 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ---------- LOGIN ----------
+    // ─── LOGIN ───────────────────────────────────────────────────────────────
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
-    // ---------- REGISTER ----------
+    // ─── REGISTER ────────────────────────────────────────────────────────────
     @GetMapping("/register")
     public String register() {
         return "register";
     }
 
     @PostMapping("/register")
-    public String registerUser(@RequestParam String username,
-                               @RequestParam String email,
-                               @RequestParam String password,
-                               @RequestParam(required = false) String confirmPassword,
-                               @RequestParam(required = false) String securityQuestion,
-                               @RequestParam(required = false) String securityAnswer,
-                               Model model) {
+    public String registerUser(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam(required = false) String confirmPassword,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String pin,
+            @RequestParam(required = false) String securityQuestion,
+            @RequestParam(required = false) String securityAnswer,
+            Model model) {
 
         if (confirmPassword != null && !password.equals(confirmPassword)) {
             model.addAttribute("error", "Passwords do not match.");
             return "register";
         }
-
         if (userRepository.findByUsername(username).isPresent()) {
             model.addAttribute("error", "Username already exists.");
+            return "register";
+        }
+        if (pin == null || !pin.matches("\\d{4}")) {
+            model.addAttribute("error", "PIN must be exactly 4 digits.");
             return "register";
         }
 
         User user = new User();
         user.setUsername(username);
-        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setSecurityQuestion(securityQuestion);
-        user.setSecurityAnswer(securityAnswer);
-        userRepository.save(user);
+        user.setEmail(email != null ? email.trim() : "");
+        user.setPin(passwordEncoder.encode(pin));
+        user.setSecurityQuestion(securityQuestion != null ? securityQuestion.trim() : "");
+        user.setSecurityAnswer(securityAnswer != null ? securityAnswer.trim().toLowerCase() : "");
 
+        userRepository.save(user);
         return "redirect:/login?registered=true";
     }
 
-    // ---------- FORGOT PASSWORD ----------
+    // ─── FORGOT PASSWORD (Step 1: enter username) ─────────────────────────────
     @GetMapping("/forgot-password")
     public String showForgotPasswordPage() {
         return "forgot-password";
     }
 
     @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam("username") String username, Model model) {
-        User user = userRepository.findByUsername(username).orElse(null);
+    public String processForgotPassword(
+            @RequestParam("username") String username, Model model) {
 
+        User user = userRepository.findByUsername(username).orElse(null);
         if (user == null) {
-            model.addAttribute("error", "No user found with that username.");
+            model.addAttribute("error", "No account found with that username.");
             return "forgot-password";
         }
 
-        model.addAttribute("securityQuestion", user.getSecurityQuestion());
         model.addAttribute("username", username);
+        model.addAttribute("securityQuestion", user.getSecurityQuestion());
+        model.addAttribute("verifyStep", true);
         return "reset-password";
     }
 
-    // ---------- RESET PASSWORD ----------
+    // ─── VERIFY IDENTITY (Step 2: PIN or security question) ──────────────────
+    @PostMapping("/verify-identity")
+    public String verifyIdentity(
+            @RequestParam String username,
+            @RequestParam String verifyMethod,
+            @RequestParam(required = false) String pinValue,
+            @RequestParam(required = false) String securityAnswer,
+            HttpServletRequest request,
+            Model model) {
+
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            model.addAttribute("error", "User not found.");
+            model.addAttribute("verifyStep", true);
+            return "reset-password";
+        }
+
+        boolean verified = false;
+        if ("pin".equals(verifyMethod)) {
+            verified = pinValue != null
+                    && user.getPin() != null
+                    && passwordEncoder.matches(pinValue, user.getPin());
+        } else {
+            verified = securityAnswer != null
+                    && user.getSecurityAnswer() != null
+                    && user.getSecurityAnswer().equalsIgnoreCase(securityAnswer.trim());
+        }
+
+        if (!verified) {
+            String errMsg = "pin".equals(verifyMethod)
+                    ? "Incorrect PIN. Please try again."
+                    : "Incorrect security answer. Please try again.";
+            model.addAttribute("error", errMsg);
+            model.addAttribute("username", username);
+            model.addAttribute("securityQuestion", user.getSecurityQuestion());
+            model.addAttribute("verifyStep", true);
+            return "reset-password";
+        }
+
+        // Verified — store in session so Step 3 can use it
+        request.getSession().setAttribute("pendingReset", username);
+        model.addAttribute("passwordStep", true);
+        return "reset-password";
+    }
+
+    // ─── RESET PASSWORD (Step 3: set new password) ───────────────────────────
     @GetMapping("/reset-password")
-    public String resetPasswordPage() {
+    public String resetPasswordPage(HttpServletRequest request, Model model) {
+        String username = (String) request.getSession().getAttribute("pendingReset");
+        if (username != null) {
+            model.addAttribute("passwordStep", true);
+        }
         return "reset-password";
     }
 
     @PostMapping("/reset-password")
-    public String processResetPassword(@RequestParam("username") String username,
-                                       @RequestParam("securityAnswer") String securityAnswer,
-                                       @RequestParam("newPassword") String newPassword,
-                                       Model model) {
+    public String processResetPassword(
+            @RequestParam String newPassword,
+            @RequestParam(required = false) String confirmPassword,
+            HttpServletRequest request,
+            Model model) {
 
-        User user = userRepository.findByUsername(username).orElse(null);
+        String username = (String) request.getSession().getAttribute("pendingReset");
+        if (username == null) {
+            return "redirect:/forgot-password";
+        }
 
-        if (user == null || !user.getSecurityAnswer().equalsIgnoreCase(securityAnswer)) {
-            model.addAttribute("error", "Incorrect security answer.");
-            model.addAttribute("username", username);
-            model.addAttribute("securityQuestion", user != null ? user.getSecurityQuestion() : "");
+        if (confirmPassword != null && !newPassword.equals(confirmPassword)) {
+            model.addAttribute("error", "Passwords do not match.");
+            model.addAttribute("passwordStep", true);
+            return "reset-password";
+        }
+        if (newPassword.length() < 6) {
+            model.addAttribute("error", "Password must be at least 6 characters.");
+            model.addAttribute("passwordStep", true);
             return "reset-password";
         }
 
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return "redirect:/forgot-password";
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        request.getSession().removeAttribute("pendingReset");
 
-        model.addAttribute("success", "Password reset successful! You can now log in.");
+        model.addAttribute("success", "Password reset successful! You can now sign in.");
         return "login";
-    }
-
-    // ---------- PROFILE UPDATE ----------
-    @PostMapping("/profile/update")
-    public String updateProfile(@RequestParam String name,
-                                @RequestParam String email,
-                                @RequestParam String username,
-                                Authentication authentication, Model model) {
-
-        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
-        if (user == null) return "redirect:/login";
-
-        user.setName(name);
-        user.setEmail(email);
-        user.setUsername(username);
-        userRepository.save(user);
-
-        model.addAttribute("user", user);
-        model.addAttribute("success", "Profile updated successfully.");
-        return "profile";
-    }
-
-    // ---------- PASSWORD CHANGE ----------
-    @PostMapping("/profile/password")
-    public String updatePassword(@RequestParam String currentPassword,
-                                 @RequestParam String newPassword,
-                                 @RequestParam String confirmPassword,
-                                 Authentication authentication, Model model) {
-
-        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
-        if (user == null) return "redirect:/login";
-
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            model.addAttribute("user", user);
-            model.addAttribute("error", "Current password is incorrect.");
-            return "profile";
-        }
-
-        if (!newPassword.equals(confirmPassword)) {
-            model.addAttribute("user", user);
-            model.addAttribute("error", "New passwords do not match.");
-            return "profile";
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-
-        model.addAttribute("user", user);
-        model.addAttribute("success", "Password updated successfully.");
-        return "profile";
-    }
-
-    // ---------- DELETE ACCOUNT ----------
-    @PostMapping("/profile/delete")
-    public String deleteAccount(Authentication authentication, HttpServletRequest request) {
-        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
-        if (user != null) {
-            userRepository.delete(user);
-        }
-        request.getSession().invalidate();
-        return "redirect:/login?deleted=true";
     }
 }
