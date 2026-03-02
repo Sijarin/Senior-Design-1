@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Receipt Scanner – FinVision</title>
+    <title>Actual Expense – FinVision</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <!-- Tesseract.js v5 — client-side OCR, no API key needed -->
@@ -197,14 +197,94 @@
         .rr-del:hover { background:#f5576c; color:#fff; }
 
         /* Category color strips */
+        .cat-Rent          { border-left-color:#e74c3c; }
+        .cat-Utilities     { border-left-color:#11998e; }
+        .cat-Insurance     { border-left-color:#9b59b6; }
         .cat-Groceries     { border-left-color:#0ba360; }
+        .cat-Subscriptions { border-left-color:#3498db; }
         .cat-Dining        { border-left-color:#f7971e; }
         .cat-Shopping      { border-left-color:#667eea; }
         .cat-Transport     { border-left-color:#4facfe; }
         .cat-Healthcare    { border-left-color:#f5576c; }
         .cat-Entertainment { border-left-color:#764ba2; }
-        .cat-Utilities     { border-left-color:#11998e; }
         .cat-Other         { border-left-color:#bdbdbd; }
+
+        /* ── Comparison Table ── */
+        .comp-section { margin-bottom: 1.4rem; }
+        .comp-table {
+            width: 100%; border-collapse: collapse;
+        }
+        .comp-table thead th {
+            font-size: .71rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .55px; color: #7f8c8d;
+            padding: .65rem 1rem; text-align: left;
+            border-bottom: 2px solid #f0f2ff; white-space: nowrap;
+        }
+        .comp-row { border-bottom: 1px solid #f5f6fa; transition: background .15s; }
+        .comp-row:hover { background: #f8f9ff; }
+        .comp-row td { padding: .8rem 1rem; vertical-align: middle; font-size: .88rem; }
+        .comp-total-row td {
+            padding: .85rem 1rem; font-size: .9rem; font-weight: 900;
+            border-top: 2.5px solid #e8eaf6; background: #f4f6ff;
+        }
+
+        /* Category cell */
+        .comp-cat-cell { display: flex; align-items: center; gap: .55rem; font-weight: 700; color: var(--text-main,#2c3e50); }
+        .cat-dot {
+            width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,.15);
+        }
+        .cat-dot-Rent          { background: #e74c3c; }
+        .cat-dot-Utilities     { background: #11998e; }
+        .cat-dot-Insurance     { background: #9b59b6; }
+        .cat-dot-Groceries     { background: #0ba360; }
+        .cat-dot-Subscriptions { background: #3498db; }
+        .cat-dot-Dining        { background: #f7971e; }
+        .cat-dot-Shopping      { background: #667eea; }
+        .cat-dot-Transport     { background: #4facfe; }
+        .cat-dot-Healthcare    { background: #f5576c; }
+        .cat-dot-Entertainment { background: #764ba2; }
+        .cat-dot-Others        { background: #bdbdbd; }
+        .cat-dot-Other         { background: #bdbdbd; }
+        .cat-dot-default       { background: #c0c0c0; }
+
+        /* Amount cells */
+        .set-amt   { font-weight: 700; color: #667eea; }
+        .actual-amt { font-weight: 700; color: #0ba360; }
+        .actual-over { color: #e74c3c; }
+        .not-set   { color: #c0c0c0; font-style: italic; font-size: .78rem; }
+
+        /* Diff cell */
+        .diff-under { color: #0ba360; font-weight: 800; }
+        .diff-over  { color: #e74c3c; font-weight: 800; }
+        .diff-zero  { color: #7f8c8d; }
+
+        /* Feedback chips */
+        .feedback-chip {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .25rem .85rem; border-radius: 50px;
+            font-size: .72rem; font-weight: 700; white-space: nowrap;
+        }
+        .chip-good        { background: #d4f5ef; color: #0a7a56; }
+        .chip-warn        { background: #fff3cd; color: #c07800; }
+        .chip-over        { background: #ffeaea; color: #c0392b; }
+        .chip-none        { background: #f0f2ff; color: #667eea; }
+        .chip-total       { background: #e8eaf6; color: #444; }
+
+        /* Progress bar inside table */
+        .usage-bar-wrap { display: flex; align-items: center; gap: .5rem; min-width: 80px; }
+        .usage-bar-track { flex: 1; height: 6px; background: #eef0fc; border-radius: 3px; overflow: hidden; }
+        .usage-bar-fill  { height: 100%; border-radius: 3px; transition: width .6s; }
+        .fill-good { background: linear-gradient(to right,#0ba360,#38ef7d); }
+        .fill-warn { background: linear-gradient(to right,#f7971e,#ffd200); }
+        .fill-over { background: linear-gradient(to right,#f5576c,#f093fb); }
+        .fill-none { background: #d0d4f7; }
+        .usage-pct { font-size: .7rem; font-weight: 700; color: #7f8c8d; white-space: nowrap; }
+
+        @media(max-width:768px) {
+            .comp-table thead th:nth-child(5),
+            .comp-row td:nth-child(5) { display: none; }
+        }
 
         /* ── Dark mode ── */
         body.dark .rs-card   { background:#1e2235; }
@@ -216,8 +296,14 @@
         body.dark .field-wrap textarea { background:#252840; border-color:#3a3f6e; color:#e0e0e0; }
         body.dark .receipt-row { background:#1e2235; }
         body.dark .rr-merchant { color:#e0e0e0; }
-        body.dark .amt-chip   { background:#252840; }
+        body.dark .amt-chip      { background:#252840; }
         body.dark .ocr-bar-track { background:#252840; }
+        body.dark .comp-row      { border-color:#2d3250; }
+        body.dark .comp-row:hover { background:#252840; }
+        body.dark .comp-total-row td { background:#252840; }
+        body.dark .comp-table thead th { border-color:#2d3250; }
+        body.dark .comp-cat-cell { color:#e0e0e0; }
+        body.dark .usage-bar-track { background:#2d3250; }
 
         @media(max-width:768px) {
             .rs-grid { grid-template-columns:1fr; }
@@ -239,7 +325,7 @@
             <div class="rs-hero a1">
                 <div class="rs-hero-icon"><i class="fa-solid fa-receipt"></i></div>
                 <div class="rs-hero-text">
-                    <h1>Receipt Scanner</h1>
+                    <h1>Actual Expense</h1>
                     <p>Upload a photo of any receipt — AI reads the amount automatically. Every scanned receipt updates your dashboard, budget, and all reports.</p>
                     <div class="rs-stats">
                         <div class="rs-stat">
@@ -305,7 +391,7 @@
                         <div class="rs-card-icon" style="background:linear-gradient(135deg,#0ba360,#38ef7d);">
                             <i class="fa-solid fa-plus"></i>
                         </div>
-                        Add Receipt
+                        Other Expenses
                     </div>
 
                     <form th:action="@{/receipt-scan/add}" method="POST" enctype="multipart/form-data" id="addForm">
@@ -336,14 +422,21 @@
                                 <i class="fa-solid fa-tag fi"></i>
                                 <select name="category" id="categorySelect" required>
                                     <option value="">— Select category —</option>
-                                    <option value="Groceries">Groceries</option>
-                                    <option value="Dining">Dining</option>
-                                    <option value="Shopping">Shopping</option>
-                                    <option value="Transport">Transport</option>
-                                    <option value="Healthcare">Healthcare</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Utilities">Utilities</option>
-                                    <option value="Other">Other</option>
+                                    <optgroup label="Fixed Expenses">
+                                        <option value="Rent">Rent / Mortgage</option>
+                                        <option value="Utilities">Utilities</option>
+                                        <option value="Insurance">Insurance</option>
+                                        <option value="Groceries">Groceries</option>
+                                        <option value="Subscriptions">Subscriptions</option>
+                                    </optgroup>
+                                    <optgroup label="Other Expenses">
+                                        <option value="Dining">Dining</option>
+                                        <option value="Shopping">Shopping</option>
+                                        <option value="Transport">Transport</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Other">Other</option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
@@ -425,6 +518,177 @@
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ BUDGET VS ACTUAL COMPARISON ══ -->
+            <div class="rs-card a4 comp-section">
+                <div class="rs-card-title">
+                    <div class="rs-card-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    Budget vs Actual Comparison
+                    <span style="margin-left:auto;font-size:.75rem;font-weight:600;color:#7f8c8d;">This Month</span>
+                </div>
+
+                <!-- No budget set -->
+                <div th:if="${!hasBudget}" class="history-empty">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    Set your budget first to see the comparison.
+                </div>
+
+                <!-- Has budget but no rows (shouldn't happen, but safety net) -->
+                <div th:if="${hasBudget and #lists.isEmpty(compRows)}" class="history-empty">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    No data yet for this month.
+                </div>
+
+                <!-- Comparison table -->
+                <div th:if="${hasBudget and !#lists.isEmpty(compRows)}" style="overflow-x:auto;">
+                    <table class="comp-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Category</th>
+                                <th>Set Amount</th>
+                                <th>Actual Amount</th>
+                                <th>Difference</th>
+                                <th>Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row,stat : ${compRows}" class="comp-row">
+
+                                <!-- Row number -->
+                                <td style="color:#b0b8c8;font-weight:700;font-size:.8rem;"
+                                    th:text="${stat.count}">1</td>
+
+                                <!-- Category -->
+                                <td>
+                                    <div class="comp-cat-cell">
+                                        <span th:class="'cat-dot cat-dot-' + ${row.category}"></span>
+                                        <span th:text="${row.category}">Category</span>
+                                    </div>
+                                </td>
+
+                                <!-- Set Amount -->
+                                <td>
+                                    <span class="set-amt"
+                                          th:if="${row.setAmount > 0}"
+                                          th:text="'$' + ${#numbers.formatDecimal(row.setAmount,1,'COMMA',2,'POINT')}">$0.00</span>
+                                    <span class="not-set" th:unless="${row.setAmount > 0}">—</span>
+                                </td>
+
+                                <!-- Actual Amount -->
+                                <td>
+                                    <span th:if="${row.actualAmount > 0}"
+                                          th:class="${row.status == 'over'} ? 'actual-amt actual-over' : 'actual-amt'"
+                                          th:text="'$' + ${#numbers.formatDecimal(row.actualAmount,1,'COMMA',2,'POINT')}">$0.00</span>
+                                    <span class="not-set" th:unless="${row.actualAmount > 0}">—</span>
+                                </td>
+
+                                <!-- Difference (set - actual) -->
+                                <td>
+                                    <span th:if="${row.diff > 0}" class="diff-under"
+                                          th:text="'$' + ${#numbers.formatDecimal(row.diff,1,'COMMA',2,'POINT')}">—</span>
+                                    <span th:if="${row.diff < 0}" class="diff-over"
+                                          th:text="'-$' + ${#numbers.formatDecimal(-row.diff,1,'COMMA',2,'POINT')}">—</span>
+                                    <span th:if="${row.diff == 0 and (row.setAmount > 0 or row.actualAmount > 0)}" class="diff-zero">$0.00</span>
+                                    <span th:if="${row.diff == 0 and row.setAmount == 0 and row.actualAmount == 0}" class="not-set">—</span>
+                                </td>
+
+                                <!-- Feedback -->
+                                <td>
+                                    <span th:class="'feedback-chip ' + (${row.status == 'good'} ? 'chip-good' : (${row.status == 'warn'} ? 'chip-warn' : (${row.status == 'over'} ? 'chip-over' : 'chip-none')))">
+                                        <i th:if="${row.status == 'good'}" class="fa-solid fa-circle-check"></i>
+                                        <i th:if="${row.status == 'warn'}" class="fa-solid fa-triangle-exclamation"></i>
+                                        <i th:if="${row.status == 'over'}" class="fa-solid fa-circle-xmark"></i>
+                                        <i th:if="${row.status == 'none'}" class="fa-solid fa-circle-info"></i>
+                                        <span th:text="${row.feedback}">—</span>
+                                    </span>
+                                </td>
+
+                            </tr>
+                        </tbody>
+
+                        <!-- Totals row -->
+                        <tfoot>
+                            <tr class="comp-total-row">
+                                <td></td>
+                                <td><strong>Total</strong></td>
+                                <td><span class="set-amt" th:text="'$' + ${compTotalSet}">$0.00</span></td>
+                                <td><span class="actual-amt" th:text="'$' + ${compTotalActual}">$0.00</span></td>
+                                <td>
+                                    <span th:with="td=${T(java.lang.Double).parseDouble(compTotalSet) - T(java.lang.Double).parseDouble(compTotalActual)}">
+                                        <span th:if="${td > 0}" class="diff-under"
+                                              th:text="'$' + ${#numbers.formatDecimal(td,1,'COMMA',2,'POINT')}">—</span>
+                                        <span th:if="${td < 0}" class="diff-over"
+                                              th:text="'-$' + ${#numbers.formatDecimal(-td,1,'COMMA',2,'POINT')}">—</span>
+                                        <span th:if="${td == 0}" class="diff-zero">$0.00</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="feedback-chip chip-total">
+                                        <i class="fa-solid fa-sigma"></i> Summary
+                                    </span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- Summary message below table -->
+                    <div th:with="totalDiff=${T(java.lang.Double).parseDouble(compTotalSet) - T(java.lang.Double).parseDouble(compTotalActual)}"
+                         style="margin-top:1.2rem;">
+                        <div th:if="${totalDiff < 0}"
+                             style="display:flex;align-items:center;gap:.75rem;
+                                    background:linear-gradient(135deg,#ffeaea,#fff0f0);
+                                    border-left:5px solid #e74c3c;border-radius:12px;
+                                    padding:1rem 1.3rem;">
+                            <span style="font-size:1.6rem;">⚠️</span>
+                            <div>
+                                <div style="font-size:.95rem;font-weight:800;color:#c0392b;">
+                                    You spend too much than your budget!
+                                </div>
+                                <div style="font-size:.8rem;color:#e74c3c;margin-top:.2rem;">
+                                    You exceeded your total budget by
+                                    <strong th:text="'$' + ${#numbers.formatDecimal(-totalDiff,1,'COMMA',2,'POINT')}">$0.00</strong>.
+                                    Consider reviewing your spending.
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${totalDiff > 0}"
+                             style="display:flex;align-items:center;gap:.75rem;
+                                    background:linear-gradient(135deg,#d4f5ef,#eaffef);
+                                    border-left:5px solid #0ba360;border-radius:12px;
+                                    padding:1rem 1.3rem;">
+                            <span style="font-size:1.6rem;">✅</span>
+                            <div>
+                                <div style="font-size:.95rem;font-weight:800;color:#0a7a56;">
+                                    You spend less than your budget!
+                                </div>
+                                <div style="font-size:.8rem;color:#0ba360;margin-top:.2rem;">
+                                    You are
+                                    <strong th:text="'$' + ${#numbers.formatDecimal(totalDiff,1,'COMMA',2,'POINT')}">$0.00</strong>
+                                    under budget this month. Great job!
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${totalDiff == 0 and T(java.lang.Double).parseDouble(compTotalSet) > 0}"
+                             style="display:flex;align-items:center;gap:.75rem;
+                                    background:linear-gradient(135deg,#f0f2ff,#f8f9ff);
+                                    border-left:5px solid #667eea;border-radius:12px;
+                                    padding:1rem 1.3rem;">
+                            <span style="font-size:1.6rem;">🎯</span>
+                            <div>
+                                <div style="font-size:.95rem;font-weight:800;color:#667eea;">
+                                    Exactly on budget!
+                                </div>
+                                <div style="font-size:.8rem;color:#667eea;margin-top:.2rem;">
+                                    Your actual spending matches your budget perfectly.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
