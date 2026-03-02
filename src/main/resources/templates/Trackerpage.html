@@ -181,6 +181,12 @@
                 </div>
             </div>
 
+            <!-- No-budget warning -->
+            <div th:if="${!hasBudget}" style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:12px;padding:1rem 1.3rem;margin-bottom:1.5rem;color:#856404;display:flex;align-items:center;gap:.8rem;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size:1.2rem;"></i>
+                <span>You haven't set a budget yet. <a th:href="@{/budget}" style="color:#667eea;font-weight:700;text-decoration:none;">Set your budget</a> to track your savings accurately.</span>
+            </div>
+
             <!-- Summary Stats -->
             <div class="summary-row">
                 <div class="sum-card sc-a">
@@ -312,10 +318,13 @@
     </div>
 </div>
 
-<script>
-    document.querySelector('.menu-toggle').addEventListener('click', () => {
-        document.querySelector('.nav-menu').classList.toggle('show');
-    });
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var SERVER_TOTAL_SAVED = parseFloat([[${serverTotalSaved}]]) || 0;
+    var HAS_BUDGET         = [[${hasBudget}]];
+    var CURRENT_USER       = [[${trackerUsername}]] || 'guest';
+    var GOALS_KEY          = 'fv_goals_' + CURRENT_USER;
+    /*]]>*/
 
     const COLORS = ['gc-purple','gc-emerald','gc-rose','gc-ocean','gc-amber','gc-indigo','gc-red','gc-teal'];
     const CAT_ICONS = {
@@ -329,19 +338,12 @@
         education:'Education', car:'Car / Vehicle', investment:'Investment Fund', custom:'Custom Goal'
     };
 
-    const PRESETS = [
-        { id:'p1', name:'Emergency Fund',     category:'emergency',  target:10000, saved:2500, date:'2026-12-31' },
-        { id:'p2', name:'Retirement Savings', category:'retirement', target:50000, saved:8000, date:'2030-06-30' },
-        { id:'p3', name:'Vacation Fund',      category:'vacation',   target:3000,  saved:900,  date:'2026-08-01' },
-    ];
-
     function loadGoals() {
-        const raw = localStorage.getItem('fv_goals');
+        const raw = localStorage.getItem(GOALS_KEY);
         if (raw) return JSON.parse(raw);
-        localStorage.setItem('fv_goals', JSON.stringify(PRESETS));
-        return PRESETS;
+        return [];
     }
-    function saveGoals(g) { localStorage.setItem('fv_goals', JSON.stringify(g)); }
+    function saveGoals(g) { localStorage.setItem(GOALS_KEY, JSON.stringify(g)); }
     function genId() { return 'g_' + Date.now(); }
 
     let chartInstance = null;
@@ -400,12 +402,20 @@
         renderChart(goals);
     }
 
+    function totalAllocated(goals) {
+        return goals.reduce((s, g) => s + Number(g.saved), 0);
+    }
+    function availableSavings(goals) {
+        return Math.max(SERVER_TOTAL_SAVED - totalAllocated(goals), 0);
+    }
+
     function updateStats(goals) {
-        const saved  = goals.reduce((s, g) => s + Number(g.saved), 0);
-        const target = goals.reduce((s, g) => s + Number(g.target), 0);
-        const pct    = target > 0 ? Math.round((saved / target) * 100) : 0;
+        const allocated = totalAllocated(goals);
+        const target    = goals.reduce((s, g) => s + Number(g.target), 0);
+        const pct       = target > 0 ? Math.round((allocated / target) * 100) : 0;
+        const available = availableSavings(goals);
         document.getElementById('statGoals').textContent  = goals.length;
-        document.getElementById('statSaved').textContent  = '$' + saved.toLocaleString();
+        document.getElementById('statSaved').textContent  = '$' + available.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('statTarget').textContent = '$' + target.toLocaleString();
         document.getElementById('statPct').textContent    = pct + '%';
     }
@@ -474,6 +484,14 @@
             const idx = goals.findIndex(g => g.id === editId);
             if (idx !== -1) goals[idx] = { ...goals[idx], name, category:cat, target, saved, date };
         } else {
+            // For new goals, validate initial saved doesn't exceed available savings
+            if (saved > 0) {
+                const avail = availableSavings(goals);
+                if (saved > avail) {
+                    alert('Initial saved amount ($' + saved.toFixed(2) + ') exceeds your available savings ($' + avail.toFixed(2) + ').');
+                    return;
+                }
+            }
             goals.push({ id:genId(), name, category:cat, target, saved, date });
         }
         saveGoals(goals); closeModal('goalModal'); render();
@@ -494,7 +512,12 @@
         const id  = document.getElementById('depositGoalId').value;
         const amt = parseFloat(document.getElementById('depositAmount').value);
         if (!amt || amt <= 0) { alert('Enter a valid amount.'); return; }
-        const goals = loadGoals();
+        const goals   = loadGoals();
+        const avail   = availableSavings(goals);
+        if (amt > avail) {
+            alert('Insufficient available savings.\nYou have $' + avail.toFixed(2) + ' left to allocate.');
+            return;
+        }
         const g = goals.find(x => x.id === id);
         if (g) g.saved = Math.min(Number(g.saved) + amt, Number(g.target));
         saveGoals(goals); closeModal('depositModal'); render();

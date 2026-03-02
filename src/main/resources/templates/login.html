@@ -290,6 +290,12 @@
             Account created! Please sign in.
         </div>
 
+        <!-- Account deleted -->
+        <div th:if="${param.deleted}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            Your account has been deleted. You may register a new account anytime.
+        </div>
+
         <form th:action="@{/login}" method="post">
 
             <div class="field">
