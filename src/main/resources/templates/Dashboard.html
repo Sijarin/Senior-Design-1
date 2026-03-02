@@ -421,7 +421,47 @@
         }
         .tip-text p { font-size: 0.96rem; line-height: 1.68; opacity: 0.95; margin: 0; }
 
+        /* ══ STATS SECTION BOX ══ */
+        .stats-section {
+            background: var(--bg-card, #fff);
+            border-radius: 22px;
+            padding: 1.6rem 1.8rem 1.8rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 22px rgba(102,126,234,0.1);
+            border-top: 4px solid #667eea;
+        }
+        .stats-section-header {
+            display: flex; align-items: center; gap: 1rem;
+            margin-bottom: 1.4rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(102,126,234,0.1);
+        }
+        .stats-section-icon {
+            width: 46px; height: 46px; flex-shrink: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.15rem; color: #fff;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+        }
+        .stats-section-title {
+            font-size: 1.05rem; font-weight: 800;
+            color: var(--text-main, #2c3e50);
+            line-height: 1.2;
+        }
+        .stats-section-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted, #7f8c8d);
+            margin-top: 0.15rem;
+        }
+        .stats-section .stats-grid { margin-bottom: 0; }
+        .actual-section { border-top-color: #11998e; }
+        .actual-icon { background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 14px rgba(17,153,142,0.35); }
+
         /* ── DARK MODE ── */
+        body.dark .stats-section  { background: #1e2235; }
+        body.dark .stats-section-title { color: #e0e0e0; }
+        body.dark .stats-section-header { border-color: rgba(255,255,255,0.06); }
         body.dark .health-section,
         body.dark .chart-card,
         body.dark .quick-card     { background: #1e2235; }
@@ -507,8 +547,17 @@
                 </div>
             </div>
 
-            <!-- ══ STAT CARDS ══ -->
-            <div class="stats-grid anim-2">
+            <!-- ══ STAT CARDS — SET BUDGET ══ -->
+            <div class="stats-section anim-2">
+                <div class="stats-section-header">
+                    <div class="stats-section-icon"><i class="fa-solid fa-coins"></i></div>
+                    <div>
+                        <div class="stats-section-title">Set Budget</div>
+                        <div class="stats-section-sub">Monthly income, expenses &amp; savings at a glance</div>
+                    </div>
+                </div>
+
+            <div class="stats-grid">
 
                 <div class="stat-card income">
                     <div class="stat-top">
@@ -571,6 +620,82 @@
                 </div>
 
             </div>
+            </div><!-- /stats-section -->
+
+            <!-- ══ ACTUAL BUDGET CARDS ══ -->
+            <div class="stats-section actual-section anim-3">
+                <div class="stats-section-header">
+                    <div class="stats-section-icon actual-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <div>
+                        <div class="stats-section-title">Actual Budget</div>
+                        <div class="stats-section-sub">Real spending from Actual Expense vs your Set Budget income</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+
+                    <div class="stat-card income">
+                        <div class="stat-top">
+                            <div class="stat-icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                            <span class="stat-label-chip">Income</span>
+                        </div>
+                        <div th:if="${hasBudget}">
+                            <div class="stat-value" th:text="'$' + ${income}">$0.00</div>
+                            <div class="stat-sub">From Set Budget</div>
+                        </div>
+                        <div th:unless="${hasBudget}">
+                            <div class="stat-value">—</div>
+                            <div class="no-budget-note">Set your budget to see data</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card expenses">
+                        <div class="stat-top">
+                            <div class="stat-icon-box"><i class="fa-solid fa-cart-shopping"></i></div>
+                            <span class="stat-label-chip">Expenses</span>
+                        </div>
+                        <div th:if="${hasBudget}">
+                            <div class="stat-value" th:text="'$' + ${actualExpenses}">$0.00</div>
+                            <div class="stat-sub" th:text="${actualPercent} + '% of income'">0% of income</div>
+                        </div>
+                        <div th:unless="${hasBudget}">
+                            <div class="stat-value">—</div>
+                            <div class="no-budget-note">Set your budget to see data</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card savings">
+                        <div class="stat-top">
+                            <div class="stat-icon-box"><i class="fa-solid fa-piggy-bank"></i></div>
+                            <span class="stat-label-chip">Savings</span>
+                        </div>
+                        <div th:if="${hasBudget}">
+                            <div class="stat-value" th:text="'$' + ${actualSavings}">$0.00</div>
+                            <div class="stat-sub">Income minus actual expenses</div>
+                        </div>
+                        <div th:unless="${hasBudget}">
+                            <div class="stat-value">—</div>
+                            <div class="no-budget-note">Set your budget to see data</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card savings-rate">
+                        <div class="stat-top">
+                            <div class="stat-icon-box"><i class="fa-solid fa-percent"></i></div>
+                            <span class="stat-label-chip">Rate</span>
+                        </div>
+                        <div th:if="${hasBudget}">
+                            <div class="stat-value" th:text="${actualSavingsRate} + '%'">0%</div>
+                            <div class="stat-sub">Of your income actually saved</div>
+                        </div>
+                        <div th:unless="${hasBudget}">
+                            <div class="stat-value">—</div>
+                            <div class="no-budget-note">Set your budget to see data</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div><!-- /actual-section -->
 
             <!-- ══ BUDGET HEALTH ══ -->
             <div class="health-section anim-3">
