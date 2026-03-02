@@ -200,6 +200,33 @@
         }
         .input-wrap:focus-within .field-icon { color: #11998e; }
 
+        /* Select field */
+        .input-wrap select {
+            width: 100%;
+            padding: 0.78rem 0.9rem 0.78rem 2.5rem;
+            border: 2px solid #e8eaf6;
+            border-radius: 11px;
+            font-size: 0.92rem;
+            background: #fff;
+            color: #2c3e50;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .input-wrap select:focus {
+            border-color: #11998e;
+            box-shadow: 0 0 0 3px rgba(17,153,142,0.13);
+        }
+        .input-wrap .select-arrow {
+            position: absolute; right: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: #aaa; font-size: 0.8rem; pointer-events: none;
+        }
+
+        /* PIN hint */
+        .field-hint { font-size: 0.72rem; color: #aaa; margin-top: 0.2rem; }
+
         /* Two-column row */
         .field-row {
             display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
@@ -401,15 +428,55 @@
                 </div>
             </div>
 
+            <!-- 4-Digit PIN -->
+            <div class="section-label"><i class="fa-solid fa-hashtag"></i> Recovery PIN</div>
+
+            <div class="field">
+                <label for="pin">4-Digit PIN</label>
+                <div class="input-wrap">
+                    <input type="password" id="pin" name="pin"
+                           placeholder="••••" required
+                           maxlength="4" inputmode="numeric"
+                           oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)">
+                    <i class="fa-solid fa-lock-open field-icon"></i>
+                    <button type="button" class="toggle-pw" onclick="togglePw('pin','pinIcon')" tabindex="-1">
+                        <i class="fa-solid fa-eye" id="pinIcon"></i>
+                    </button>
+                </div>
+                <div class="field-hint">Exactly 4 digits — used to recover your account if you forget your password</div>
+            </div>
+
             <!-- Security -->
-            <div class="section-label"><i class="fa-solid fa-shield-halved"></i> Security</div>
+            <div class="section-label"><i class="fa-solid fa-shield-halved"></i> Security Question</div>
 
             <div class="field">
                 <label for="securityQuestion">Security Question</label>
                 <div class="input-wrap">
-                    <input type="text" id="securityQuestion" name="securityQuestion"
-                           placeholder="e.g. What was your first pet's name?" required>
+                    <select id="securityQuestion" name="securityQuestion" required>
+                        <option value="" disabled selected>— Select a question —</option>
+                        <option>What was the name of your first pet?</option>
+                        <option>What city were you born in?</option>
+                        <option>What is your mother's maiden name?</option>
+                        <option>What was the name of your elementary school?</option>
+                        <option>What was the make of your first car?</option>
+                        <option>What is the name of the street you grew up on?</option>
+                        <option>What was your childhood nickname?</option>
+                        <option>In what city did your parents meet?</option>
+                        <option>What is your oldest sibling's middle name?</option>
+                        <option>What was the name of your first stuffed animal?</option>
+                        <option>What was the first concert you attended?</option>
+                        <option>What is the name of your favorite childhood friend?</option>
+                        <option>What was the first album you purchased?</option>
+                        <option>What is your paternal grandmother's maiden name?</option>
+                        <option>What was the first sports team you rooted for?</option>
+                        <option>In what city was your first job?</option>
+                        <option>What was the name of the hospital where you were born?</option>
+                        <option>What is your favorite movie from childhood?</option>
+                        <option>What was the first dish you learned to cook?</option>
+                        <option>What was your high school mascot?</option>
+                    </select>
                     <i class="fa-solid fa-circle-question field-icon"></i>
+                    <i class="fa-solid fa-chevron-down select-arrow"></i>
                 </div>
             </div>
 
@@ -417,7 +484,7 @@
                 <label for="securityAnswer">Security Answer</label>
                 <div class="input-wrap">
                     <input type="text" id="securityAnswer" name="securityAnswer"
-                           placeholder="Your answer" required>
+                           placeholder="Your answer" required autocomplete="off">
                     <i class="fa-solid fa-key field-icon"></i>
                 </div>
             </div>

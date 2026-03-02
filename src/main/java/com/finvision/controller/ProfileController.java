@@ -1,10 +1,13 @@
 package com.finvision.controller;
 
-import java.security.Principal;
-import java.util.Base64;
-import java.util.concurrent.ThreadLocalRandom;
-
+import com.finvision.model.User;
+import com.finvision.repository.BudgetRepository;
+import com.finvision.repository.ScannedReceiptRepository;
+import com.finvision.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,14 +16,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.finvision.model.User;
-import com.finvision.repository.UserRepository;
+import java.security.Principal;
+import java.util.Base64;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Controller
 public class ProfileController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BudgetRepository budgetRepository;
+
+    @Autowired
+    private ScannedReceiptRepository receiptRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -49,7 +59,7 @@ public class ProfileController {
         return "profile";
     }
 
-    @PostMapping("/profile/edit")
+    @PostMapping("/profile/update")
     public String updateProfile(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email,
@@ -69,7 +79,7 @@ public class ProfileController {
         return "profile";
     }
 
-    @PostMapping("/profile/change-password")
+    @PostMapping("/profile/password")
     public String changePassword(
             @RequestParam String currentPassword,
             @RequestParam String newPassword,
@@ -128,5 +138,23 @@ public class ProfileController {
 
         model.addAttribute("user", user);
         return "profile";
+    }
+
+    @PostMapping("/profile/delete")
+    public String deleteAccount(Principal principal, HttpServletRequest request) {
+        if (principal == null) return "redirect:/login";
+        String username = principal.getName();
+
+        // Erase all data for this user
+        budgetRepository.deleteByUsername(username);
+        receiptRepository.deleteByUsername(username);
+        userRepository.findByUsername(username).ifPresent(userRepository::delete);
+
+        // Invalidate session and clear security context (logs the user out)
+        HttpSession session = request.getSession(false);
+        if (session != null) session.invalidate();
+        SecurityContextHolder.clearContext();
+
+        return "redirect:/login?deleted";
     }
 }

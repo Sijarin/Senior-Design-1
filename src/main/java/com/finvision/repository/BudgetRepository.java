@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface BudgetRepository extends MongoRepository<Budget, String> {
     Optional<Budget> findByUsernameAndMonth(String username, String month);
     Optional<Budget> findTopByUsernameOrderByIdDesc(String username);
+    void deleteByUsername(String username);
 }

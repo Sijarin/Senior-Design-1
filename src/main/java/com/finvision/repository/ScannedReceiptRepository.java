@@ -12,4 +12,7 @@ public interface ScannedReceiptRepository extends MongoRepository<ScannedReceipt
 
     /** Receipts for a specific month, e.g. "2026-02" */
     List<ScannedReceipt> findByUsernameAndYearMonth(String username, String yearMonth);
+
+    /** Delete all receipts belonging to a user */
+    void deleteByUsername(String username);
 }
