@@ -182,18 +182,38 @@ public class DashboardController {
             double[] billTotal = new double[1];
             addBillsToPieAndGetTotal(username, pieLabels, pieData, billTotal);
 
-            model.addAttribute("hasBudget",   true);
-            model.addAttribute("income",      String.format("%.2f", income));
-            model.addAttribute("expenses",    String.format("%.2f", expenses));
-            model.addAttribute("savings",     String.format("%.2f", savings));
-            model.addAttribute("savingsRate", String.format("%.0f", savingsRate));
-            model.addAttribute("percent",     String.format("%.0f", percent));
-            model.addAttribute("status",      status);
-            model.addAttribute("pieLabels",   pieLabels);
-            model.addAttribute("pieData",     pieData);
+            // Actual Budget — receipts only (not bill manager) from Actual Expense page
+            double actualExpenses    = receiptTotal(username);
+            double actualSavings     = income - actualExpenses;
+            double actualSavingsRate = (income == 0) ? 0 : Math.max((actualSavings / income) * 100, 0);
+            double actualPercent     = (income == 0) ? 0 : Math.min((actualExpenses / income) * 100, 100);
+            String actualStatus      = actualSavings < 0 ? "overspending"
+                                     : (actualSavings < income * 0.2 ? "low" : "healthy");
+
+            java.util.List<String> actualPieLabels = new java.util.ArrayList<>();
+            java.util.List<Double> actualPieData   = new java.util.ArrayList<>();
+            addReceiptsToPie(username, actualPieLabels, actualPieData);
+
+            model.addAttribute("hasBudget",        true);
+            model.addAttribute("income",           String.format("%.2f", income));
+            model.addAttribute("expenses",         String.format("%.2f", expenses));
+            model.addAttribute("savings",          String.format("%.2f", savings));
+            model.addAttribute("savingsRate",      String.format("%.0f", savingsRate));
+            model.addAttribute("percent",          String.format("%.0f", percent));
+            model.addAttribute("status",           status);
+            model.addAttribute("pieLabels",        pieLabels);
+            model.addAttribute("pieData",          pieData);
+            model.addAttribute("actualExpenses",    String.format("%.2f", actualExpenses));
+            model.addAttribute("actualSavings",     String.format("%.2f", actualSavings));
+            model.addAttribute("actualSavingsRate", String.format("%.0f", actualSavingsRate));
+            model.addAttribute("actualPercent",     String.format("%.0f", actualPercent));
+            model.addAttribute("actualStatus",      actualStatus);
+            model.addAttribute("actualPieLabels",   actualPieLabels);
+            model.addAttribute("actualPieData",     actualPieData);
         } else {
             model.addAttribute("hasBudget", false);
             model.addAttribute("status", "none");
+            model.addAttribute("actualStatus", "none");
         }
 
         return "Dashboard";
@@ -253,7 +273,23 @@ public class DashboardController {
     }
 
     @GetMapping("/tracker")
-    public String tracker() {
+    public String tracker(Principal principal, Model model) {
+        String username = (principal != null) ? principal.getName() : null;
+        Budget budget = (username != null) ? resolveBudgetForCurrentMonth(username) : null;
+
+        if (budget != null) {
+            double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
+            double expenses = receiptTotal(username);
+            double totalSaved = Math.max(income - expenses, 0);
+
+            model.addAttribute("hasBudget", true);
+            model.addAttribute("serverTotalSaved", String.format("%.2f", totalSaved));
+        } else {
+            model.addAttribute("hasBudget", false);
+            model.addAttribute("serverTotalSaved", "0.00");
+        }
+
+        model.addAttribute("trackerUsername", username != null ? username : "guest");
         return "Trackerpage";
     }
 
