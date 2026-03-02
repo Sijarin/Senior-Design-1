@@ -285,7 +285,7 @@
                             <label for="monthlyIncome">Monthly Income</label>
                             <div class="input-wrap">
                                 <span class="currency-symbol">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="monthlyIncome" id="monthlyIncome"
                                        placeholder="0" required class="income-input"
                                        th:value="${budget != null and budget.monthlyIncome > 0} ? ${budget.monthlyIncome} : ''">
@@ -295,7 +295,7 @@
                             <label for="otherIncome">Other Income <span style="font-weight:400;text-transform:none;">(optional)</span></label>
                             <div class="input-wrap">
                                 <span class="currency-symbol">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="otherIncome" id="otherIncome"
                                        placeholder="0" class="income-input"
                                        th:value="${budget != null and budget.otherIncome > 0} ? ${budget.otherIncome} : ''">
@@ -319,7 +319,7 @@
                             <label>Rent / Mortgage</label>
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="rent" placeholder="0" class="expense-input"
                                        th:value="${budget != null and budget.rent > 0} ? ${budget.rent} : ''">
                             </div>
@@ -330,7 +330,7 @@
                             <label>Utilities</label>
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="utilities" placeholder="0" class="expense-input"
                                        th:value="${budget != null and budget.utilities > 0} ? ${budget.utilities} : ''">
                             </div>
@@ -341,7 +341,7 @@
                             <label>Insurance</label>
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="insurance" placeholder="0" class="expense-input"
                                        th:value="${budget != null and budget.insurance > 0} ? ${budget.insurance} : ''">
                             </div>
@@ -352,7 +352,7 @@
                             <label>Groceries</label>
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="groceries" placeholder="0" class="expense-input"
                                        th:value="${budget != null and budget.groceries > 0} ? ${budget.groceries} : ''">
                             </div>
@@ -363,7 +363,7 @@
                             <label>Subscriptions</label>
                             <div class="exp-input-wrap">
                                 <span class="sym">$</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                <input type="text" inputmode="decimal" step="0.01"
                                        name="subscriptions" placeholder="0" class="expense-input"
                                        th:value="${budget != null and budget.subscriptions > 0} ? ${budget.subscriptions} : ''">
                             </div>
@@ -464,8 +464,8 @@
             </div>
             <div>
                 <label>Amount ($)</label>
-                <input type="text" inputmode="numeric" pattern="[0-9]*"
-                       name="variableAmount" placeholder="0"
+                <input type="text" inputmode="decimal" step="0.01"
+                       name="variableAmount" placeholder="0.00"
                        class="var-amount" required oninput="recalc()">
             </div>
             <button type="button" class="btn-remove" onclick="removeRow('varRow_${rowCount}')">
