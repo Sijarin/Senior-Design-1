@@ -1,8 +1,10 @@
 package com.finvision.controller;
 
 import com.finvision.model.Budget;
+import com.finvision.model.ScannedReceipt;
 import com.finvision.model.User;
 import com.finvision.repository.BudgetRepository;
+import com.finvision.repository.ScannedReceiptRepository;
 import com.finvision.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Controller
@@ -22,25 +26,33 @@ public class ChatController {
     @Autowired
     private BudgetRepository budgetRepository;
 
+    @Autowired
+    private ScannedReceiptRepository receiptRepository;
+
     @PostMapping("/chat")
     @ResponseBody
     public Map<String, String> chat(@RequestBody Map<String, String> body, Principal principal) {
         String msg = body.getOrDefault("message", "").toLowerCase().trim();
         User user = null;
         Budget budget = null;
+        List<ScannedReceipt> receipts = new ArrayList<>();
+
         if (principal != null) {
             user   = userRepository.findByUsername(principal.getName()).orElse(null);
             budget = budgetRepository.findTopByUsernameOrderByIdDesc(principal.getName()).orElse(null);
+            String yearMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            receipts = receiptRepository.findByUsernameAndYearMonth(principal.getName(), yearMonth);
         }
+
         Map<String, String> result = new HashMap<>();
-        result.put("response", generateResponse(msg, user, budget));
+        result.put("response", generateResponse(msg, user, budget, receipts));
         return result;
     }
 
-    private String generateResponse(String msg, User user, Budget budget) {
+    private String generateResponse(String msg, User user, Budget budget, List<ScannedReceipt> receipts) {
         String name = getDisplayName(user);
 
-        // Compute budget stats
+        // ── Compute set-budget stats ──
         double income = 0, expenses = 0, savings = 0, savingsRate = 0;
         Map<String, Double> categories = new LinkedHashMap<>();
         String status = "none";
@@ -63,27 +75,101 @@ public class ChatController {
                     }
                 }
             }
-            savings    = income - expenses;
+            savings     = income - expenses;
             savingsRate = income > 0 ? (savings / income) * 100 : 0;
-            status     = savings < 0 ? "overspending" : (savings < income * 0.2 ? "low" : "healthy");
+            status      = savings < 0 ? "overspending" : (savings < income * 0.2 ? "low" : "healthy");
+        }
+
+        // ── Compute actual expense stats (from receipts) ──
+        double actualTotal = receipts.stream().mapToDouble(ScannedReceipt::getAmount).sum();
+        Map<String, Double> actualCategories = new LinkedHashMap<>();
+        for (ScannedReceipt r : receipts) {
+            String cat = (r.getCategory() != null && !r.getCategory().isBlank()) ? r.getCategory() : "Other";
+            actualCategories.merge(cat, r.getAmount(), Double::sum);
         }
 
         final double expTotal = expenses;
-        final double inc      = income;
-        final double sav      = savings;
-        final double rate     = savingsRate;
         String highestCat = categories.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey).orElse(null);
+                .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
+        String highestActualCat = actualCategories.entrySet().stream()
+                .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
 
         // ── Greetings ──
         if (matches(msg, "hello", "hi ", "hey ", "good morning", "good evening", "howdy", "what's up", "sup")) {
-            return "Hello " + name + "! \uD83D\uDC4B I'm FinVision AI, your personal finance assistant.\n\nI can help with:\n\u2022 Budget & spending insights\n\u2022 Savings & financial health\n\u2022 Account information\n\u2022 Personalized financial tips\n\nType 'help' for all commands, or just ask anything!";
+            return "Hello " + name + "! \uD83D\uDC4B I'm FinVision AI, your personal finance assistant.\n\nI can help with:\n\u2022 Budget & actual spending insights\n\u2022 Account & profile information\n\u2022 Expense categories & comparisons\n\u2022 Savings analysis & financial tips\n\nType 'help' for all commands, or just ask anything!";
         }
 
         // ── Help ──
         if (matches(msg, "help", "what can you do", "commands", "capabilities", "menu")) {
-            return "Here's what I can answer:\n\n\uD83D\uDCB0 Income \u2014 'What's my income?'\n\uD83D\uDCCA Expenses \u2014 'Show my expenses'\n\uD83D\uDC37 Savings \u2014 'How much am I saving?'\n\u2764\uFE0F Health \u2014 'How's my budget health?'\n\uD83D\uDCC2 Categories \u2014 'Show spending breakdown'\n\uD83C\uDFE6 Banking \u2014 'What's my account number?'\n\uD83D\uDC64 Profile \u2014 'Who am I?'\n\uD83D\uDCA1 Tips \u2014 'Give me financial advice'\n\uD83D\uDCC8 Forecast \u2014 'Show my cash flow'\n\uD83C\uDFAF Goals \u2014 'Help me set financial goals'\n\nYou can also use the \uD83C\uDFA4 microphone for voice commands!";
+            return "Here's what I can answer:\n\n\uD83D\uDCB0 Income \u2014 'What's my income?'\n\uD83D\uDCCA Set Budget \u2014 'Show my set expenses'\n\uD83E\uDDFE Actual Expenses \u2014 'What did I actually spend?'\n\uD83D\uDCC2 Categories \u2014 'Show actual categories'\n\uD83C\uDD9A Compare \u2014 'Budget vs actual'\n\uD83D\uDC37 Savings \u2014 'How much am I saving?'\n\u2764\uFE0F Health \u2014 'How's my budget health?'\n\uD83D\uDC64 Profile \u2014 'My name / email / username'\n\uD83C\uDFE6 Banking \u2014 'My account number'\n\uD83D\uDCA1 Tips \u2014 'Give me financial advice'\n\uD83D\uDCC8 Forecast \u2014 'Show my cash flow'\n\uD83C\uDFAF Goals \u2014 'Help me set financial goals'\n\uD83D\uDCCB Summary \u2014 'Show all my data'\n\n\uD83C\uDFA4 You can also use the microphone for voice commands!";
+        }
+
+        // ── Email ──
+        if (matches(msg, "email", "my email", "email address", "what is my email", "what's my email")) {
+            if (user == null) return "Please log in to view profile info.";
+            if (user.getEmail() == null || user.getEmail().isBlank())
+                return "No email address saved on your account.";
+            return "\uD83D\uDCE7 Your email address is: " + user.getEmail();
+        }
+
+        // ── Full name ──
+        if (matches(msg, "my full name", "what is my name", "what's my name", "full name", "my name")) {
+            if (user == null) return "Please log in to view profile info.";
+            if (user.getName() == null || user.getName().isBlank())
+                return "No full name saved. It can be set during registration.";
+            return "\uD83D\uDC64 Your full name is: " + user.getName();
+        }
+
+        // ── Username ──
+        if (matches(msg, "username", "my username", "what is my username", "what's my username", "user name")) {
+            if (user == null) return "Please log in to view profile info.";
+            return "\uD83D\uDD11 Your username is: " + user.getUsername();
+        }
+
+        // ── Profile overview ──
+        if (matches(msg, "who am i", "my profile", "my info", "about me", "profile info")) {
+            if (user == null) return "You're not logged in.";
+            StringBuilder r = new StringBuilder("\uD83D\uDC64 Your profile:\n");
+            r.append("\u2022 Username: ").append(user.getUsername());
+            if (user.getName()  != null && !user.getName().isBlank())  r.append("\n\u2022 Full Name: ").append(user.getName());
+            if (user.getEmail() != null && !user.getEmail().isBlank()) r.append("\n\u2022 Email: ").append(user.getEmail());
+            if (user.getAccountNumber() != null && !user.getAccountNumber().isBlank()) {
+                String num = user.getAccountNumber();
+                r.append("\n\u2022 Account: ****").append(num.substring(Math.max(0, num.length() - 4)));
+            }
+            return r.toString();
+        }
+
+        // ── Individual budget category questions ──
+        if (matches(msg, "my rent", "how much is my rent", "rent budget", "rent expense")) {
+            if (budget == null) return noBudget();
+            return budget.getRent() > 0
+                ? String.format("\uD83C\uDFE0 Your budgeted rent is $%.2f/month.", budget.getRent())
+                : "Rent is not set in your budget. Visit 'Set Budget' to add it.";
+        }
+        if (matches(msg, "my utilities", "utility budget", "electricity", "water bill", "internet bill")) {
+            if (budget == null) return noBudget();
+            return budget.getUtilities() > 0
+                ? String.format("\uD83D\uDCA1 Your budgeted utilities is $%.2f/month.", budget.getUtilities())
+                : "Utilities is not set in your budget.";
+        }
+        if (matches(msg, "my insurance", "insurance budget")) {
+            if (budget == null) return noBudget();
+            return budget.getInsurance() > 0
+                ? String.format("\uD83D\uDEE1\uFE0F Your budgeted insurance is $%.2f/month.", budget.getInsurance())
+                : "Insurance is not set in your budget.";
+        }
+        if (matches(msg, "my groceries", "grocery budget", "food budget")) {
+            if (budget == null) return noBudget();
+            return budget.getGroceries() > 0
+                ? String.format("\uD83D\uDED2 Your budgeted groceries is $%.2f/month.", budget.getGroceries())
+                : "Groceries is not set in your budget.";
+        }
+        if (matches(msg, "my subscriptions", "subscription budget", "streaming budget")) {
+            if (budget == null) return noBudget();
+            return budget.getSubscriptions() > 0
+                ? String.format("\uD83D\uDCFA Your budgeted subscriptions is $%.2f/month.", budget.getSubscriptions())
+                : "Subscriptions is not set in your budget.";
         }
 
         // ── Income ──
@@ -95,13 +181,138 @@ public class ChatController {
             return r.toString();
         }
 
-        // ── Expenses ──
+        // ── Set Budget Expenses ──
+        if (matches(msg, "set budget expense", "set expense", "planned expense", "my set expense", "what is set budget", "budgeted expense")) {
+            if (budget == null) return noBudget();
+            double pct = income > 0 ? (expenses / income) * 100 : 0;
+            StringBuilder r = new StringBuilder(String.format("\uD83D\uDCCA Set budget — $%.2f/month (%.0f%% of income)\n", expenses, pct));
+            categories.forEach((k, v) -> r.append(String.format("\u2022 %s: $%.2f\n", k, v)));
+            return r.toString().trim();
+        }
+
+        // ── Expenses (general) ──
         if (matches(msg, "expense", "spend", "how much do i spend", "total expense", "my expenses", "costs", "what i spend")) {
             if (budget == null) return noBudget();
             double pct = income > 0 ? (expenses / income) * 100 : 0;
-            StringBuilder r = new StringBuilder(String.format("\uD83D\uDCCA Total monthly expenses: $%.2f (%.0f%% of income).", expenses, pct));
+            StringBuilder r = new StringBuilder(String.format("\uD83D\uDCCA Set budget — Total: $%.2f/month (%.0f%% of income)", expenses, pct));
             categories.forEach((k, v) -> r.append(String.format("\n\u2022 %s: $%.2f", k, v)));
+            if (!receipts.isEmpty()) {
+                r.append(String.format("\n\n\uD83E\uDDFE Actual spending (receipts this month): $%.2f", actualTotal));
+                r.append("\nAsk 'show actual categories' to see the breakdown.");
+            }
             return r.toString();
+        }
+
+        // ── Actual expenses ──
+        if (matches(msg, "actual expense", "actual spend", "actual cost", "what did i actually spend", "real expense",
+                    "receipt total", "my receipts", "scanned receipt", "actual amount", "how much did i spend")) {
+            if (receipts.isEmpty())
+                return "\uD83E\uDDFE No receipts scanned this month yet. Use the 'Scan Receipt' feature to log your actual expenses.";
+            StringBuilder r = new StringBuilder(String.format("\uD83E\uDDFE Actual spending this month: $%.2f\n", actualTotal));
+            if (budget != null) {
+                double diff = expenses - actualTotal;
+                r.append(String.format("\u2022 Set budget: $%.2f\n", expenses));
+                if (diff >= 0)
+                    r.append(String.format("\u2705 You're $%.2f under budget \u2014 great job!", diff));
+                else
+                    r.append(String.format("\u26A0\uFE0F You're $%.2f over your set budget.", Math.abs(diff)));
+            }
+            return r.toString();
+        }
+
+        // ── Actual expense categories ──
+        if (matches(msg, "actual categor", "receipt categor", "what did i spend on", "actual breakdown", "show actual", "actual by category")) {
+            if (receipts.isEmpty())
+                return "No receipts found this month. Scan receipts to track your actual spending by category.";
+            StringBuilder r = new StringBuilder(String.format("\uD83E\uDDFE Actual spending by category (this month \u2014 $%.2f total):\n", actualTotal));
+            actualCategories.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .forEach(e -> r.append(String.format("\u2022 %s: $%.2f (%.0f%%)\n",
+                    e.getKey(), e.getValue(), actualTotal > 0 ? e.getValue() / actualTotal * 100 : 0)));
+            if (highestActualCat != null)
+                r.append("\nHighest: ").append(highestActualCat)
+                 .append(" ($").append(String.format("%.2f", actualCategories.get(highestActualCat))).append(")");
+            return r.toString().trim();
+        }
+
+        // ── Compare budget vs actual ──
+        if (matches(msg, "compare", "budget vs actual", "am i on track", "how am i tracking", "vs actual", "vs budget")) {
+            if (budget == null) return noBudget();
+            if (receipts.isEmpty())
+                return String.format("\uD83D\uDCCA Set budget: $%.2f/month\n\uD83E\uDDFE Actual (receipts): $0.00\n\nNo receipts scanned yet this month. Scan receipts to compare!", expenses);
+            double diff = expenses - actualTotal;
+            StringBuilder r = new StringBuilder("\uD83C\uDD9A Budget vs Actual (this month):\n");
+            r.append(String.format("\u2022 Set budget:   $%.2f\n", expenses));
+            r.append(String.format("\u2022 Actual spent: $%.2f\n", actualTotal));
+            if (diff >= 0)
+                r.append(String.format("\u2705 You're $%.2f under budget \u2014 on track!", diff));
+            else
+                r.append(String.format("\u26A0\uFE0F You're $%.2f over your set budget.", Math.abs(diff)));
+            r.append("\n\nVisit 'Spending Visualization' for full charts!");
+            return r.toString();
+        }
+
+        // ── Recent receipts ──
+        if (matches(msg, "recent receipt", "latest expense", "last receipt", "what did i buy", "recent purchase", "recent spending", "last purchase")) {
+            if (receipts.isEmpty())
+                return "No receipts found this month. Start scanning receipts to track your spending!";
+            List<ScannedReceipt> sorted = new ArrayList<>(receipts);
+            sorted.sort((a, b) -> b.getDateStr().compareTo(a.getDateStr()));
+            StringBuilder r = new StringBuilder(String.format("\uD83E\uDDFE Recent expenses this month (%d total):\n", receipts.size()));
+            int show = Math.min(5, sorted.size());
+            for (int i = 0; i < show; i++) {
+                ScannedReceipt rec = sorted.get(i);
+                r.append(String.format("\u2022 %s \u2014 $%.2f (%s)",
+                    rec.getMerchantName() != null ? rec.getMerchantName() : "Unknown",
+                    rec.getAmount(),
+                    rec.getCategory() != null ? rec.getCategory() : "Other"));
+                if (rec.getDateStr() != null) r.append(" on ").append(rec.getDateStr());
+                r.append("\n");
+            }
+            if (sorted.size() > 5) r.append("...and ").append(sorted.size() - 5).append(" more.");
+            return r.toString().trim();
+        }
+
+        // ── Full summary / all data ──
+        if (matches(msg, "summary", "overview", "show all", "all data", "everything", "full report", "my data", "give me everything", "full summary")) {
+            if (user == null) return "Please log in to view your data.";
+            StringBuilder r = new StringBuilder("\uD83D\uDCCB Your Complete Financial Summary:\n");
+
+            // Profile
+            r.append("\n\uD83D\uDC64 Profile:\n");
+            r.append("\u2022 Username: ").append(user.getUsername()).append("\n");
+            if (user.getName()  != null && !user.getName().isBlank())  r.append("\u2022 Name: ").append(user.getName()).append("\n");
+            if (user.getEmail() != null && !user.getEmail().isBlank()) r.append("\u2022 Email: ").append(user.getEmail()).append("\n");
+
+            // Set Budget
+            if (budget != null) {
+                r.append(String.format("\n\uD83D\uDCB0 Income: $%.2f/month\n", income));
+                r.append(String.format("\uD83D\uDCCA Set Budget Expenses: $%.2f\n", expenses));
+                categories.forEach((k, v) -> r.append(String.format("  \u2022 %s: $%.2f\n", k, v)));
+                r.append(String.format("\uD83D\uDC37 Savings: $%.2f (%.0f%%)\n", savings, savingsRate));
+                r.append("\u2764\uFE0F Health: ").append(status.substring(0, 1).toUpperCase()).append(status.substring(1)).append("\n");
+            } else {
+                r.append("\n\u26A0\uFE0F No budget set yet.\n");
+            }
+
+            // Actual
+            if (!receipts.isEmpty()) {
+                r.append(String.format("\n\uD83E\uDDFE Actual Spent (this month): $%.2f\n", actualTotal));
+                actualCategories.entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .limit(5)
+                    .forEach(e -> r.append(String.format("  \u2022 %s: $%.2f\n", e.getKey(), e.getValue())));
+                if (budget != null) {
+                    double diff = expenses - actualTotal;
+                    r.append(diff >= 0
+                        ? String.format("\u2705 $%.2f under budget\n", diff)
+                        : String.format("\u26A0\uFE0F $%.2f over budget\n", Math.abs(diff)));
+                }
+            } else {
+                r.append("\n\uD83E\uDDFE No receipts scanned this month.\n");
+            }
+
+            return r.toString().trim();
         }
 
         // ── Savings ──
@@ -119,7 +330,7 @@ public class ChatController {
         }
 
         // ── Savings rate ──
-        if (matches(msg, "savings rate", "saving rate", "how much percent", "what percent", "rate")) {
+        if (matches(msg, "savings rate", "saving rate", "how much percent", "what percent")) {
             if (budget == null) return noBudget();
             return String.format("\uD83D\uDCC8 Your savings rate is %.0f%%.\n%s", savingsRate,
                     savingsRate >= 20 ? "Great job! You're above the recommended 20%." :
@@ -146,11 +357,11 @@ public class ChatController {
             }
         }
 
-        // ── Categories ──
-        if (matches(msg, "categor", "breakdown", "where does my money go", "what am i spending on", "spending on")) {
+        // ── Budget categories ──
+        if (matches(msg, "categor", "breakdown", "where does my money go", "spending on", "set budget categories", "budget breakdown")) {
             if (budget == null) return noBudget();
             if (categories.isEmpty()) return "No expense categories found. Visit 'Set Budget' to add them.";
-            StringBuilder r = new StringBuilder("\uD83D\uDCC2 Spending breakdown (highest first):");
+            StringBuilder r = new StringBuilder("\uD83D\uDCC2 Set budget breakdown (highest first):");
             categories.entrySet().stream()
                     .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
                     .forEach(e -> r.append(String.format("\n\u2022 %s: $%.2f (%.0f%%)",
@@ -162,7 +373,7 @@ public class ChatController {
         if (matches(msg, "account number", "my account", "acc number", "account #", "account no")) {
             if (user == null) return "Please log in to view account info.";
             if (user.getAccountNumber() == null || user.getAccountNumber().isBlank())
-                return "No account number saved yet. Go to your Profile to add it.";
+                return "No account number saved yet. Go to your Profile to view it.";
             String num = user.getAccountNumber();
             String masked = "****" + num.substring(Math.max(0, num.length() - 4));
             return "\uD83C\uDFE6 Account number: " + masked + "\n(Last 4 digits shown for security. Full number is in your Profile.)";
@@ -172,20 +383,10 @@ public class ChatController {
         if (matches(msg, "routing", "routing number", "aba", "transit number")) {
             if (user == null) return "Please log in to view account info.";
             if (user.getRoutingNumber() == null || user.getRoutingNumber().isBlank())
-                return "No routing number saved yet. Go to your Profile to add it.";
+                return "No routing number saved yet. Go to your Profile to view it.";
             String num = user.getRoutingNumber();
             String masked = "****" + num.substring(Math.max(0, num.length() - 4));
             return "\uD83C\uDFE6 Routing number: " + masked + "\n(Last 4 digits shown for security. Full number is in your Profile.)";
-        }
-
-        // ── Profile ──
-        if (matches(msg, "who am i", "my name", "my profile", "my info", "about me", "profile info")) {
-            if (user == null) return "You're not logged in.";
-            StringBuilder r = new StringBuilder("\uD83D\uDC64 Your profile:\n");
-            r.append("\u2022 Username: ").append(user.getUsername());
-            if (user.getName()  != null && !user.getName().isBlank())  r.append("\n\u2022 Name: ").append(user.getName());
-            if (user.getEmail() != null && !user.getEmail().isBlank()) r.append("\n\u2022 Email: ").append(user.getEmail());
-            return r.toString();
         }
 
         // ── Cash flow ──
@@ -235,7 +436,7 @@ public class ChatController {
         }
 
         // ── Default ──
-        return "I'm not sure I understood that. \uD83E\uDD14\n\nTry asking:\n\u2022 'What's my income?'\n\u2022 'Show my expenses'\n\u2022 'How's my budget health?'\n\u2022 'Give me financial advice'\n\u2022 'What's my account number?'\n\nOr type 'help' for all commands!";
+        return "I'm not sure I understood that. \uD83E\uDD14\n\nTry asking:\n\u2022 'What's my email?'\n\u2022 'What's my full name?'\n\u2022 'What are my actual expenses?'\n\u2022 'Show actual categories'\n\u2022 'Budget vs actual'\n\u2022 'Show all my data'\n\nOr type 'help' for all commands!";
     }
 
     private boolean matches(String msg, String... keywords) {
