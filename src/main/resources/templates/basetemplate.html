@@ -102,40 +102,6 @@
         <button id="darkModeToggle" class="topbar-dark-toggle">
             <i id="darkModeIcon" class="fa-solid fa-moon"></i>
         </button>
-        <div class="topbar-bell-wrap">
-            <button id="billBellToggle" class="topbar-bell-btn" type="button" title="Bill reminders">
-                <i class="fa-solid fa-bell"></i>
-                <span th:if="${billReminderCount > 0}" class="topbar-bell-badge" th:text="${billReminderCount}">0</span>
-            </button>
-            <div id="billBellDropdown" class="topbar-bell-dropdown">
-                <div class="bell-dd-header">
-                    <span>Bill Reminders</span>
-                    <strong th:text="${billReminderCount + ' due date(s)'}">0 due date(s)</strong>
-                </div>
-
-                <div th:if="${billReminderCount == 0}" class="bell-dd-empty">
-                    No active reminders today. Add bills in Alerts &amp; Notifications.
-                </div>
-
-                <div th:if="${billReminderCount > 0}" class="bell-dd-list">
-                    <div th:each="item : ${billReminderItems}" class="bell-dd-item">
-                        <a th:href="@{/alerts(focusBillId=${item.billId})}" class="bell-dd-link">
-                            <div class="bell-dd-row">
-                                <strong th:text="${item.name}">Bill</strong>
-                                <span th:text="${item.amount}">$0.00</span>
-                            </div>
-                            <div class="bell-dd-row bell-dd-meta">
-                                <span th:text="${'Due: ' + item.dueDate}">Due: 04/01/2026</span>
-                                <span class="bell-dd-badge">Active</span>
-                            </div>
-                            <div class="bell-dd-row bell-dd-sub">
-                                <span th:text="${item.trigger}">Due in 7 day(s)</span>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
         <a th:href="@{/profile}" class="topbar-avatar-link" title="My Profile">
             <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
                  th:src="${profilePhoto}" alt="Profile" class="topbar-avatar-img">
@@ -144,24 +110,6 @@
                   th:text="${userInitial != null} ? ${userInitial} : 'U'">U</span>
         </a>
     </div>
-    <script>
-    (function() {
-        var btn = document.getElementById('billBellToggle');
-        var menu = document.getElementById('billBellDropdown');
-        if (!btn || !menu) return;
-
-        btn.addEventListener('click', function(event) {
-            event.stopPropagation();
-            menu.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!menu.contains(event.target) && !btn.contains(event.target)) {
-                menu.classList.remove('show');
-            }
-        });
-    })();
-    </script>
 </div>
 
 <th:block th:fragment="darkMode">
@@ -204,9 +152,11 @@
 
         <!-- Suggestion chips -->
         <div class="fv-chips">
-            <button class="fv-chip" onclick="fvChip('What is my income?')">My income</button>
-            <button class="fv-chip" onclick="fvChip('Show my expenses')">My expenses</button>
-            <button class="fv-chip" onclick="fvChip('Budget health')">Budget health</button>
+            <button class="fv-chip" onclick="fvChip('Show all my data')">Summary</button>
+            <button class="fv-chip" onclick="fvChip('What are my actual expenses?')">Actual</button>
+            <button class="fv-chip" onclick="fvChip('Budget vs actual')">Compare</button>
+            <button class="fv-chip" onclick="fvChip('Budget health')">Health</button>
+            <button class="fv-chip" onclick="fvChip('What is my income?')">Income</button>
             <button class="fv-chip" onclick="fvChip('Give me financial advice')">Tips</button>
         </div>
 
@@ -482,26 +432,78 @@
                 addMsg("Voice input isn't supported in your browser. Try Chrome or Edge.", 'bot');
                 return;
             }
-            if (!recognition) {
-                recognition = new SR();
-                recognition.continuous     = false;
-                recognition.interimResults = false;
-                recognition.lang           = 'en-US';
-                recognition.onresult = function(e) {
-                    var t = e.results[0][0].transcript;
-                    document.getElementById('fvInput').value = t;
-                    fvSend();
-                };
-                recognition.onend  = function() { listening = false; updateMic(); };
-                recognition.onerror = function() { listening = false; updateMic(); };
-            }
             if (listening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                listening = true;
-                addMsg("\uD83C\uDFA4 Listening... speak now!", 'bot');
+                if (recognition) recognition.stop();
+                return;
             }
+            // Always create a fresh instance for reliability
+            recognition = new SR();
+            recognition.continuous     = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 3;
+            recognition.lang           = 'en-US';
+
+            var inputEl = document.getElementById('fvInput');
+            var savedPlaceholder = inputEl.placeholder;
+
+            recognition.onstart = function() {
+                inputEl.placeholder = '\uD83C\uDFA4 Listening...';
+            };
+
+            recognition.onspeechstart = function() {
+                inputEl.placeholder = '\uD83C\uDFA4 Hearing you...';
+            };
+
+            recognition.onresult = function(e) {
+                var interim = '';
+                var final_  = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    var transcript = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        // Pick the alternative with highest confidence
+                        var best = e.results[i][0];
+                        for (var j = 1; j < e.results[i].length; j++) {
+                            if (e.results[i][j].confidence > best.confidence) best = e.results[i][j];
+                        }
+                        final_ += best.transcript;
+                    } else {
+                        interim += transcript;
+                    }
+                }
+                // Show live interim text in the input field
+                if (interim) inputEl.value = interim;
+                if (final_) {
+                    inputEl.value = final_;
+                    inputEl.placeholder = savedPlaceholder;
+                }
+            };
+
+            recognition.onend = function() {
+                listening = false;
+                updateMic();
+                inputEl.placeholder = savedPlaceholder;
+                // If there's text in the input after recognition ends, send it
+                if (inputEl.value.trim()) fvSend();
+            };
+
+            recognition.onerror = function(e) {
+                listening = false;
+                updateMic();
+                inputEl.placeholder = savedPlaceholder;
+                var msgs = {
+                    'no-speech':       '\uD83C\uDFA4 No speech detected. Try speaking louder or closer to the mic.',
+                    'not-allowed':     '\uD83D\uDEAB Microphone access denied. Please allow microphone in your browser settings.',
+                    'network':         '\uD83D\uDEF0\uFE0F Network error. Check your connection and try again.',
+                    'audio-capture':   '\uD83C\uDFA4 No microphone found. Please connect one and try again.',
+                    'aborted':         null
+                };
+                var m = msgs[e.error];
+                if (m) addMsg(m, 'bot');
+            };
+
+            recognition.start();
+            listening = true;
+            addMsg("\uD83C\uDFA4 Listening... speak your question!", 'bot');
             updateMic();
         };
 
