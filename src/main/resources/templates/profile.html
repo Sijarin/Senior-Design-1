@@ -190,6 +190,7 @@
         body.dark .pf-card  { background: #1e2235; }
         body.dark .pf-card-title { color: #e0e0e0; border-color: #2d3250; }
         body.dark .field-wrap input { background: #252840; border-color: #3a3f6e; color: #e0e0e0; }
+        body.dark .field-wrap input[readonly] { background: #1e2235 !important; }
         body.dark .field-group label { color: #9aa; }
         body.dark .banking-note { background: rgba(102,126,234,0.1); color: #9aa; }
         body.dark .danger-card { background: #2d1c1c; border-color: #6b3030; }
@@ -266,43 +267,41 @@
                     Personal Information
                 </div>
 
-                <div th:if="${updateSuccess}" class="alert alert-success">
-                    <i class="fa-solid fa-circle-check"></i> <span th:text="${updateSuccess}"></span>
+                <div class="banking-note" style="margin-bottom:1.2rem;">
+                    <i class="fa-solid fa-lock"></i>
+                    Full name and email are set at registration and cannot be changed.
                 </div>
 
-                <form th:action="@{/profile/update}" method="POST">
-                    <div class="form-grid">
-                        <div class="field-group">
-                            <label for="name">Full Name</label>
-                            <div class="field-wrap">
-                                <i class="fa-solid fa-id-card field-icon"></i>
-                                <input type="text" id="name" name="name" placeholder="Your full name"
-                                       th:value="${user.name}">
-                            </div>
-                        </div>
-                        <div class="field-group">
-                            <label for="email">Email Address</label>
-                            <div class="field-wrap">
-                                <i class="fa-solid fa-envelope field-icon"></i>
-                                <input type="email" id="email" name="email" placeholder="email@example.com"
-                                       th:value="${user.email}">
-                            </div>
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label>Full Name</label>
+                        <div class="field-wrap">
+                            <i class="fa-solid fa-id-card field-icon"></i>
+                            <input type="text" readonly
+                                   th:value="${user.name != null and !#strings.isEmpty(user.name)} ? ${user.name} : '—'"
+                                   style="opacity:0.65;cursor:not-allowed;background:#f4f6ff;">
                         </div>
                     </div>
-                    <div class="form-grid single" style="margin-bottom:1.4rem;">
-                        <div class="field-group">
-                            <label>Username (read-only)</label>
-                            <div class="field-wrap">
-                                <i class="fa-solid fa-at field-icon"></i>
-                                <input type="text" th:value="${user.username}" disabled
-                                       style="opacity:0.55;cursor:not-allowed;">
-                            </div>
+                    <div class="field-group">
+                        <label>Email Address</label>
+                        <div class="field-wrap">
+                            <i class="fa-solid fa-envelope field-icon"></i>
+                            <input type="text" readonly
+                                   th:value="${user.email != null and !#strings.isEmpty(user.email)} ? ${user.email} : '—'"
+                                   style="opacity:0.65;cursor:not-allowed;background:#f4f6ff;">
                         </div>
                     </div>
-                    <button type="submit" class="btn-save">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
-                    </button>
-                </form>
+                </div>
+                <div class="form-grid single">
+                    <div class="field-group">
+                        <label>Username (read-only)</label>
+                        <div class="field-wrap">
+                            <i class="fa-solid fa-at field-icon"></i>
+                            <input type="text" th:value="${user.username}" readonly
+                                   style="opacity:0.65;cursor:not-allowed;background:#f4f6ff;">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- ══ BANKING INFORMATION ══ -->

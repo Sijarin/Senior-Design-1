@@ -60,22 +60,12 @@ public class ProfileController {
     }
 
     @PostMapping("/profile/update")
-    public String updateProfile(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String email,
-            Principal principal, Model model) {
-
+    public String updateProfile(Principal principal, Model model) {
         if (principal == null) return "redirect:/login";
         User user = userRepository.findByUsername(principal.getName()).orElse(null);
         if (user == null) return "redirect:/login";
-
-        user.setName(name != null ? name.trim() : "");
-        user.setEmail(email != null ? email.trim() : "");
-        // accountNumber and routingNumber are auto-generated and never overwritten
-        userRepository.save(user);
-
+        // name and email are locked at registration — never overwritten here
         model.addAttribute("user", user);
-        model.addAttribute("updateSuccess", "Profile updated successfully!");
         return "profile";
     }
 

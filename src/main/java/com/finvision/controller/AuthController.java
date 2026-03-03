@@ -38,6 +38,8 @@ public class AuthController {
             @RequestParam String password,
             @RequestParam(required = false) String confirmPassword,
             @RequestParam(required = false) String email,
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String pin,
             @RequestParam(required = false) String securityQuestion,
             @RequestParam(required = false) String securityAnswer,
@@ -56,10 +58,15 @@ public class AuthController {
             return "register";
         }
 
+        String fn = (firstName != null) ? firstName.trim() : "";
+        String ln = (lastName  != null) ? lastName.trim()  : "";
+        String fullName = (fn + " " + ln).trim();
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email != null ? email.trim() : "");
+        user.setName(fullName.isEmpty() ? null : fullName);
         user.setPin(passwordEncoder.encode(pin));
         user.setSecurityQuestion(securityQuestion != null ? securityQuestion.trim() : "");
         user.setSecurityAnswer(securityAnswer != null ? securityAnswer.trim().toLowerCase() : "");
