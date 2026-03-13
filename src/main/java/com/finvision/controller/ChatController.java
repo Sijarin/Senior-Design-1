@@ -101,7 +101,21 @@ public class ChatController {
 
         // ── Help ──
         if (matches(msg, "help", "what can you do", "commands", "capabilities", "menu")) {
-            return "Here's what I can answer:\n\n\uD83D\uDCB0 Income \u2014 'What's my income?'\n\uD83D\uDCCA Set Budget \u2014 'Show my set expenses'\n\uD83E\uDDFE Actual Expenses \u2014 'What did I actually spend?'\n\uD83D\uDCC2 Categories \u2014 'Show actual categories'\n\uD83C\uDD9A Compare \u2014 'Budget vs actual'\n\uD83D\uDC37 Savings \u2014 'How much am I saving?'\n\u2764\uFE0F Health \u2014 'How's my budget health?'\n\uD83D\uDC64 Profile \u2014 'My name / email / username'\n\uD83C\uDFE6 Banking \u2014 'My account number'\n\uD83D\uDCA1 Tips \u2014 'Give me financial advice'\n\uD83D\uDCC8 Forecast \u2014 'Show my cash flow'\n\uD83C\uDFAF Goals \u2014 'Help me set financial goals'\n\uD83D\uDCCB Summary \u2014 'Show all my data'\n\n\uD83C\uDFA4 You can also use the microphone for voice commands!";
+            return "Here's what I can answer:\n\n"
+                + "\uD83D\uDCCA Set Budget \u2014 'Show my set budget details'\n"
+                + "\uD83D\uDCB0 Income \u2014 'What\u2019s my income?'\n"
+                + "\uD83E\uDDFE Actual Expenses \u2014 'What did I actually spend?'\n"
+                + "\uD83D\uDCC2 Categories \u2014 'Show actual categories'\n"
+                + "\uD83C\uDD9A Compare \u2014 'Budget vs actual'\n"
+                + "\uD83D\uDC37 Savings \u2014 'How much am I saving?'\n"
+                + "\u2764\uFE0F Health \u2014 'How\u2019s my budget health?'\n"
+                + "\uD83D\uDC64 Profile \u2014 'My name / email / username'\n"
+                + "\uD83C\uDFE6 Banking \u2014 'My account number'\n"
+                + "\uD83D\uDCA1 Tips \u2014 'Give me financial advice'\n"
+                + "\uD83D\uDCC8 Forecast \u2014 'Show my cash flow'\n"
+                + "\uD83C\uDFAF Goals \u2014 'Help me set financial goals'\n"
+                + "\uD83D\uDCCB Summary \u2014 'Show all my data'\n\n"
+                + "\uD83C\uDFA4 You can also use the microphone for voice commands!";
         }
 
         // ── Email ──
@@ -181,13 +195,148 @@ public class ChatController {
             return r.toString();
         }
 
-        // ── Set Budget Expenses ──
-        if (matches(msg, "set budget expense", "set expense", "planned expense", "my set expense", "what is set budget", "budgeted expense")) {
+        // ── Full Set Budget Overview (totals at top, full breakdown below) ──
+        if (matches(msg, "set budget", "show my set budget", "set budget details", "budget details",
+                    "full budget", "budget overview", "my budget details", "set budget expense",
+                    "set expense", "planned expense", "my set expense", "what is set budget",
+                    "budgeted expense", "show budget", "what is my budget", "my budget")) {
             if (budget == null) return noBudget();
+
+            String month = (budget.getMonth() != null && !budget.getMonth().isBlank())
+                    ? budget.getMonth() : "This Month";
             double pct = income > 0 ? (expenses / income) * 100 : 0;
-            StringBuilder r = new StringBuilder(String.format("\uD83D\uDCCA Set budget — $%.2f/month (%.0f%% of income)\n", expenses, pct));
-            categories.forEach((k, v) -> r.append(String.format("\u2022 %s: $%.2f\n", k, v)));
-            return r.toString().trim();
+            StringBuilder r = new StringBuilder();
+
+            // ── Header ──
+            r.append("\uD83D\uDCCA **Your Set Budget \u2014 ").append(month).append("**\n");
+            r.append("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n");
+
+            // ── TOTALS at the top ──
+            r.append("\uD83D\uDCB0 **TOTALS**\n");
+            r.append(String.format("\u2022 Total Income:    **$%.2f**\n", income));
+            r.append(String.format("\u2022 Total Expenses:  **$%.2f** (%.0f%% of income)\n", expenses, pct));
+            if (savings >= 0) {
+                r.append(String.format("\u2022 Net Savings:     **$%.2f** (%.0f%% savings rate)\n", savings, savingsRate));
+            } else {
+                r.append(String.format("\u2022 Over Budget by:  **$%.2f** \u26A0\uFE0F\n", Math.abs(savings)));
+            }
+            r.append("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n");
+
+            // ── Income breakdown ──
+            r.append("\uD83D\uDCE5 **INCOME**\n");
+            if (budget.getMonthlyIncome() > 0) r.append(String.format("\u2022 Monthly Income:  $%.2f\n", budget.getMonthlyIncome()));
+            if (budget.getOtherIncome()   > 0) r.append(String.format("\u2022 Other Income:    $%.2f\n", budget.getOtherIncome()));
+            r.append("\n");
+
+            // ── Fixed expenses ──
+            boolean hasFixed = budget.getRent() > 0 || budget.getUtilities() > 0
+                    || budget.getInsurance() > 0 || budget.getGroceries() > 0
+                    || budget.getSubscriptions() > 0;
+            if (hasFixed) {
+                r.append("\uD83C\uDFE0 **FIXED EXPENSES**\n");
+                if (budget.getRent()          > 0) r.append(String.format("\u2022 Rent:            $%.2f\n", budget.getRent()));
+                if (budget.getUtilities()     > 0) r.append(String.format("\u2022 Utilities:       $%.2f\n", budget.getUtilities()));
+                if (budget.getInsurance()     > 0) r.append(String.format("\u2022 Insurance:       $%.2f\n", budget.getInsurance()));
+                if (budget.getGroceries()     > 0) r.append(String.format("\u2022 Groceries:       $%.2f\n", budget.getGroceries()));
+                if (budget.getSubscriptions() > 0) r.append(String.format("\u2022 Subscriptions:   $%.2f\n", budget.getSubscriptions()));
+                r.append("\n");
+            }
+
+            // ── Variable expenses ──
+            List<String> vt = budget.getVariableTitle();
+            List<Double> va = budget.getVariableAmount();
+            boolean hasVariable = vt != null && va != null && !vt.isEmpty();
+            if (hasVariable) {
+                r.append("\uD83D\uDCDD **VARIABLE EXPENSES**\n");
+                for (int i = 0; i < Math.min(vt.size(), va.size()); i++) {
+                    if (va.get(i) != null && va.get(i) > 0 && vt.get(i) != null && !vt.get(i).isBlank()) {
+                        r.append(String.format("\u2022 %-18s $%.2f\n", vt.get(i) + ":", va.get(i)));
+                    }
+                }
+                r.append("\n");
+            }
+
+            // ── Health status ──
+            String healthLine;
+            switch (status) {
+                case "healthy":
+                    healthLine = "\u2764\uFE0F Budget Health: **Healthy** \u2014 Great job saving " + String.format("%.0f%%", savingsRate) + "!";
+                    break;
+                case "overspending":
+                    healthLine = "\uD83D\uDEA8 Budget Health: **Overspending!** Expenses exceed income by $" + String.format("%.2f", Math.abs(savings)) + ".";
+                    break;
+                default:
+                    healthLine = "\u26A0\uFE0F Budget Health: **Low Savings** \u2014 Try to reach 20% savings rate.";
+            }
+            r.append(healthLine).append("\n");
+            r.append("\uD83D\uDC49 Visit **Set Budget** in the sidebar to update your budget.");
+
+            return r.toString();
+        }
+
+        // ── Full Actual Expense Overview (totals at top, categories, all receipts) ──
+        if (matches(msg, "actual expense", "actual spend", "actual cost", "what did i actually spend",
+                    "real expense", "receipt total", "my receipts", "scanned receipt", "actual amount",
+                    "how much did i spend", "actual categor", "receipt categor", "what did i spend on",
+                    "actual breakdown", "show actual", "actual by category", "what are my actual")) {
+            if (receipts.isEmpty())
+                return "\uD83E\uDDFE No receipts scanned this month yet.\nUse the **Actual Expense** page in the sidebar to scan and log your expenses.";
+
+            String yearMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+            StringBuilder r = new StringBuilder();
+
+            // ── Header ──
+            r.append("\uD83E\uDDFE **Your Actual Expenses \u2014 ").append(yearMonth).append("**\n");
+            r.append("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n");
+
+            // ── TOTALS at the top ──
+            r.append("\uD83D\uDCB0 **TOTALS**\n");
+            r.append(String.format("\u2022 Total Spent:    **$%.2f** (%d receipt%s)\n",
+                    actualTotal, receipts.size(), receipts.size() == 1 ? "" : "s"));
+            if (budget != null) {
+                double diff = expenses - actualTotal;
+                r.append(String.format("\u2022 Set Budget:     $%.2f\n", expenses));
+                if (diff >= 0)
+                    r.append(String.format("\u2022 Difference:     \u2705 **$%.2f under budget** \u2014 great job!\n", diff));
+                else
+                    r.append(String.format("\u2022 Difference:     \u26A0\uFE0F **$%.2f over budget**\n", Math.abs(diff)));
+            }
+            r.append("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n");
+
+            // ── By Category ──
+            if (!actualCategories.isEmpty()) {
+                r.append("\uD83D\uDCC2 **BY CATEGORY**\n");
+                actualCategories.entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .forEach(e -> r.append(String.format("\u2022 %-18s $%.2f  (%.0f%%)\n",
+                        e.getKey() + ":", e.getValue(),
+                        actualTotal > 0 ? e.getValue() / actualTotal * 100 : 0)));
+                r.append("\n");
+            }
+
+            // ── All Receipts ──
+            List<ScannedReceipt> sorted = new ArrayList<>(receipts);
+            sorted.sort((a, b) -> {
+                String da = a.getDateStr() != null ? a.getDateStr() : "";
+                String db = b.getDateStr() != null ? b.getDateStr() : "";
+                return db.compareTo(da);
+            });
+            r.append(String.format("\uD83E\uDDFE **ALL RECEIPTS (%d)**\n", sorted.size()));
+            int show = Math.min(10, sorted.size());
+            for (int i = 0; i < show; i++) {
+                ScannedReceipt rec = sorted.get(i);
+                String merchant = rec.getMerchantName() != null && !rec.getMerchantName().isBlank()
+                        ? rec.getMerchantName() : "Unknown";
+                String cat = rec.getCategory() != null && !rec.getCategory().isBlank()
+                        ? rec.getCategory() : "Other";
+                String date = rec.getDateStr() != null ? "  " + rec.getDateStr() : "";
+                r.append(String.format("\u2022 %-20s $%.2f  [%s]%s\n", merchant, rec.getAmount(), cat, date));
+            }
+            if (sorted.size() > 10)
+                r.append("... and ").append(sorted.size() - 10).append(" more receipts.\n");
+
+            r.append("\n\uD83D\uDC49 Visit **Actual Expense** in the sidebar to manage your receipts.");
+            return r.toString();
         }
 
         // ── Expenses (general) ──
@@ -198,41 +347,9 @@ public class ChatController {
             categories.forEach((k, v) -> r.append(String.format("\n\u2022 %s: $%.2f", k, v)));
             if (!receipts.isEmpty()) {
                 r.append(String.format("\n\n\uD83E\uDDFE Actual spending (receipts this month): $%.2f", actualTotal));
-                r.append("\nAsk 'show actual categories' to see the breakdown.");
+                r.append("\nAsk 'show actual' to see the full breakdown.");
             }
             return r.toString();
-        }
-
-        // ── Actual expenses ──
-        if (matches(msg, "actual expense", "actual spend", "actual cost", "what did i actually spend", "real expense",
-                    "receipt total", "my receipts", "scanned receipt", "actual amount", "how much did i spend")) {
-            if (receipts.isEmpty())
-                return "\uD83E\uDDFE No receipts scanned this month yet. Use the 'Scan Receipt' feature to log your actual expenses.";
-            StringBuilder r = new StringBuilder(String.format("\uD83E\uDDFE Actual spending this month: $%.2f\n", actualTotal));
-            if (budget != null) {
-                double diff = expenses - actualTotal;
-                r.append(String.format("\u2022 Set budget: $%.2f\n", expenses));
-                if (diff >= 0)
-                    r.append(String.format("\u2705 You're $%.2f under budget \u2014 great job!", diff));
-                else
-                    r.append(String.format("\u26A0\uFE0F You're $%.2f over your set budget.", Math.abs(diff)));
-            }
-            return r.toString();
-        }
-
-        // ── Actual expense categories ──
-        if (matches(msg, "actual categor", "receipt categor", "what did i spend on", "actual breakdown", "show actual", "actual by category")) {
-            if (receipts.isEmpty())
-                return "No receipts found this month. Scan receipts to track your actual spending by category.";
-            StringBuilder r = new StringBuilder(String.format("\uD83E\uDDFE Actual spending by category (this month \u2014 $%.2f total):\n", actualTotal));
-            actualCategories.entrySet().stream()
-                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                .forEach(e -> r.append(String.format("\u2022 %s: $%.2f (%.0f%%)\n",
-                    e.getKey(), e.getValue(), actualTotal > 0 ? e.getValue() / actualTotal * 100 : 0)));
-            if (highestActualCat != null)
-                r.append("\nHighest: ").append(highestActualCat)
-                 .append(" ($").append(String.format("%.2f", actualCategories.get(highestActualCat))).append(")");
-            return r.toString().trim();
         }
 
         // ── Compare budget vs actual ──
@@ -341,17 +458,47 @@ public class ChatController {
         // ── Budget health ──
         if (matches(msg, "health", "how am i doing", "budget status", "financial health", "am i okay", "am i overspend", "status", "doing good")) {
             if (budget == null) return noBudget();
-            switch (status) {
+
+            // Use actual receipts when available; fall back to set budget
+            boolean hHasActual    = !receipts.isEmpty();
+            double  hExpenses     = hHasActual ? actualTotal : expenses;
+            double  hSavings      = income - hExpenses;
+            double  hSavingsRate  = income > 0 ? (hSavings / income) * 100 : 0;
+            String  hStatus       = hSavings < 0 ? "overspending"
+                                  : (hSavings < income * 0.2 ? "low" : "healthy");
+            String  hExpLabel     = hHasActual ? "actual spending" : "set budget";
+            String  hHighCat      = hHasActual ? highestActualCat : highestCat;
+            double  hHighAmt      = hHighCat != null
+                                  ? (hHasActual ? actualCategories.getOrDefault(hHighCat, 0.0)
+                                                : categories.getOrDefault(hHighCat, 0.0))
+                                  : 0;
+
+            switch (hStatus) {
                 case "healthy":
-                    return String.format("\u2764\uFE0F Budget health: Healthy!\nYou're saving %.0f%% of income ($%.2f/month). Your finances are in great shape. Keep it up!", savingsRate, savings);
+                    return String.format(
+                        "\u2764\uFE0F **Budget Health: Healthy!**\n"
+                        + "You\u2019re saving **%.0f%%** of income (**$%.2f/month**).\n"
+                        + "_(Based on %s)_\n\n"
+                        + "Your finances are in great shape. Keep it up!",
+                        hSavingsRate, hSavings, hExpLabel);
                 case "low":
-                    return String.format("\u26A0\uFE0F Budget health: Low Balance.\nYou're only saving %.0f%% ($%.2f/month). Recommended minimum is 20%%.\n%s",
-                            savingsRate, savings,
-                            highestCat != null ? "Biggest expense: " + highestCat + " ($" + String.format("%.2f", categories.get(highestCat)) + "). Look for savings there." : "Try to increase income or reduce expenses.");
+                    return String.format(
+                        "\u26A0\uFE0F **Budget Health: Low Savings**\n"
+                        + "You\u2019re only saving **%.0f%%** ($%.2f/month). Recommended minimum is 20%%.\n"
+                        + "_(Based on %s)_\n%s",
+                        hSavingsRate, hSavings, hExpLabel,
+                        hHighCat != null
+                            ? "\nBiggest expense: **" + hHighCat + "** ($" + String.format("%.2f", hHighAmt) + "). Look for savings there."
+                            : "\nTry to increase income or reduce expenses.");
                 case "overspending":
-                    return String.format("\uD83D\uDEA8 Budget health: Overspending!\nYou're over budget by $%.2f/month. Expenses ($%.2f) exceed income ($%.2f).%s",
-                            Math.abs(savings), expenses, income,
-                            highestCat != null ? "\nLargest expense: " + highestCat + " ($" + String.format("%.2f", categories.get(highestCat)) + "). Reducing it would help most." : "");
+                    return String.format(
+                        "\uD83D\uDEA8 **Budget Health: Overspending!**\n"
+                        + "You\u2019re over budget by **$%.2f/month**. Expenses ($%.2f) exceed income ($%.2f).\n"
+                        + "_(Based on %s)_%s",
+                        Math.abs(hSavings), hExpenses, income, hExpLabel,
+                        hHighCat != null
+                            ? "\nLargest expense: **" + hHighCat + "** ($" + String.format("%.2f", hHighAmt) + "). Reducing it would help most."
+                            : "");
                 default:
                     return noBudget();
             }
@@ -389,12 +536,76 @@ public class ChatController {
             return "\uD83C\uDFE6 Routing number: " + masked + "\n(Last 4 digits shown for security. Full number is in your Profile.)";
         }
 
-        // ── Cash flow ──
-        if (matches(msg, "cash flow", "forecast", "next month", "projection", "predict", "future money")) {
+        // ── Predictive Cash Flow — full 6-month forecast ──
+        if (matches(msg, "cash flow", "predictive cash flow", "forecast", "next month", "projection",
+                    "predict", "future money", "6 month", "six month", "monthly forecast")) {
             if (budget == null) return noBudget();
-            String sign = savings >= 0 ? "+" : "-";
-            return String.format("\uD83D\uDCC8 Cash flow forecast:\n\u2022 Monthly net: %s$%.2f\n\u2022 3-month: %s$%.2f\n\u2022 6-month: %s$%.2f\n\nVisit 'Predictive Cash Flow' in the sidebar for full charts!",
-                    sign, Math.abs(savings), sign, Math.abs(savings * 3), sign, Math.abs(savings * 6));
+
+            // Use actual receipts for expenses when available (same as the page does)
+            double cfExpenses   = !receipts.isEmpty() ? actualTotal : expenses;
+            double cfNet        = income - cfExpenses;
+            double cfRate       = income > 0 ? (cfNet / income) * 100 : 0;
+            String expSource    = !receipts.isEmpty() ? "actual receipts" : "set budget";
+            String trajectory   = cfNet > 0 ? "positive" : (cfNet < 0 ? "negative" : "neutral");
+
+            // Build 6-month cumulative forecast
+            String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+            DateTimeFormatter mFmt = DateTimeFormatter.ofPattern("MMM yyyy");
+            String[] monthLabels = new String[6];
+            double[] cumulative  = new double[6];
+            double running = 0;
+            for (int i = 0; i < 6; i++) {
+                running += cfNet;
+                monthLabels[i] = LocalDate.now().plusMonths(i).format(mFmt);
+                cumulative[i]  = running;
+            }
+            double sixMonthTotal = cumulative[5];
+
+            StringBuilder r = new StringBuilder();
+
+            // ── Header ──
+            r.append("\uD83D\uDCC8 **Predictive Cash Flow \u2014 ").append(currentMonth).append("**\n");
+            r.append("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n");
+
+            // ── Monthly snapshot ──
+            r.append("\uD83D\uDCB0 **MONTHLY SNAPSHOT**\n");
+            r.append(String.format("\u2022 Monthly Income:    **$%.2f**\n", income));
+            r.append(String.format("\u2022 Monthly Expenses:  $%.2f  (%s)\n", cfExpenses, expSource));
+            r.append(String.format("\u2022 Monthly Net:       **%s$%.2f**\n", cfNet >= 0 ? "+" : "-", Math.abs(cfNet)));
+            r.append(String.format("\u2022 Savings Rate:      **%.0f%%**\n", cfRate));
+            r.append(String.format("\u2022 6-Month Total:     **%s$%.2f**\n", sixMonthTotal >= 0 ? "+" : "-", Math.abs(sixMonthTotal)));
+            r.append("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n");
+
+            // ── Trajectory ──
+            switch (trajectory) {
+                case "positive":
+                    r.append(String.format("\uD83D\uDCC8 **Trajectory: POSITIVE**\n"
+                        + "At your current rate you\u2019ll accumulate **$%.2f** over 6 months.\n"
+                        + "Your %.0f%% savings rate puts you on a strong financial path!\n\n",
+                        sixMonthTotal, cfRate));
+                    break;
+                case "negative":
+                    r.append(String.format("\uD83D\uDCC9 **Trajectory: NEGATIVE**\n"
+                        + "At your current rate you\u2019ll accumulate **$%.2f in debt** over 6 months.\n"
+                        + "Reduce expenses or increase income to reverse this trend.\n\n",
+                        Math.abs(sixMonthTotal)));
+                    break;
+                default:
+                    r.append("\u2696\uFE0F **Trajectory: BREAK-EVEN**\n"
+                        + "Income exactly covers expenses. Trim even $50/month \u2014 it compounds over time.\n\n");
+            }
+
+            // ── Month-by-month breakdown ──
+            r.append("\uD83D\uDCC5 **6-MONTH FORECAST**\n");
+            for (int i = 0; i < 6; i++) {
+                String sign = cumulative[i] >= 0 ? "+" : "-";
+                r.append(String.format("\u2022 Month %d  %-10s  %s$%-10.2f  Income: $%.0f \u00B7 Exp: $%.0f\n",
+                        i + 1, monthLabels[i], sign, Math.abs(cumulative[i]), income, cfExpenses));
+            }
+
+            r.append("\n\u2139\uFE0F Forecast assumes consistent monthly income and expenses.\n");
+            r.append("\uD83D\uDC49 Visit **Predictive Cash Flow** in the sidebar for full charts!");
+            return r.toString();
         }
 
         // ── Goals ──
@@ -409,17 +620,38 @@ public class ChatController {
             if (budget == null) {
                 return "\uD83D\uDCA1 General financial tips:\n\n1. 50/30/20 rule: 50% needs, 30% wants, 20% savings\n2. Build a 3\u20136 month emergency fund first\n3. Automate savings on payday\n4. Track every expense for 30 days\n5. Cancel unused subscriptions\n6. Invest early \u2014 compound interest is powerful!\n\nSet up your budget for personalized advice!";
             }
-            StringBuilder r = new StringBuilder("\uD83D\uDCA1 Personalized tips for " + name + ":\n\n");
-            if (status.equals("overspending")) {
-                r.append(String.format("\uD83D\uDEA8 You're overspending by $%.2f/month.\n", Math.abs(savings)));
-                if (highestCat != null) r.append(String.format("\u2022 Cut %s expenses ($%.2f) first\n", highestCat, categories.get(highestCat)));
+
+            // Use actual receipts when available; fall back to set budget
+            boolean hasActual       = !receipts.isEmpty();
+            double  tipExpenses     = hasActual ? actualTotal : expenses;
+            double  tipSavings      = income - tipExpenses;
+            double  tipSavingsRate  = income > 0 ? (tipSavings / income) * 100 : 0;
+            String  tipStatus       = tipSavings < 0 ? "overspending"
+                                    : (tipSavings < income * 0.2 ? "low" : "healthy");
+            String  expLabel        = hasActual ? "actual spending" : "set budget";
+
+            // Highest actual category (for personalized advice when using receipts)
+            String tipHighCat = hasActual ? highestActualCat : highestCat;
+            double tipHighAmt = 0;
+            if (tipHighCat != null) {
+                tipHighAmt = hasActual
+                    ? actualCategories.getOrDefault(tipHighCat, 0.0)
+                    : categories.getOrDefault(tipHighCat, 0.0);
+            }
+
+            StringBuilder r = new StringBuilder("\uD83D\uDCA1 Personalized tips for " + name + ":\n");
+            r.append(String.format("_(Based on %s — $%.2f/month)_\n\n", expLabel, tipExpenses));
+
+            if (tipStatus.equals("overspending")) {
+                r.append(String.format("\uD83D\uDEA8 You're overspending by **$%.2f/month**.\n", Math.abs(tipSavings)));
+                if (tipHighCat != null) r.append(String.format("\u2022 Cut **%s** ($%.2f) first\n", tipHighCat, tipHighAmt));
                 r.append("\u2022 Cancel unused subscriptions\n\u2022 Cook at home to reduce food costs\n\u2022 Set a daily spending limit\n\u2022 Use the 48-hour rule before big purchases");
-            } else if (status.equals("low")) {
-                r.append(String.format("\uD83D\uDCC8 Savings rate: %.0f%% \u2014 target is 20%%\n", savingsRate));
-                if (highestCat != null) r.append(String.format("\u2022 Reduce %s ($%.2f) to boost savings\n", highestCat, categories.get(highestCat)));
+            } else if (tipStatus.equals("low")) {
+                r.append(String.format("\uD83D\uDCC8 Savings rate: **%.0f%%** \u2014 target is 20%%\n", tipSavingsRate));
+                if (tipHighCat != null) r.append(String.format("\u2022 Reduce **%s** ($%.2f) to boost savings\n", tipHighCat, tipHighAmt));
                 r.append("\u2022 Automate savings transfers on payday\n\u2022 Try meal prepping to cut grocery bills\n\u2022 Negotiate bills (insurance, phone, internet)\n\u2022 Consider a side income stream");
             } else {
-                r.append(String.format("\u2705 Great! Saving %.0f%% ($%.2f/month).\n", savingsRate, savings));
+                r.append(String.format("\u2705 Great! Saving **%.0f%%** ($%.2f/month).\n", tipSavingsRate, tipSavings));
                 r.append("\u2022 Invest in low-cost index funds\n\u2022 Max out 401k/IRA contributions\n\u2022 Build emergency fund to 6 months\n\u2022 Consider dividend stocks or real estate\n\u2022 Stay consistent \u2014 time in market beats timing!");
             }
             return r.toString();
