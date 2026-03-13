@@ -42,7 +42,6 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-
         <!-- JPA and H2 Database -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

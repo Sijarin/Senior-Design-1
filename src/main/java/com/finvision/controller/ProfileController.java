@@ -64,7 +64,6 @@ public class ProfileController {
         if (principal == null) return "redirect:/login";
         User user = userRepository.findByUsername(principal.getName()).orElse(null);
         if (user == null) return "redirect:/login";
-        // name and email are locked at registration — never overwritten here
         model.addAttribute("user", user);
         return "profile";
     }

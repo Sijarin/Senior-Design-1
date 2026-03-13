@@ -299,6 +299,24 @@
 </div>
 
 
+<script th:inline="javascript">
+/*<![CDATA[*/
+// Save insights data to localStorage so the chatbot can read it from any page
+(function() {
+    var user = /*[[${loggedInUsername}]]*/ 'guest';
+    try {
+        localStorage.setItem('fv_insights_' + user, JSON.stringify({
+            income:    /*[[${income}]]*/    '0.00',
+            expenses:  /*[[${expenses}]]*/ '0.00',
+            remaining: /*[[${remaining}]]*/ '0.00',
+            percent:   /*[[${percent}]]*/   '0',
+            status:    /*[[${status}]]*/    'none',
+            savedAt:   new Date().toISOString()
+        }));
+    } catch(e) {}
+})();
+/*]]>*/
+</script>
 <script>
     const menuToggle = document.querySelector('.menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
