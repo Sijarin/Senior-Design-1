@@ -23,16 +23,10 @@ public class Budget {
     private double insurance;
     private double groceries;
     private double subscriptions;
-    private String rentDueDate;
-    private String utilitiesDueDate;
-    private String insuranceDueDate;
-    private String groceriesDueDate;
-    private String subscriptionsDueDate;
 
     // Variable Expenses
     private List<String> variableTitle;
     private List<Double> variableAmount;
-    private List<String> variableDueDate;
 
     // Getters and Setters
     public String getId() { return id; }
@@ -65,27 +59,9 @@ public class Budget {
     public double getSubscriptions() { return subscriptions; }
     public void setSubscriptions(double subscriptions) { this.subscriptions = subscriptions; }
 
-    public String getRentDueDate() { return rentDueDate; }
-    public void setRentDueDate(String rentDueDate) { this.rentDueDate = rentDueDate; }
-
-    public String getUtilitiesDueDate() { return utilitiesDueDate; }
-    public void setUtilitiesDueDate(String utilitiesDueDate) { this.utilitiesDueDate = utilitiesDueDate; }
-
-    public String getInsuranceDueDate() { return insuranceDueDate; }
-    public void setInsuranceDueDate(String insuranceDueDate) { this.insuranceDueDate = insuranceDueDate; }
-
-    public String getGroceriesDueDate() { return groceriesDueDate; }
-    public void setGroceriesDueDate(String groceriesDueDate) { this.groceriesDueDate = groceriesDueDate; }
-
-    public String getSubscriptionsDueDate() { return subscriptionsDueDate; }
-    public void setSubscriptionsDueDate(String subscriptionsDueDate) { this.subscriptionsDueDate = subscriptionsDueDate; }
-
     public List<String> getVariableTitle() { return variableTitle; }
     public void setVariableTitle(List<String> variableTitle) { this.variableTitle = variableTitle; }
 
     public List<Double> getVariableAmount() { return variableAmount; }
     public void setVariableAmount(List<Double> variableAmount) { this.variableAmount = variableAmount; }
-
-    public List<String> getVariableDueDate() { return variableDueDate; }
-    public void setVariableDueDate(List<String> variableDueDate) { this.variableDueDate = variableDueDate; }
 }
