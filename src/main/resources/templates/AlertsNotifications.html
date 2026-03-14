@@ -891,6 +891,10 @@
         .then(function(res) {
             if (res.ok || res.type === 'opaqueredirect') {
                 removeDueTodayCard(bid);
+                // Save paid status so it persists across page navigation
+                var paid = loadPaidStatus();
+                paid[bid] = true;
+                savePaidStatus(paid);
                 // Flip toggle to Paid
                 var toggle = document.querySelector('.bill-paid-toggle[data-bill-id="' + bid + '"]');
                 if (toggle) { setPaidToggle(toggle, true); }
