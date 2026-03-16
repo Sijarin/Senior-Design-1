@@ -47,16 +47,16 @@ public class ReceiptController {
         // ── Build Budget vs Actual comparison ──────────────────────────────────
         Budget budget = budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null);
 
-        // Sum actual receipt amounts by MERCHANT NAME (case-insensitive, this month only)
-        Map<String, Double> actualByMerchant = new LinkedHashMap<>();
-        Map<String, String> merchantDisplay  = new LinkedHashMap<>(); // lowercase key → display name
+        // Sum actual receipt amounts by CATEGORY (case-insensitive, this month only)
+        Map<String, Double> actualByCategory = new LinkedHashMap<>();
+        Map<String, String> categoryDisplay  = new LinkedHashMap<>(); // lowercase key → display name
         for (ScannedReceipt r : receipts) {
             if (yearMonth.equals(r.getYearMonth())) {
-                String merchant = (r.getMerchantName() != null && !r.getMerchantName().trim().isEmpty())
-                        ? r.getMerchantName().trim() : "Unknown";
-                String key = merchant.toLowerCase();
-                actualByMerchant.merge(key, r.getAmount(), Double::sum);
-                merchantDisplay.putIfAbsent(key, merchant);
+                String cat = (r.getCategory() != null && !r.getCategory().trim().isEmpty())
+                        ? r.getCategory().trim() : "Other";
+                String key = cat.toLowerCase();
+                actualByCategory.merge(key, r.getAmount(), Double::sum);
+                categoryDisplay.putIfAbsent(key, cat);
             }
         }
 
@@ -64,7 +64,7 @@ public class ReceiptController {
         Set<String> budgetCatNamesLower = new HashSet<>();
 
         if (budget != null) {
-            // Fixed budget categories — match against merchant name (case-insensitive)
+            // Fixed budget categories — match against receipt category (case-insensitive)
             String[][] fixed = {
                 {"Rent",          String.valueOf(budget.getRent())},
                 {"Utilities",     String.valueOf(budget.getUtilities())},
@@ -75,7 +75,7 @@ public class ReceiptController {
             for (String[] fc : fixed) {
                 budgetCatNamesLower.add(fc[0].toLowerCase());
                 double set    = Double.parseDouble(fc[1]);
-                double actual = actualByMerchant.getOrDefault(fc[0].toLowerCase(), 0.0);
+                double actual = actualByCategory.getOrDefault(fc[0].toLowerCase(), 0.0);
                 compRows.add(buildRow(fc[0], set, actual));
             }
 
@@ -89,17 +89,17 @@ public class ReceiptController {
                     if (title != null && !title.trim().isEmpty()) {
                         budgetCatNamesLower.add(title.trim().toLowerCase());
                         double set    = (amt != null) ? amt : 0.0;
-                        double actual = actualByMerchant.getOrDefault(title.trim().toLowerCase(), 0.0);
+                        double actual = actualByCategory.getOrDefault(title.trim().toLowerCase(), 0.0);
                         compRows.add(buildRow(title, set, actual));
                     }
                 }
             }
         }
 
-        // Merchant names that don't match any budget category → individual rows
-        for (Map.Entry<String, Double> entry : actualByMerchant.entrySet()) {
+        // Receipt categories that don't match any budget category → individual rows
+        for (Map.Entry<String, Double> entry : actualByCategory.entrySet()) {
             if (!budgetCatNamesLower.contains(entry.getKey())) {
-                String displayName = merchantDisplay.getOrDefault(entry.getKey(), entry.getKey());
+                String displayName = categoryDisplay.getOrDefault(entry.getKey(), entry.getKey());
                 compRows.add(buildRow(displayName, 0.0, entry.getValue()));
             }
         }
