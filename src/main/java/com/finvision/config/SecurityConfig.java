@@ -17,7 +17,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable only if you’re still prototyping
+                .csrf(csrf -> csrf.disable()) // Disable only if you're still prototyping
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/register", "/forgot-password", "/reset-password", "/verify-identity", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()

@@ -12,7 +12,7 @@
         /* ── LAYOUT ── */
         .dashboard-wrapper { display: flex; min-height: 100vh; background: var(--bg-main, #f0f2ff); }
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .content { padding: 4.6rem 2rem 3rem; flex: 1; overflow-y: auto; }
+        .content { padding: 1.8rem 2rem 3rem; flex: 1; overflow-y: auto; }
 
         /* ── ANIMATIONS ── */
         @keyframes fadeInUp {
@@ -489,7 +489,7 @@
             .quick-grid { grid-template-columns: 1fr; }
             .hero-right { display: none; }
             .hero-left h1 { font-size: 1.75rem; }
-            .content { padding: 4.2rem 1rem 2rem; }
+            .content { padding: 1.2rem 1rem 2rem; }
         }
     </style>
 </head>
@@ -547,7 +547,7 @@
                 </div>
             </div>
 
-            <!-- ══ STAT CARDS — SET BUDGET ══ -->
+            <!-- ══ STAT CARDS ══ -->
             <div class="stats-section anim-2">
                 <div class="stats-section-header">
                     <div class="stats-section-icon"><i class="fa-solid fa-coins"></i></div>
@@ -698,24 +698,24 @@
             </div><!-- /actual-section -->
 
             <!-- ══ BUDGET HEALTH ══ -->
-            <div class="health-section anim-3">
+            <div class="health-section anim-4">
                 <div class="health-header">
-                    <h3><i class="fa-solid fa-heart-pulse"></i> Budget Health</h3>
-                    <span th:if="${status == 'healthy'}"      class="health-badge badge-healthy"><i class="fa-solid fa-circle-check"></i> Healthy</span>
-                    <span th:if="${status == 'low'}"          class="health-badge badge-low"><i class="fa-solid fa-triangle-exclamation"></i> Low Balance</span>
-                    <span th:if="${status == 'overspending'}" class="health-badge badge-overspending"><i class="fa-solid fa-circle-xmark"></i> Overspending</span>
-                    <span th:if="${status == 'none'}"         class="health-badge badge-none"><i class="fa-solid fa-circle-info"></i> No Data Yet</span>
+                    <h3><i class="fa-solid fa-heart-pulse"></i> Budget Health <span style="font-size:0.72rem;font-weight:600;color:#7f8c8d;">(based on Actual Expenses)</span></h3>
+                    <span th:if="${actualStatus == 'healthy'}"      class="health-badge badge-healthy"><i class="fa-solid fa-circle-check"></i> Healthy</span>
+                    <span th:if="${actualStatus == 'low'}"          class="health-badge badge-low"><i class="fa-solid fa-triangle-exclamation"></i> Low Balance</span>
+                    <span th:if="${actualStatus == 'overspending'}" class="health-badge badge-overspending"><i class="fa-solid fa-circle-xmark"></i> Overspending</span>
+                    <span th:if="${actualStatus == 'none'}"         class="health-badge badge-none"><i class="fa-solid fa-circle-info"></i> No Data Yet</span>
                 </div>
                 <div class="health-bar-track">
                     <div class="health-bar-fill"
-                         th:classappend="${status == 'healthy'} ? 'fill-healthy' : (${status == 'low'} ? 'fill-low' : (${status == 'overspending'} ? 'fill-overspending' : 'fill-none'))"
-                         th:style="${hasBudget} ? 'width:' + ${percent} + '%' : 'width:0%'">
+                         th:classappend="${actualStatus == 'healthy'} ? 'fill-healthy' : (${actualStatus == 'low'} ? 'fill-low' : (${actualStatus == 'overspending'} ? 'fill-overspending' : 'fill-none'))"
+                         th:style="${hasBudget} ? 'width:' + ${actualPercent} + '%' : 'width:0%'">
                     </div>
                 </div>
                 <div class="health-footer">
                     <span>$0</span>
-                    <span th:if="${hasBudget}" th:text="'Spending: $' + ${expenses} + ' / $' + ${income}">Spending</span>
-                    <span th:unless="${hasBudget}">Set a budget to see your health</span>
+                    <span th:if="${hasBudget}" th:text="'Actual Spending: $' + ${actualExpenses} + ' / $' + ${income}">Spending</span>
+                    <span th:unless="${hasBudget}">Log actual expenses to see your health</span>
                     <span th:if="${hasBudget}" th:text="'$' + ${income}">$0</span>
                 </div>
                 <div th:if="${hasBudget}" class="health-stats-row">
@@ -724,16 +724,16 @@
                         <div class="hs-value" th:text="'$' + ${income}">$0</div>
                     </div>
                     <div class="health-stat">
-                        <div class="hs-label">Total Expenses</div>
-                        <div class="hs-value" th:text="'$' + ${expenses}">$0</div>
+                        <div class="hs-label">Actual Expenses</div>
+                        <div class="hs-value" th:text="'$' + ${actualExpenses}">$0</div>
                     </div>
                     <div class="health-stat">
                         <div class="hs-label">Remaining</div>
-                        <div class="hs-value" th:text="'$' + ${savings}">$0</div>
+                        <div class="hs-value" th:text="'$' + ${actualSavings}">$0</div>
                     </div>
                     <div class="health-stat">
                         <div class="hs-label">Budget Used</div>
-                        <div class="hs-value" th:text="${percent} + '%'">0%</div>
+                        <div class="hs-value" th:text="${actualPercent} + '%'">0%</div>
                     </div>
                 </div>
             </div>
@@ -855,12 +855,12 @@
 
 <script th:inline="javascript">
 /*<![CDATA[*/
-var hasBudget = [[${hasBudget}]];
-var income    = hasBudget ? parseFloat([[${income}]])   : 0;
-var expenses  = hasBudget ? parseFloat([[${expenses}]]) : 0;
-var pieLabels = hasBudget ? [[${pieLabels}]] : [];
-var pieData   = hasBudget ? [[${pieData}]]   : [];
-var savRate   = hasBudget ? parseFloat([[${savingsRate}]]) : 0;
+var hasBudget       = [[${hasBudget}]];
+var income          = hasBudget ? parseFloat([[${income}]])          : 0;
+var actualExpenses  = hasBudget ? parseFloat([[${actualExpenses}]])  : 0;
+var pieLabels       = hasBudget ? [[${actualPieLabels}]]             : [];
+var pieData         = hasBudget ? [[${actualPieData}]]               : [];
+var savRate         = hasBudget ? parseFloat([[${actualSavingsRate}]]) : 0;
 /*]]>*/
 
 // ── Hamburger ──
@@ -891,7 +891,7 @@ if (hasBudget) {
         data: {
             labels: ['Income', 'Expenses'],
             datasets: [{
-                data: [income, expenses],
+                data: [income, actualExpenses],
                 backgroundColor: ['rgba(11,163,96,0.85)', 'rgba(245,87,108,0.85)'],
                 borderRadius: 10,
                 borderSkipped: false
