@@ -7,88 +7,240 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .analyzer-header {
-            margin-bottom: 1.5rem;
+        /* ── Page header ── */
+        .sv-header { margin-bottom: 2rem; }
+        .sv-header h2 {
+            margin: 0 0 0.3rem; font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 55%, #f5576c 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .analyzer-header h2 {
-            margin: 0 0 0.25rem 0;
+        .sv-header p { margin: 0; color: var(--text-muted,#666); font-size: 0.95rem; }
+
+        /* ── Stat summary cards ── */
+        .sv-stats-row {
+            display: grid; grid-template-columns: repeat(3,1fr);
+            gap: 1.2rem; margin-bottom: 1.8rem;
         }
-        .analyzer-header p {
-            margin: 0;
-            color: var(--text-muted, #666);
-            font-size: 0.95rem;
+        @media(max-width:680px){ .sv-stats-row { grid-template-columns: 1fr; } }
+        .sv-stat {
+            border-radius: 20px; padding: 1.3rem 1.4rem;
+            display: flex; align-items: center; gap: 1rem;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+            position: relative; overflow: hidden;
+            transition: transform .2s, box-shadow .2s; cursor: default;
         }
-        .charts-row {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
+        .sv-stat:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.2); }
+        .sv-stat-icon {
+            width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.35rem; background: rgba(255,255,255,0.22);
         }
-        .chart-card {
-            flex: 1;
-            min-width: 280px;
-            background: var(--card-bg, #fff);
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 1.5rem;
+        .sv-stat-label { font-size: 0.72rem; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: .5px; }
+        .sv-stat-value { font-size: 1.55rem; font-weight: 900; line-height: 1.2; margin-top: 2px; }
+        .sv-stat-sub   { font-size: 0.72rem; opacity: .75; margin-top: 2px; }
+        .sv-stat-bg    { position:absolute; right:-12px; bottom:-12px; font-size:6.5rem; opacity:.07; pointer-events:none; }
+        .sv-stat-income    { background: linear-gradient(135deg,#11998e,#38ef7d); color: #003d2e; }
+        .sv-stat-expenses  { background: linear-gradient(135deg,#fc4a1a,#f7b733); color: #fff; }
+        .sv-stat-savings   { background: linear-gradient(135deg,#667eea,#764ba2); color: #fff; }
+        .sv-stat-savings.over { background: linear-gradient(135deg,#e74c3c,#c0392b); }
+
+        /* ── Chart cards ── */
+        .sv-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .sv-card {
+            background: var(--card-bg,#fff);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px rgba(102,126,234,0.11), 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: transform .22s, box-shadow .22s;
         }
-        .chart-card h3 {
-            margin: 0 0 1rem 0;
-            font-size: 1rem;
-            color: var(--text-main, #2c3e50);
+        .sv-card:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(102,126,234,0.2); }
+        .sv-card-head {
+            padding: 1rem 1.4rem; display: flex; align-items: center; gap: .75rem;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
         }
-        .no-budget-msg {
-            text-align: center;
-            padding: 3rem 2rem;
-            background: var(--card-bg, #fff);
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        .sv-card-head-icon {
+            width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff;
         }
-        .no-budget-msg p {
-            color: var(--text-main, #2c3e50);
-            margin-top: 0.75rem;
+        .sv-card-head h3   { margin: 0; font-size: .97rem; font-weight: 700; color: var(--text-main,#2c3e50); }
+        .sv-card-head span { font-size: .74rem; color: var(--text-muted,#888); display:block; margin-top:1px; }
+        .sv-card-body { padding: 1.3rem 1.5rem 1.6rem; }
+
+        /* Card sizing */
+        .sv-donut { flex: 0 0 400px; }
+        .sv-bar   { flex: 1; min-width: 260px; }
+        .sv-full  { width: 100%; }
+        @media(max-width:860px){ .sv-donut { flex: 1 1 100%; } }
+
+        /* ── Doughnut center text ── */
+        .sv-donut-wrap { position: relative; display: flex; justify-content: center; align-items: center; }
+        .sv-donut-center {
+            position: absolute; text-align: center; pointer-events: none;
         }
-        .no-budget-msg a {
-            color: #667eea;
-            font-weight: 600;
+        .sv-donut-pct {
+            font-size: 2.1rem; font-weight: 900; line-height: 1;
+            background: linear-gradient(135deg,#667eea,#f5576c);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
+        .sv-donut-lbl { font-size: .68rem; font-weight: 700; color: #999; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+
+        /* ── Custom legend ── */
+        .sv-legend { display: flex; flex-wrap: wrap; gap: .45rem 1rem; justify-content: center; padding-top: .9rem; }
+        .sv-legend-item { display: flex; align-items: center; gap: .4rem; font-size: .76rem; font-weight: 600; color: var(--text-main,#2c3e50); }
+        .sv-legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── Utilisation bar ── */
+        .sv-util-wrap { margin-bottom: 1.5rem; }
+        .sv-util-card {
+            background: var(--card-bg,#fff);
+            border-radius: 22px;
+            padding: 1.2rem 1.6rem;
+            box-shadow: 0 8px 32px rgba(102,126,234,0.11);
+            display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+            transition: transform .22s, box-shadow .22s;
+        }
+        .sv-util-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(102,126,234,0.18); }
+        .sv-util-label { font-size: .85rem; font-weight: 700; color: var(--text-main,#2c3e50); white-space: nowrap; }
+        .sv-util-track { flex: 1; min-width: 200px; height: 14px; border-radius: 999px; background: rgba(0,0,0,0.07); overflow: hidden; }
+        .sv-util-fill  { height: 100%; border-radius: 999px; transition: width 1.2s cubic-bezier(.34,1.56,.64,1); }
+        .sv-util-pct   { font-size: 1rem; font-weight: 900; white-space: nowrap; }
+
+        /* ── No budget ── */
+        .sv-no-budget {
+            text-align: center; padding: 4rem 2rem;
+            background: var(--card-bg,#fff); border-radius: 22px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .sv-no-budget p { color: var(--text-main,#2c3e50); margin-top: .75rem; font-size: 1rem; }
+        .sv-no-budget a { color: #667eea; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <div class="dashboard-wrapper">
-
-    <!-- SIDEBAR -->
     <aside th:replace="~{basetemplate :: sidebar}"></aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main">
-
         <div th:replace="~{basetemplate :: topbar}"></div>
 
-        <div class="analyzer-header">
-            <h2>Spending Visualization</h2>
-            <p>Interactive charts and category breakdowns of income and expenses.</p>
+        <!-- Header -->
+        <div class="sv-header">
+            <h2><i class="fa-solid fa-chart-pie" style="margin-right:.4rem;opacity:.85;"></i>Spending Visualization</h2>
+            <p>Interactive charts and category breakdowns of your income and expenses.</p>
         </div>
 
-        <!-- Charts -->
-        <div th:if="${hasBudget}" class="charts-row">
+        <!-- ── Has budget ── -->
+        <div th:if="${hasBudget}">
 
-            <!-- Bar Chart: Income vs Total Expenses -->
-            <div class="chart-card">
-                <h3><i class="fa-solid fa-chart-bar" style="color:#667eea; margin-right:6px;"></i>Income vs Expenses</h3>
-                <canvas id="barChart" height="260"></canvas>
+            <!-- Stat cards -->
+            <div class="sv-stats-row">
+                <div class="sv-stat sv-stat-income">
+                    <div class="sv-stat-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div>
+                        <div class="sv-stat-label">Monthly Income</div>
+                        <div class="sv-stat-value" id="sv-income">—</div>
+                        <div class="sv-stat-sub">Total earnings this month</div>
+                    </div>
+                    <i class="fa-solid fa-coins sv-stat-bg"></i>
+                </div>
+                <div class="sv-stat sv-stat-expenses">
+                    <div class="sv-stat-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div>
+                        <div class="sv-stat-label">Total Expenses</div>
+                        <div class="sv-stat-value" id="sv-expenses">—</div>
+                        <div class="sv-stat-sub" id="sv-pct-sub">0% of income</div>
+                    </div>
+                    <i class="fa-solid fa-receipt sv-stat-bg"></i>
+                </div>
+                <div class="sv-stat sv-stat-savings" id="sv-savings-card">
+                    <div class="sv-stat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+                    <div>
+                        <div class="sv-stat-label">Remaining</div>
+                        <div class="sv-stat-value" id="sv-remaining">—</div>
+                        <div class="sv-stat-sub" id="sv-rem-sub">Available to save</div>
+                    </div>
+                    <i class="fa-solid fa-wallet sv-stat-bg"></i>
+                </div>
             </div>
 
-            <!-- Pie Chart: Expense Category Breakdown -->
-            <div class="chart-card">
-                <h3><i class="fa-solid fa-chart-pie" style="color:#764ba2; margin-right:6px;"></i>Expense Breakdown</h3>
-                <canvas id="pieChart" height="260"></canvas>
+            <!-- Budget utilisation bar -->
+            <div class="sv-util-wrap">
+                <div class="sv-util-card">
+                    <div class="sv-util-label"><i class="fa-solid fa-gauge-high" style="margin-right:6px;color:#667eea;"></i>Budget Utilisation</div>
+                    <div class="sv-util-track">
+                        <div class="sv-util-fill" id="sv-util-fill" style="width:0%"></div>
+                    </div>
+                    <div class="sv-util-pct" id="sv-util-pct" style="color:#667eea;">0%</div>
+                </div>
+            </div>
+
+            <!-- Row 1: Doughnut + Bar -->
+            <div class="sv-row">
+
+                <!-- Doughnut -->
+                <div class="sv-card sv-donut">
+                    <div class="sv-card-head">
+                        <div class="sv-card-head-icon" style="background:linear-gradient(135deg,#764ba2,#f5576c);">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <h3>Expense Breakdown</h3>
+                            <span>Spending by category</span>
+                        </div>
+                    </div>
+                    <div class="sv-card-body">
+                        <div class="sv-donut-wrap">
+                            <canvas id="donutChart" width="300" height="300"></canvas>
+                            <div class="sv-donut-center">
+                                <div class="sv-donut-pct" id="sv-donut-pct">—</div>
+                                <div class="sv-donut-lbl">Spent</div>
+                            </div>
+                        </div>
+                        <div class="sv-legend" id="sv-donut-legend"></div>
+                    </div>
+                </div>
+
+                <!-- Bar: Income vs Expenses -->
+                <div class="sv-card sv-bar">
+                    <div class="sv-card-head">
+                        <div class="sv-card-head-icon" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+                            <i class="fa-solid fa-chart-column"></i>
+                        </div>
+                        <div>
+                            <h3>Income vs Expenses</h3>
+                            <span>Monthly comparison</span>
+                        </div>
+                    </div>
+                    <div class="sv-card-body">
+                        <canvas id="barChart" height="300"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Row 2: Horizontal category bar (full width) -->
+            <div class="sv-row">
+                <div class="sv-card sv-full">
+                    <div class="sv-card-head">
+                        <div class="sv-card-head-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d);">
+                            <i class="fa-solid fa-bars-progress"></i>
+                        </div>
+                        <div>
+                            <h3>Category Breakdown</h3>
+                            <span>Spending per category</span>
+                        </div>
+                    </div>
+                    <div class="sv-card-body">
+                        <canvas id="catChart"></canvas>
+                    </div>
+                </div>
             </div>
 
         </div>
 
-        <!-- No budget set yet -->
-        <div th:if="${!hasBudget}" class="no-budget-msg">
+        <!-- No budget -->
+        <div th:if="${!hasBudget}" class="sv-no-budget">
             <i class="fa-solid fa-chart-pie fa-3x" style="color:#667eea;"></i>
             <p>No budget data found.<br><a href="/budget">Set your budget</a> to see your charts here.</p>
         </div>
@@ -96,79 +248,272 @@
     </main>
 </div>
 
-
 <script>
     const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    menuToggle.addEventListener('click', () => {
-        navMenu.classList.toggle('show');
-    });
+    const navMenu    = document.querySelector('.nav-menu');
+    if (menuToggle) menuToggle.addEventListener('click', () => navMenu.classList.toggle('show'));
 </script>
 
 <th:block th:if="${hasBudget}">
 <script th:inline="javascript">
-    /*<![CDATA[*/
-    var income        = [[${income}]];
-    var totalExpenses = [[${totalExpenses}]];
-    var pieLabels     = [[${pieLabels}]];
-    var pieData       = [[${pieData}]];
+/*<![CDATA[*/
+var income        = [[${income}]];
+var totalExpenses = [[${totalExpenses}]];
+var pieLabels     = [[${pieLabels}]];
+var pieData       = [[${pieData}]];
 
-    // Bar Chart
-    new Chart(document.getElementById('barChart'), {
-        type: 'bar',
-        data: {
-            labels: ['Income', 'Expenses'],
-            datasets: [{
-                data: [income, totalExpenses],
-                backgroundColor: ['#667eea', '#e74c3c'],
-                borderRadius: 8,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(v) { return '$' + v.toLocaleString(); }
-                    }
-                }
-            }
-        }
-    });
+// Save to localStorage so the chatbot can read it from any page
+(function() {
+    var user = /*[[${loggedInUsername}]]*/ 'guest';
+    try {
+        localStorage.setItem('fv_spendviz_' + user, JSON.stringify({
+            income:       income,
+            totalExpenses:totalExpenses,
+            pieLabels:    pieLabels,
+            pieData:      pieData,
+            savedAt:      new Date().toISOString()
+        }));
+    } catch(e) {}
+})();
+/*]]>*/
+</script>
+<script>
+(function () {
+    var fmt = function (n) {
+        return '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
 
-    // Pie Chart
-    new Chart(document.getElementById('pieChart'), {
-        type: 'pie',
+    var remaining = income - totalExpenses;
+    var pct       = income > 0 ? Math.round((totalExpenses / income) * 100) : 0;
+    var savePct   = income > 0 ? Math.max(0, Math.round((remaining / income) * 100)) : 0;
+
+    /* ── Stat cards ── */
+    document.getElementById('sv-income').textContent   = fmt(income);
+    document.getElementById('sv-expenses').textContent = fmt(totalExpenses);
+    document.getElementById('sv-pct-sub').textContent  = pct + '% of income';
+    document.getElementById('sv-remaining').textContent = (remaining < 0 ? '-' : '') + fmt(remaining);
+    document.getElementById('sv-donut-pct').textContent = pct + '%';
+
+    if (remaining < 0) {
+        document.getElementById('sv-savings-card').classList.add('over');
+        document.getElementById('sv-rem-sub').textContent = 'Overspent this month';
+    } else {
+        document.getElementById('sv-rem-sub').textContent = savePct + '% savings rate';
+    }
+
+    /* ── Utilisation bar ── */
+    var utilPct  = Math.min(pct, 100);
+    var fillEl   = document.getElementById('sv-util-fill');
+    var pctEl    = document.getElementById('sv-util-pct');
+    var fillColor = pct > 100
+        ? 'linear-gradient(90deg,#e74c3c,#c0392b)'
+        : pct > 80
+            ? 'linear-gradient(90deg,#f7971e,#ffd200)'
+            : 'linear-gradient(90deg,#667eea,#764ba2)';
+    fillEl.style.background = fillColor;
+    pctEl.style.color = pct > 100 ? '#e74c3c' : pct > 80 ? '#f7971e' : '#667eea';
+    pctEl.textContent = pct + '%';
+    setTimeout(function () { fillEl.style.width = utilPct + '%'; }, 120);
+
+    /* ── Colour palette ── */
+    var COLORS = [
+        '#667eea','#f5576c','#11998e','#f7971e',
+        '#4facfe','#a18cd1','#fc4a1a','#43e97b',
+        '#fa709a','#4e54c8','#ffd200','#38ef7d'
+    ];
+
+    /* ── Doughnut chart ── */
+    var donutCtx    = document.getElementById('donutChart').getContext('2d');
+    var donutColors = pieLabels.map(function (_, i) { return COLORS[i % COLORS.length]; });
+
+    new Chart(donutCtx, {
+        type: 'doughnut',
         data: {
             labels: pieLabels,
             datasets: [{
                 data: pieData,
-                backgroundColor: [
-                    '#667eea','#764ba2','#f6d365','#e74c3c',
-                    '#2ecc71','#3498db','#e67e22','#9b59b6',
-                    '#1abc9c','#e91e63'
-                ]
+                backgroundColor: donutColors,
+                borderWidth: 3,
+                borderColor: '#fff',
+                hoverOffset: 16,
+                hoverBorderWidth: 4
             }]
         },
         options: {
+            cutout: '70%',
+            animation: { animateRotate: true, duration: 1100, easing: 'easeInOutQuart' },
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { boxWidth: 14, padding: 10 }
-                },
+                legend: { display: false },
                 tooltip: {
+                    backgroundColor: 'rgba(20,20,40,0.9)',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 13, cornerRadius: 12,
                     callbacks: {
-                        label: function(ctx) {
-                            return ctx.label + ': $' + ctx.parsed.toLocaleString();
+                        label: function (ctx) {
+                            var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                            var p = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
+                            return '  ' + fmt(ctx.parsed) + '  (' + p + '%)';
                         }
                     }
                 }
             }
         }
     });
-    /*]]>*/
+
+    /* Custom donut legend */
+    var legendEl = document.getElementById('sv-donut-legend');
+    pieLabels.forEach(function (lbl, i) {
+        var item = document.createElement('div');
+        item.className = 'sv-legend-item';
+        item.innerHTML =
+            '<div class="sv-legend-dot" style="background:' + donutColors[i] + '"></div>' +
+            '<span>' + lbl + '</span>' +
+            '<span style="opacity:.55;font-weight:400;margin-left:2px">' + fmt(pieData[i] || 0) + '</span>';
+        legendEl.appendChild(item);
+    });
+
+    /* ── Bar chart: Income vs Expenses vs Savings ── */
+    var barCtx = document.getElementById('barChart').getContext('2d');
+
+    function makeGrad(ctx, c1, c2) {
+        var g = ctx.createLinearGradient(0, 0, 0, 280);
+        g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
+    }
+
+    var gInc = makeGrad(barCtx, '#11998e', '#38ef7d');
+    var gExp = makeGrad(barCtx, '#fc4a1a', '#f7b733');
+    var gSav = remaining >= 0
+        ? makeGrad(barCtx, '#667eea', '#764ba2')
+        : makeGrad(barCtx, '#e74c3c', '#c0392b');
+
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Income', 'Expenses', remaining >= 0 ? 'Savings' : 'Deficit'],
+            datasets: [{
+                data: [income, totalExpenses, Math.abs(remaining)],
+                backgroundColor: [gInc, gExp, gSav],
+                borderRadius: 14,
+                borderSkipped: false,
+                borderWidth: 0,
+                barPercentage: 0.52,
+                categoryPercentage: 0.65
+            }]
+        },
+        options: {
+            animation: { duration: 1000, easing: 'easeInOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(20,20,40,0.9)',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 13, cornerRadius: 12,
+                    callbacks: {
+                        label: function (ctx) { return '  ' + fmt(ctx.parsed.y); }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { weight: '700', size: 13 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                    ticks: { font: { size: 11 }, callback: function (v) { return '$' + v.toLocaleString(); } }
+                }
+            }
+        },
+        plugins: [{
+            id: 'barLabels',
+            afterDatasetsDraw: function (chart) {
+                var c = chart.ctx;
+                chart.data.datasets.forEach(function (ds, di) {
+                    chart.getDatasetMeta(di).data.forEach(function (bar, idx) {
+                        c.save();
+                        c.font = 'bold 11px system-ui';
+                        c.fillStyle = 'var(--text-main,#2c3e50)';
+                        c.textAlign = 'center'; c.textBaseline = 'bottom';
+                        c.fillText('$' + ds.data[idx].toLocaleString(undefined, { minimumFractionDigits: 0 }), bar.x, bar.y - 5);
+                        c.restore();
+                    });
+                });
+            }
+        }]
+    });
+
+    /* ── Horizontal category chart ── */
+    var catCanvas = document.getElementById('catChart');
+    catCanvas.height = Math.max(180, pieLabels.length * 54 + 30);
+    var catCtx    = catCanvas.getContext('2d');
+    var catColors = pieLabels.map(function (_, i) { return COLORS[i % COLORS.length]; });
+
+    new Chart(catCtx, {
+        type: 'bar',
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieData,
+                backgroundColor: catColors,
+                borderRadius: 10,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.75
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            animation: { duration: 1100, easing: 'easeInOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(20,20,40,0.9)',
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 13, cornerRadius: 12,
+                    callbacks: {
+                        label: function (ctx) {
+                            var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                            var p = total > 0 ? Math.round((ctx.parsed.x / total) * 100) : 0;
+                            return '  ' + fmt(ctx.parsed.x) + '  (' + p + '% of spending)';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                    ticks: { font: { size: 11 }, callback: function (v) { return '$' + v.toLocaleString(); } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { weight: '700', size: 12 } }
+                }
+            }
+        },
+        plugins: [{
+            id: 'catLabels',
+            afterDatasetsDraw: function (chart) {
+                var c = chart.ctx;
+                chart.data.datasets.forEach(function (ds, di) {
+                    chart.getDatasetMeta(di).data.forEach(function (bar, idx) {
+                        c.save();
+                        c.font = 'bold 11px system-ui';
+                        c.fillStyle = 'var(--text-main,#2c3e50)';
+                        c.textAlign = 'left'; c.textBaseline = 'middle';
+                        c.fillText(fmt(ds.data[idx]), bar.x + 8, bar.y);
+                        c.restore();
+                    });
+                });
+            }
+        }]
+    });
+
+})();
 </script>
 </th:block>
 
