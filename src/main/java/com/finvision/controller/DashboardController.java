@@ -4,6 +4,7 @@ package com.finvision.controller;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -282,8 +283,8 @@ public String alerts(Principal principal, Model model) {
         model.addAttribute("insurance",    String.format("%.2f", budget.getInsurance()));
         model.addAttribute("groceries",    String.format("%.2f", budget.getGroceries()));
         model.addAttribute("subscriptions",String.format("%.2f", budget.getSubscriptions()));
-        model.addAttribute("varTitles",    budget.getVariableTitle());
-        model.addAttribute("varAmounts",   budget.getVariableAmount());
+        model.addAttribute("varTitles",    budget.getVariableTitle()  != null ? budget.getVariableTitle()  : Collections.emptyList());
+        model.addAttribute("varAmounts",   budget.getVariableAmount() != null ? budget.getVariableAmount() : Collections.emptyList());
     } else {
         model.addAttribute("hasBudget", false);
         model.addAttribute("status", "none");

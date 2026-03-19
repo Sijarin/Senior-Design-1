@@ -510,9 +510,9 @@
             </div>
 
             <!-- Variable / custom expenses -->
-            <th:block th:if="${varTitles != null}"
+            <th:block th:if="${varTitles != null and !varTitles.isEmpty() and varAmounts != null}"
                       th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
-                <div th:if="${varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
+                <div th:if="${i < varAmounts.size() and varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
                     <i class="fa-solid fa-tag bill-bg"></i>
                     <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
                     <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
