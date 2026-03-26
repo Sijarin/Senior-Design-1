@@ -1,9 +1,14 @@
 package com.finvision.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "scanned_receipts")
+@CompoundIndexes({
+    @CompoundIndex(name = "username_yearmonth_idx", def = "{'username': 1, 'yearMonth': 1}")
+})
 public class ScannedReceipt {
 
     @Id

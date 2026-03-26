@@ -510,16 +510,17 @@
             </div>
 
             <!-- Variable / custom expenses -->
-            <th:block th:if="${varTitles != null and !varTitles.isEmpty() and varAmounts != null}"
-                      th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
-                <div th:if="${i < varAmounts.size() and varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
-                    <i class="fa-solid fa-tag bill-bg"></i>
-                    <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
-                    <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
-                    <div class="bill-amount">$<span th:text="${#numbers.formatDecimal(varAmounts[i],1,2)}"></span></div>
-                    <div class="bill-due" th:attr="data-bill-id='var_' + ${i}">Custom expense <i class="fa-solid fa-pen edit-hint"></i></div>
-                    <button class="bill-paid-toggle" th:attr="data-bill-id='var_' + ${i}" type="button"></button>
-                </div>
+            <th:block th:if="${varTitles != null and !varTitles.isEmpty() and varAmounts != null and !varAmounts.isEmpty()}">
+                <th:block th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
+                    <div th:if="${i < varAmounts.size() and varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
+                        <i class="fa-solid fa-tag bill-bg"></i>
+                        <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
+                        <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
+                        <div class="bill-amount">$<span th:text="${#numbers.formatDecimal(varAmounts[i],1,2)}"></span></div>
+                        <div class="bill-due" th:attr="data-bill-id='var_' + ${i}">Custom expense <i class="fa-solid fa-pen edit-hint"></i></div>
+                        <button class="bill-paid-toggle" th:attr="data-bill-id='var_' + ${i}" type="button"></button>
+                    </div>
+                </th:block>
             </th:block>
 
         </div>

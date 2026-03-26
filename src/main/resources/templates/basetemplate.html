@@ -1024,6 +1024,9 @@
         // ── Voice Output ──
         window.fvToggleVoiceOut = function() {
             voiceOut = !voiceOut;
+            if (!voiceOut && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             var btn = document.getElementById('fvVoiceOutBtn');
             if (btn) btn.style.color = voiceOut ? '#4facfe' : '';
             addMsg(voiceOut
