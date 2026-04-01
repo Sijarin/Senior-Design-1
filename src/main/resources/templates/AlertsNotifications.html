@@ -510,16 +510,17 @@
             </div>
 
             <!-- Variable / custom expenses -->
-            <th:block th:if="${varTitles != null}"
-                      th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
-                <div th:if="${varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
-                    <i class="fa-solid fa-tag bill-bg"></i>
-                    <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
-                    <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
-                    <div class="bill-amount">$<span th:text="${#numbers.formatDecimal(varAmounts[i],1,2)}"></span></div>
-                    <div class="bill-due" th:attr="data-bill-id='var_' + ${i}">Custom expense <i class="fa-solid fa-pen edit-hint"></i></div>
-                    <button class="bill-paid-toggle" th:attr="data-bill-id='var_' + ${i}" type="button"></button>
-                </div>
+            <th:block th:if="${varTitles != null and !varTitles.isEmpty() and varAmounts != null and !varAmounts.isEmpty()}">
+                <th:block th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
+                    <div th:if="${i < varAmounts.size() and varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
+                        <i class="fa-solid fa-tag bill-bg"></i>
+                        <div class="bill-icon"><i class="fa-solid fa-tag"></i></div>
+                        <div class="bill-name" th:text="${varTitles[i]}">Custom</div>
+                        <div class="bill-amount">$<span th:text="${#numbers.formatDecimal(varAmounts[i],1,2)}"></span></div>
+                        <div class="bill-due" th:attr="data-bill-id='var_' + ${i}">Custom expense <i class="fa-solid fa-pen edit-hint"></i></div>
+                        <button class="bill-paid-toggle" th:attr="data-bill-id='var_' + ${i}" type="button"></button>
+                    </div>
+                </th:block>
             </th:block>
 
         </div>
@@ -880,9 +881,7 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Paying…';
 
-        var csrfInput = document.querySelector('#pay-form [name="_csrf"], #pay-form input[name$="token"]');
         var fd = new FormData();
-        if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
         fd.append('merchantName', name); fd.append('amount', amount);
         fd.append('category', category); fd.append('dateStr', dtTodayStr);
         fd.append('notes', 'Paid via Alerts & Notifications');
@@ -960,9 +959,8 @@
     })();
 </script>
 
-<!-- Hidden form (CSRF token source + fallback submit) -->
+<!-- Hidden form (fallback submit — CSRF disabled globally in SecurityConfig) -->
 <form id="pay-form" th:action="@{/receipt-scan/add}" method="post" style="display:none">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
     <input type="hidden" id="pf-merchant" name="merchantName">
     <input type="hidden" id="pf-amount"   name="amount">
     <input type="hidden" id="pf-category" name="category">

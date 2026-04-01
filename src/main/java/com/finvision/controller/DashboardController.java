@@ -4,6 +4,7 @@ package com.finvision.controller;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -257,40 +258,45 @@ public String predictiveCashFlow(Principal principal, Model model) {
 
 @GetMapping("/alerts")
 public String alerts(Principal principal, Model model) {
-    String username = (principal != null) ? principal.getName() : null;
-    Budget budget = (username != null)
-        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
-        : null;
-
-    if (budget != null) {
-        double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
-        double expenses = receiptTotal(username);
-
-        double remaining = income - expenses;
-        double percent   = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
-        String status    = remaining < 0 ? "overspending" : (remaining < income * 0.2 ? "low" : "healthy");
-
-        model.addAttribute("hasBudget",  true);
-        model.addAttribute("status",     status);
-        model.addAttribute("income",     String.format("%.2f", income));
-        model.addAttribute("expenses",   String.format("%.2f", expenses));
-        model.addAttribute("remaining",  String.format("%.2f", remaining));
-        model.addAttribute("percent",    String.format("%.0f", percent));
-        // Set Budget category amounts kept for reference display
-        model.addAttribute("rent",         String.format("%.2f", budget.getRent()));
-        model.addAttribute("utilities",    String.format("%.2f", budget.getUtilities()));
-        model.addAttribute("insurance",    String.format("%.2f", budget.getInsurance()));
-        model.addAttribute("groceries",    String.format("%.2f", budget.getGroceries()));
-        model.addAttribute("subscriptions",String.format("%.2f", budget.getSubscriptions()));
-        model.addAttribute("varTitles",    budget.getVariableTitle());
-        model.addAttribute("varAmounts",   budget.getVariableAmount());
-    } else {
-        model.addAttribute("hasBudget", false);
-        model.addAttribute("status", "none");
-    }
-
+    // Always set safe defaults first so the template never renders with missing attributes
+    model.addAttribute("hasBudget", false);
+    model.addAttribute("status", "none");
+    model.addAttribute("varTitles",  Collections.emptyList());
+    model.addAttribute("varAmounts", Collections.emptyList());
     model.addAttribute("currentMonth",
         LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
+
+    try {
+        String username = (principal != null) ? principal.getName() : null;
+        Budget budget = (username != null)
+            ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
+            : null;
+
+        if (budget != null) {
+            double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
+            double expenses = receiptTotal(username);
+
+            double remaining = income - expenses;
+            double percent   = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
+            String status    = remaining < 0 ? "overspending" : (remaining < income * 0.2 ? "low" : "healthy");
+
+            model.addAttribute("hasBudget",  true);
+            model.addAttribute("status",     status);
+            model.addAttribute("income",     String.format("%.2f", income));
+            model.addAttribute("expenses",   String.format("%.2f", expenses));
+            model.addAttribute("remaining",  String.format("%.2f", remaining));
+            model.addAttribute("percent",    String.format("%.0f", percent));
+            model.addAttribute("rent",         String.format("%.2f", budget.getRent()));
+            model.addAttribute("utilities",    String.format("%.2f", budget.getUtilities()));
+            model.addAttribute("insurance",    String.format("%.2f", budget.getInsurance()));
+            model.addAttribute("groceries",    String.format("%.2f", budget.getGroceries()));
+            model.addAttribute("subscriptions",String.format("%.2f", budget.getSubscriptions()));
+            model.addAttribute("varTitles",    budget.getVariableTitle()  != null ? budget.getVariableTitle()  : Collections.emptyList());
+            model.addAttribute("varAmounts",   budget.getVariableAmount() != null ? budget.getVariableAmount() : Collections.emptyList());
+        }
+    } catch (Exception e) {
+        // Keep safe defaults already set above; page renders without budget data
+    }
 
     return "AlertsNotifications";
 }
