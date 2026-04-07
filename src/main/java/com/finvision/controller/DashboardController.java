@@ -335,6 +335,6 @@ public String insights(Principal principal, Model model) {
     model.addAttribute("percent",   String.format("%.0f", percent));
     model.addAttribute("status",    status);
 
-    return "InsightsPage";
+    return "Insightspage";
 }
 }
