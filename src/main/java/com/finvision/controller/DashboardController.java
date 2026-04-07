@@ -303,37 +303,38 @@ public String alerts(Principal principal, Model model) {
 
 @GetMapping("/insights")
 public String insights(Principal principal, Model model) {
-    String username = (principal != null) ? principal.getName() : null;
-    Budget budget = (username != null)
-        ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
-        : null;
+    model.addAttribute("income",    "0.00");
+    model.addAttribute("expenses",  "0.00");
+    model.addAttribute("remaining", "0.00");
+    model.addAttribute("percent",   "0");
+    model.addAttribute("status",    "none");
 
-    double income;
-    double expenses;
-    double remaining;
-    double percent;
-    String status;
+    try {
+        String username = (principal != null) ? principal.getName() : null;
+        Budget budget = (username != null)
+            ? budgetRepository.findTopByUsernameOrderByIdDesc(username).orElse(null)
+            : null;
 
-    if (budget != null) {
-        income = budget.getMonthlyIncome() + budget.getOtherIncome();
-        expenses = (username != null) ? receiptTotal(username) : 0;
+        if (budget != null) {
+            double income   = budget.getMonthlyIncome() + budget.getOtherIncome();
+            double expenses = (username != null) ? receiptTotal(username) : 0;
+            double remaining = income - expenses;
+            double percent  = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
 
-        remaining = income - expenses;
-        percent = (income == 0) ? 0 : Math.min((expenses / income) * 100, 100);
+            String status;
+            if (remaining < 0)                 status = "overspending";
+            else if (remaining < income * 0.2) status = "low";
+            else                               status = "healthy";
 
-        if (remaining < 0)            status = "overspending";
-        else if (remaining < income * 0.2) status = "low";
-        else                           status = "healthy";
-    } else {
-        income = 0; expenses = 0; remaining = 0; percent = 0;
-        status = "none";
+            model.addAttribute("income",    String.format("%.2f", income));
+            model.addAttribute("expenses",  String.format("%.2f", expenses));
+            model.addAttribute("remaining", String.format("%.2f", remaining));
+            model.addAttribute("percent",   String.format("%.0f", percent));
+            model.addAttribute("status",    status);
+        }
+    } catch (Exception e) {
+        // Safe defaults already set above; page renders without budget data
     }
-
-    model.addAttribute("income",    String.format("%.2f", income));
-    model.addAttribute("expenses",  String.format("%.2f", expenses));
-    model.addAttribute("remaining", String.format("%.2f", remaining));
-    model.addAttribute("percent",   String.format("%.0f", percent));
-    model.addAttribute("status",    status);
 
     return "Insightspage";
 }
