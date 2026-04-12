@@ -171,9 +171,9 @@
             pointer-events: none;
         }
         .stat-card.income       { background: linear-gradient(135deg, #0ba360, #3cba92); }
-        .stat-card.expenses     { background: linear-gradient(135deg, #f5576c, #f093fb); }
-        .stat-card.savings      { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .stat-card.savings-rate { background: linear-gradient(135deg, #f7971e, #ffd200); }
+        .stat-card.expenses     { background: linear-gradient(135deg, #0ba360, #3cba92); }
+        .stat-card.savings      { background: linear-gradient(135deg, #0ba360, #3cba92); }
+        .stat-card.savings-rate { background: linear-gradient(135deg, #0ba360, #3cba92); }
 
         .stat-top {
             display: flex; justify-content: space-between; align-items: flex-start;
@@ -478,10 +478,11 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 1200px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-grid { grid-template-columns: repeat(4, 1fr);
+            }
         }
         @media (max-width: 1000px) {
-            .quick-grid { grid-template-columns: repeat(2, 1fr); }
+            .quick-grid { grid-template-columns: repeat(4, 1fr); }
         }
         @media (max-width: 768px) {
             .charts-row { grid-template-columns: 1fr; }

@@ -59,18 +59,9 @@ body {
 /* ══════════════════════════════
    PREMIUM SIDEBAR
    ══════════════════════════════ */
-@keyframes sb-shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-}
-@keyframes sb-glow-pulse {
-    0%,100% { box-shadow: 0 0 8px rgba(102,126,234,0.4); }
-    50%      { box-shadow: 0 0 18px rgba(102,126,234,0.75); }
-}
-
 .sidebar {
     width: 260px;
-    background: linear-gradient(180deg, #0c0a1e 0%, #15112e 40%, #0d1535 100%);
+    background: #0f0d20;
     color: white;
     display: flex;
     flex-direction: column;
@@ -79,26 +70,8 @@ body {
     top: 0;
     height: 100vh;
     z-index: 1000;
-    box-shadow: 4px 0 40px rgba(0,0,0,0.45), inset -1px 0 0 rgba(102,126,234,0.15);
+    box-shadow: 1px 0 0 rgba(255,255,255,0.06);
     overflow: hidden;
-}
-/* Ambient glow blob in sidebar background */
-.sidebar::before {
-    content: '';
-    position: absolute;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(102,126,234,0.18) 0%, transparent 70%);
-    top: -60px; left: -80px;
-    pointer-events: none;
-    animation: sb-glow-pulse 5s ease-in-out infinite;
-}
-.sidebar::after {
-    content: '';
-    position: absolute;
-    width: 200px; height: 200px;
-    background: radial-gradient(circle, rgba(118,75,162,0.14) 0%, transparent 70%);
-    bottom: 80px; right: -40px;
-    pointer-events: none;
 }
 
 /* ── Brand / Logo ── */
@@ -120,7 +93,6 @@ body {
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     font-size: 1rem; color: #fff;
-    box-shadow: 0 4px 16px rgba(102,126,234,0.55);
     flex-shrink: 0;
 }
 .sb-logo-text {
@@ -214,30 +186,28 @@ body {
 
 /* Hover */
 .sidebar a:hover, .menu-item:hover {
-    background: rgba(102,126,234,0.15);
+    background: rgba(102,126,234,0.12);
     color: #fff;
-    transform: translateX(3px);
-    border-color: rgba(102,126,234,0.15);
+    border-color: rgba(102,126,234,0.12);
 }
 .sidebar a:hover .mi-icon, .menu-item:hover .mi-icon {
-    background: rgba(102,126,234,0.35);
+    background: rgba(102,126,234,0.28);
 }
 
 /* Active page highlight */
 .sidebar a.sb-active, .menu-item.sb-active {
-    background: linear-gradient(135deg, rgba(102,126,234,0.28), rgba(118,75,162,0.18));
+    background: rgba(102,126,234,0.18);
     color: #fff;
-    border-color: rgba(102,126,234,0.22);
+    border-color: rgba(102,126,234,0.18);
 }
 .sidebar a.sb-active::before, .menu-item.sb-active::before {
     content: '';
     position: absolute; left: 0; top: 20%; bottom: 20%;
     width: 3px; border-radius: 0 3px 3px 0;
-    background: linear-gradient(to bottom, #667eea, #764ba2);
+    background: #667eea;
 }
 .sidebar a.sb-active .mi-icon, .menu-item.sb-active .mi-icon {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    box-shadow: 0 3px 10px rgba(102,126,234,0.5);
+    background: rgba(102,126,234,0.45);
     color: #fff;
 }
 
