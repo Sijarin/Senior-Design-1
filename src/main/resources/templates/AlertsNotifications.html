@@ -180,12 +180,12 @@
             border-radius: 999px; padding: 2px 9px; display: inline-block;
             margin-top: 0.2rem; width: fit-content;
         }
-        .bc-rent    { background: linear-gradient(135deg,#667eea,#764ba2); }
-        .bc-util    { background: linear-gradient(135deg,#f7971e,#ffd200); color: #4a2c00; }
-        .bc-ins     { background: linear-gradient(135deg,#11998e,#38ef7d); color: #003d2e; }
-        .bc-groc    { background: linear-gradient(135deg,#fc4a1a,#f7b733); }
-        .bc-subs    { background: linear-gradient(135deg,#4facfe,#00f2fe); color: #003d5e; }
-        .bc-custom  { background: linear-gradient(135deg,#a18cd1,#fbc2eb); color: #3d004a; }
+        .bc-rent,
+        .bc-util,
+        .bc-ins,
+        .bc-groc,
+        .bc-subs,
+        .bc-custom  { background: linear-gradient(135deg,#667eea,#764ba2); }
 
         /* ── Paid / Unpaid toggle ── */
         .bill-paid-toggle {
@@ -198,12 +198,6 @@
         }
         .bill-paid-toggle:hover { transform: scale(1.06); background: rgba(255,255,255,0.28); }
         .bill-paid-toggle.is-paid { background: rgba(39,174,96,0.45); }
-        .bill-card.bc-util .bill-paid-toggle,
-        .bill-card.bc-ins  .bill-paid-toggle,
-        .bill-card.bc-subs .bill-paid-toggle { color: rgba(0,0,0,0.7); }
-        .bill-card.bc-util .bill-paid-toggle.is-paid,
-        .bill-card.bc-ins  .bill-paid-toggle.is-paid,
-        .bill-card.bc-subs .bill-paid-toggle.is-paid { background: rgba(39,174,96,0.55); color: #003d2e; }
 
         /* ── Editable due date pill ── */
         .bill-due {
@@ -353,12 +347,12 @@
         }
         .nudge-card h4 { margin: 0 0 0.5rem; font-size: 0.95rem; }
         .nudge-card p  { margin: 0; font-size: 0.82rem; opacity: 0.92; line-height: 1.55; }
-        .nc-1 { background: linear-gradient(135deg,#11998e,#38ef7d); color:#003d2e; }
-        .nc-2 { background: linear-gradient(135deg,#667eea,#764ba2); }
-        .nc-3 { background: linear-gradient(135deg,#f093fb,#f5576c); }
-        .nc-4 { background: linear-gradient(135deg,#4facfe,#00f2fe); color:#003d5e; }
-        .nc-5 { background: linear-gradient(135deg,#f6d365,#fda085); color:#5a2d00; }
-        .nc-6 { background: linear-gradient(135deg,#a1c4fd,#c2e9fb); color:#003060; }
+        .nc-1,
+        .nc-2,
+        .nc-3,
+        .nc-4,
+        .nc-5,
+        .nc-6 { background: linear-gradient(135deg,#667eea,#764ba2); }
     </style>
 </head>
 <body>
@@ -382,7 +376,7 @@
              SECTION 1 — SMART ALERTS
              ═══���══════════════════════════ -->
         <p class="section-title">
-            <i class="fa-solid fa-bell" style="color:#e74c3c;"></i> Smart Alerts
+            <i class="fa-solid fa-bell" style="color:#667eea;"></i> Smart Alerts
         </p>
         <div class="alerts-grid">
 
@@ -510,7 +504,6 @@
             </div>
 
             <!-- Variable / custom expenses -->
-<<<<<<< HEAD
             <th:block th:if="${varTitles != null}"
                       th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
                 <div th:if="${varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
@@ -521,7 +514,7 @@
                     <div class="bill-due" th:attr="data-bill-id='var_' + ${i}">Custom expense <i class="fa-solid fa-pen edit-hint"></i></div>
                     <button class="bill-paid-toggle" th:attr="data-bill-id='var_' + ${i}" type="button"></button>
                 </div>
-=======
+
             <th:block th:if="${varTitles != null and !varTitles.isEmpty() and varAmounts != null and !varAmounts.isEmpty()}">
                 <th:block th:each="i : ${#numbers.sequence(0, varTitles.size() - 1)}">
                     <div th:if="${i < varAmounts.size() and varAmounts[i] != null and varAmounts[i] > 0}" class="bill-card bc-custom">
@@ -533,7 +526,7 @@
                         <button class="bill-paid-toggle" th:attr="data-bill-id='var_' + ${i}" type="button"></button>
                     </div>
                 </th:block>
->>>>>>> 3d7198eab2a55949c3fc8be7a46d851679fc958d
+
             </th:block>
 
         </div>
@@ -547,7 +540,7 @@
              SECTION 3 — SAVINGS NUDGES
              ══════════════════════════════ -->
         <p class="section-title">
-            <i class="fa-solid fa-seedling" style="color:#27ae60;"></i> Savings Nudges
+            <i class="fa-solid fa-seedling" style="color:#667eea;"></i> Savings Nudges
         </p>
         <div class="nudges-grid">
 
