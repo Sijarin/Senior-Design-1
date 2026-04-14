@@ -17,7 +17,7 @@
         /* ── LEFT BRAND PANEL ── */
         .brand-panel {
             flex: 1;
-            background: linear-gradient(145deg, #11998e 0%, #38ef7d 60%, #667eea 100%);
+            background: linear-gradient(145deg, #667eea 0%, #764ba2 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -142,12 +142,12 @@
         }
         .box-header .header-icon {
             width: 60px; height: 60px;
-            background: linear-gradient(135deg, #11998e, #38ef7d);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem; color: #fff;
             margin: 0 auto 1rem;
-            box-shadow: 0 6px 20px rgba(17,153,142,0.35);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.35);
         }
         .box-header h2 {
             font-size: 1.6rem; font-weight: 700;
@@ -160,13 +160,13 @@
         /* Section dividers */
         .section-label {
             font-size: 0.72rem; font-weight: 700;
-            color: #11998e; text-transform: uppercase;
+            color: #667eea; text-transform: uppercase;
             letter-spacing: 1px; margin: 1.2rem 0 0.7rem;
             display: flex; align-items: center; gap: 0.5rem;
         }
         .section-label::after {
             content: ''; flex: 1; height: 1px;
-            background: linear-gradient(to right, #d4f5ef, transparent);
+            background: linear-gradient(to right, rgba(102,126,234,0.25), transparent);
         }
 
         /* Input fields */
@@ -195,10 +195,10 @@
             outline: none;
         }
         .input-wrap input:focus {
-            border-color: #11998e;
-            box-shadow: 0 0 0 3px rgba(17,153,142,0.13);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.13);
         }
-        .input-wrap:focus-within .field-icon { color: #11998e; }
+        .input-wrap:focus-within .field-icon { color: #667eea; }
 
         /* Select field */
         .input-wrap select {
@@ -215,8 +215,8 @@
             cursor: pointer;
         }
         .input-wrap select:focus {
-            border-color: #11998e;
-            box-shadow: 0 0 0 3px rgba(17,153,142,0.13);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.13);
         }
         .input-wrap .select-arrow {
             position: absolute; right: 14px; top: 50%;
@@ -240,7 +240,7 @@
             color: #aaa; font-size: 0.88rem;
             transition: color 0.2s;
         }
-        .toggle-pw:hover { color: #11998e; }
+        .toggle-pw:hover { color: #667eea; }
 
         /* Password strength bar */
         .strength-bar {
@@ -261,18 +261,18 @@
         /* Submit button */
         .btn-submit {
             width: 100%; padding: 0.88rem;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff; border: none; border-radius: 12px;
             font-size: 1rem; font-weight: 700; cursor: pointer;
             letter-spacing: 0.4px;
-            box-shadow: 0 4px 16px rgba(17,153,142,0.4);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.4);
             transition: transform 0.2s, box-shadow 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 0.5rem;
             margin-top: 1rem;
         }
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 7px 22px rgba(17,153,142,0.5);
+            box-shadow: 0 7px 22px rgba(102,126,234,0.5);
         }
 
         /* Alert messages */
@@ -290,15 +290,15 @@
             font-size: 0.86rem; color: #7f8c8d;
         }
         .login-link a {
-            color: #11998e; font-weight: 700;
+            color: #667eea; font-weight: 700;
             text-decoration: none; transition: color 0.2s;
         }
-        .login-link a:hover { color: #0d7a6f; text-decoration: underline; }
+        .login-link a:hover { color: #764ba2; text-decoration: underline; }
 
         /* Responsive */
         @media (max-width: 860px) {
             .brand-panel { display: none; }
-            .form-panel  { width: 100%; background: linear-gradient(135deg,#11998e,#38ef7d); }
+            .form-panel  { width: 100%; background: linear-gradient(135deg,#667eea,#764ba2); }
             .register-box { background: #fff; border-radius: 20px; padding: 2rem; }
         }
         @media (max-width: 480px) {
@@ -548,7 +548,7 @@
             { w: '25%',  color: '#e74c3c', label: 'Weak',              textColor: '#e74c3c' },
             { w: '50%',  color: '#f39c12', label: 'Fair',              textColor: '#f39c12' },
             { w: '75%',  color: '#3498db', label: 'Good',              textColor: '#3498db' },
-            { w: '100%', color: '#11998e', label: 'Strong',            textColor: '#11998e' },
+            { w: '100%', color: '#27ae60', label: 'Strong',            textColor: '#27ae60' },
         ];
         const lvl = val.length === 0 ? levels[0] : levels[score];
         fill.style.width       = lvl.w;

@@ -39,8 +39,8 @@
         }
         .stat-card .stat-label { font-size: 0.8rem; opacity: 0.88; margin-bottom: 2px; }
         .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; }
-        .card-income  { background: linear-gradient(135deg, #11998e, #38ef7d); }
-        .card-expense { background: linear-gradient(135deg, #e74c3c, #f39c12); }
+        .card-income,
+        .card-expense        { background: linear-gradient(135deg, #667eea, #764ba2); }
         .card-remaining-good { background: linear-gradient(135deg, #667eea, #764ba2); }
         .card-remaining-warn { background: linear-gradient(135deg, #f6d365, #fda085); }
         .card-remaining-bad  { background: linear-gradient(135deg, #c0392b, #e74c3c); }
@@ -127,11 +127,10 @@
             font-size: 0.85rem; line-height: 1.7;
             opacity: 0.93;
         }
-        .rec-saving     { background: linear-gradient(135deg, #11998e, #38ef7d); }
-        .rec-debt       { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .rec-invest     { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .rec-emergency  { background: linear-gradient(135deg, #f6d365, #fda085); color: #5a3000; }
-        .rec-emergency ul, .rec-emergency .rec-top h4 { color: #5a3000; }
+        .rec-saving,
+        .rec-debt,
+        .rec-invest,
+        .rec-emergency  { background: linear-gradient(135deg, #667eea, #764ba2); }
     </style>
 </head>
 <body>
@@ -180,7 +179,7 @@
 
         <!-- ── Budget Health Bar ── (hidden if no budget) -->
         <div class="health-section" th:if="${status != 'none'}">
-            <h3><i class="fa-solid fa-heart-pulse" style="color:#e74c3c; margin-right:6px;"></i>Budget Health</h3>
+            <h3><i class="fa-solid fa-heart-pulse" style="color:#667eea; margin-right:6px;"></i>Budget Health</h3>
             <div class="health-bar-track">
                 <div class="health-bar-fill"
                      th:classappend="${status == 'healthy'} ? 'fill-healthy' : (${status == 'low'} ? 'fill-low' : 'fill-overspend')"
@@ -229,7 +228,7 @@
 
         <!-- ── Recommendation Cards ── -->
         <div class="rec-section">
-            <h3><i class="fa-solid fa-lightbulb" style="color:#f6d365; margin-right:6px;"></i>Personalized Recommendations</h3>
+            <h3><i class="fa-solid fa-lightbulb" style="color:#667eea; margin-right:6px;"></i>Personalized Recommendations</h3>
             <div class="rec-grid">
 
                 <!-- Saving -->

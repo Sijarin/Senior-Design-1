@@ -170,10 +170,10 @@
             bottom: -45px; right: -30px;
             pointer-events: none;
         }
-        .stat-card.income       { background: linear-gradient(135deg, #0ba360, #3cba92); }
-        .stat-card.expenses     { background: linear-gradient(135deg, #0ba360, #3cba92); }
-        .stat-card.savings      { background: linear-gradient(135deg, #0ba360, #3cba92); }
-        .stat-card.savings-rate { background: linear-gradient(135deg, #0ba360, #3cba92); }
+        .stat-card.income,
+        .stat-card.expenses,
+        .stat-card.savings,
+        .stat-card.savings-rate { background: linear-gradient(135deg, #667eea, #764ba2); }
 
         .stat-top {
             display: flex; justify-content: space-between; align-items: flex-start;
@@ -363,18 +363,18 @@
         }
         .quick-card:hover .qc-footer { gap: 0.8rem; }
 
-        .qc-1 .qc-header { background: linear-gradient(135deg,rgba(102,126,234,.08),rgba(118,75,162,.08)); }
-        .qc-1 .qc-icon   { background: linear-gradient(135deg,#667eea,#764ba2); }
-        .qc-2 .qc-header { background: linear-gradient(135deg,rgba(11,163,96,.08),rgba(56,239,125,.08)); }
-        .qc-2 .qc-icon   { background: linear-gradient(135deg,#0ba360,#38ef7d); }
-        .qc-3 .qc-header { background: linear-gradient(135deg,rgba(79,172,254,.08),rgba(0,242,254,.08)); }
-        .qc-3 .qc-icon   { background: linear-gradient(135deg,#4facfe,#00f2fe); }
-        .qc-4 .qc-header { background: linear-gradient(135deg,rgba(245,87,108,.08),rgba(240,147,251,.08)); }
-        .qc-4 .qc-icon   { background: linear-gradient(135deg,#f5576c,#f093fb); }
-        .qc-5 .qc-header { background: linear-gradient(135deg,rgba(247,151,30,.08),rgba(255,210,0,.08)); }
-        .qc-5 .qc-icon   { background: linear-gradient(135deg,#f7971e,#ffd200); }
-        .qc-6 .qc-header { background: linear-gradient(135deg,rgba(67,233,123,.08),rgba(56,249,215,.08)); }
-        .qc-6 .qc-icon   { background: linear-gradient(135deg,#43e97b,#38f9d7); }
+        .qc-1 .qc-header,
+        .qc-2 .qc-header,
+        .qc-3 .qc-header,
+        .qc-4 .qc-header,
+        .qc-5 .qc-header,
+        .qc-6 .qc-header { background: linear-gradient(135deg,rgba(102,126,234,.08),rgba(118,75,162,.08)); }
+        .qc-1 .qc-icon,
+        .qc-2 .qc-icon,
+        .qc-3 .qc-icon,
+        .qc-4 .qc-icon,
+        .qc-5 .qc-icon,
+        .qc-6 .qc-icon   { background: linear-gradient(135deg,#667eea,#764ba2); }
 
         /* ══ TIP CARD ══ */
         .tip-card {
@@ -455,8 +455,8 @@
             margin-top: 0.15rem;
         }
         .stats-section .stats-grid { margin-bottom: 0; }
-        .actual-section { border-top-color: #11998e; }
-        .actual-icon { background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 4px 14px rgba(17,153,142,0.35); }
+        .actual-section { border-top-color: #667eea; }
+        .actual-icon { background: linear-gradient(135deg, #667eea, #764ba2); box-shadow: 0 4px 14px rgba(102,126,234,0.35); }
 
         /* ── DARK MODE ── */
         body.dark .stats-section  { background: #1e2235; }

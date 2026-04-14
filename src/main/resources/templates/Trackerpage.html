@@ -12,15 +12,11 @@
 
         /* ── Hero ── */
         .gt-hero {
-<<<<<<< HEAD
-            background: linear-gradient(135deg,#f093fb 0%,#f5576c 50%,#4facfe 100%);
-=======
-            background: linear-gradient(135deg,#f093fb 0%,#9e6cd1 50%,#4facfe 100%);
->>>>>>> 3d7198eab2a55949c3fc8be7a46d851679fc958d
+            background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
             border-radius: 18px; padding: 1.6rem 2rem;
             color: #fff; display: flex; align-items: center; gap: 1.2rem;
             margin-bottom: 1.8rem;
-            box-shadow: 0 6px 28px rgba(240,147,251,0.4);
+            box-shadow: 0 6px 28px rgba(102,126,234,0.4);
         }
         .gt-hero .hero-icon {
             width: 60px; height: 60px; background: rgba(255,255,255,0.22);
@@ -41,17 +37,10 @@
         .sum-card .sc-bg { position:absolute;right:-8px;bottom:-8px;font-size:4rem;opacity:.1; }
         .sum-card .sc-label { font-size:.75rem;opacity:.88;text-transform:uppercase;letter-spacing:.5px; }
         .sum-card .sc-val   { font-size:1.3rem;font-weight:700;margin-top:3px; }
-<<<<<<< HEAD
-        .sc-a { background:linear-gradient(135deg,#667eea,#764ba2); }
-        .sc-b { background:linear-gradient(135deg,#11998e,#38ef7d);color:#003d2e; }
-        .sc-c { background:linear-gradient(135deg,#f093fb,#f5576c); }
-        .sc-d { background:linear-gradient(135deg,#4facfe,#00f2fe);color:#003d5e; }
-=======
-        .sc-a { background:linear-gradient(135deg,#9e6cd1,#9e6cd1); }
-        .sc-b { background:linear-gradient(135deg,#9e6cd1,#9e6cd1);color:#003d2e; }
-        .sc-c { background:linear-gradient(135deg,#9e6cd1,#9e6cd1); }
-        .sc-d { background:linear-gradient(135deg,#9e6cd1,#9e6cd1);color:#003d5e; }
->>>>>>> 3d7198eab2a55949c3fc8be7a46d851679fc958d
+        .sc-a,
+        .sc-b,
+        .sc-c,
+        .sc-d { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
 
         /* ── Section title ── */
         .sec-title {
@@ -110,14 +99,14 @@
         .goal-card .gc-badge {
             background:rgba(255,255,255,.25);padding:2px 10px;border-radius:999px;font-weight:600;font-size:.72rem;
         }
-        .gc-emerald { background:linear-gradient(135deg,#11998e,#38ef7d);color:#003d2e; }
-        .gc-purple  { background:linear-gradient(135deg,#667eea,#764ba2); }
-        .gc-rose    { background:linear-gradient(135deg,#f093fb,#f5576c); }
-        .gc-ocean   { background:linear-gradient(135deg,#4facfe,#00f2fe);color:#003d5e; }
-        .gc-amber   { background:linear-gradient(135deg,#f6d365,#fda085);color:#5a2d00; }
-        .gc-indigo  { background:linear-gradient(135deg,#a18cd1,#fbc2eb);color:#3d004a; }
-        .gc-red     { background:linear-gradient(135deg,#e74c3c,#c0392b); }
-        .gc-teal    { background:linear-gradient(135deg,#43e97b,#38f9d7);color:#003d2e; }
+        .gc-emerald,
+        .gc-purple,
+        .gc-rose,
+        .gc-ocean,
+        .gc-amber,
+        .gc-indigo,
+        .gc-red,
+        .gc-teal    { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
 
         /* ── Modals ── */
         .overlay {
@@ -170,10 +159,10 @@
         }
         .tip-card h4 { margin:0 0 .4rem;font-size:.92rem; }
         .tip-card p  { margin:0;font-size:.8rem;opacity:.9;line-height:1.5; }
-        .tc-1{background:linear-gradient(135deg,#11998e,#38ef7d);color:#003d2e;}
-        .tc-2{background:linear-gradient(135deg,#667eea,#764ba2);}
-        .tc-3{background:linear-gradient(135deg,#f6d365,#fda085);color:#5a2d00;}
-        .tc-4{background:linear-gradient(135deg,#4facfe,#00f2fe);color:#003d5e;}
+        .tc-1,
+        .tc-2,
+        .tc-3,
+        .tc-4{background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;}
     </style>
 </head>
 <body>
@@ -225,7 +214,7 @@
             <!-- Goals header + add button -->
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.6rem;">
                 <p class="sec-title" style="margin:0;">
-                    <i class="fa-solid fa-flag" style="color:#f5576c;"></i> My Goals
+                    <i class="fa-solid fa-flag" style="color:#667eea;"></i> My Goals
                 </p>
                 <button class="btn-add-goal" onclick="openAddModal()">
                     <i class="fa-solid fa-plus"></i> Add New Goal
@@ -247,7 +236,7 @@
 
             <!-- Tips -->
             <p class="sec-title">
-                <i class="fa-solid fa-lightbulb" style="color:#f6d365;"></i> Goal-Setting Tips
+                <i class="fa-solid fa-lightbulb" style="color:#667eea;"></i> Goal-Setting Tips
             </p>
             <div class="tips-grid">
                 <div class="tip-card tc-1">
