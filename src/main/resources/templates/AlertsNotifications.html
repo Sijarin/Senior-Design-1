@@ -887,13 +887,7 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Paying…';
 
-<<<<<<< HEAD
-        var csrfInput = document.querySelector('#pay-form [name="_csrf"], #pay-form input[name$="token"]');
         var fd = new FormData();
-        if (csrfInput) fd.append(csrfInput.name, csrfInput.value);
-=======
-        var fd = new FormData();
->>>>>>> 3d7198eab2a55949c3fc8be7a46d851679fc958d
         fd.append('merchantName', name); fd.append('amount', amount);
         fd.append('category', category); fd.append('dateStr', dtTodayStr);
         fd.append('notes', 'Paid via Alerts & Notifications');
@@ -971,14 +965,8 @@
     })();
 </script>
 
-<<<<<<< HEAD
-<!-- Hidden form (CSRF token source + fallback submit) -->
-<form id="pay-form" th:action="@{/receipt-scan/add}" method="post" style="display:none">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-=======
 <!-- Hidden form (fallback submit — CSRF disabled globally in SecurityConfig) -->
 <form id="pay-form" th:action="@{/receipt-scan/add}" method="post" style="display:none">
->>>>>>> 3d7198eab2a55949c3fc8be7a46d851679fc958d
     <input type="hidden" id="pf-merchant" name="merchantName">
     <input type="hidden" id="pf-amount"   name="amount">
     <input type="hidden" id="pf-category" name="category">
