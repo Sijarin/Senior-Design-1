@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside th:fragment="sidebar" class="sidebar">
+
+    <!-- ── Brand Logo ── -->
+    <div class="sb-brand">
+        <div class="sb-logo">
+            <div class="sb-logo-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <div class="sb-logo-text">FinVision</div>
+                <span class="sb-logo-sub">Clarity in every dollar</span>
+            </div>
+        </div>
+        <button class="menu-toggle" onclick="document.querySelector('.nav-menu').classList.toggle('show')">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- ── User mini-profile ── -->
+    <div class="sb-user" th:if="${displayName != null}">
+        <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+             th:src="${profilePhoto}" alt="Profile" class="sb-user-photo">
+        <div th:unless="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+             class="sb-user-initial"
+             th:text="${userInitial != null} ? ${userInitial} : 'U'">U</div>
+        <div>
+            <div class="sb-user-name" th:text="${displayName}">User</div>
+            <div class="sb-user-role">Member</div>
+        </div>
+    </div>
+
+    <!-- ── Navigation ── -->
+    <nav class="nav-menu">
+
+        <div class="sb-section-label">Main</div>
+
+        <a th:href="@{/dashboard}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-house"></i></div>
+            <span class="mi-text">Dashboard</span>
+        </a>
+        <a th:href="@{/budget}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-wallet"></i></div>
+            <span class="mi-text">Set Budget</span>
+        </a>
+        <a th:href="@{/tracker}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <span class="mi-text">Goal Tracking</span>
+        </a>
+
+        <div class="sb-section-label">Analytics</div>
+
+        <a th:href="@{/predictive-cash-flow}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <span class="mi-text">Predictive Cash Flow</span>
+        </a>
+        <a th:href="@{/alerts}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-bell"></i></div>
+            <span class="mi-text">Alerts &amp; Notifications<span id="alerts-due-badge"></span></span>
+        </a>
+        <a th:href="@{/insights}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-brain"></i></div>
+            <span class="mi-text">Insights</span>
+        </a>
+        <a th:href="@{/spending-visualization}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            <span class="mi-text">Spending Visualization</span>
+        </a>
+        <a th:href="@{/receipt-scan}" class="menu-item">
+            <div class="mi-icon"><i class="fa-solid fa-receipt"></i></div>
+            <span class="mi-text">Actual Expense</span>
+        </a>
+
+    </nav>
+
+    <!-- ── Footer / Logout ── -->
+    <div class="sidebar-footer">
+        <a th:href="@{/logout}" class="logout-btn">
+            <div class="lb-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <span>Logout</span>
+        </a>
+    </div>
+
+    <!-- Active-page highlight -->
+    <script>
+    (function() {
+        var path = window.location.pathname;
+        document.querySelectorAll('.sidebar .menu-item').forEach(function(a) {
+            var href = a.getAttribute('href') || '';
+            if (href && path === href) a.classList.add('sb-active');
+        });
+    })();
+    </script>
+
+</aside>
+
+<!-- Shared topbar: dark mode toggle + profile avatar -->
+<div th:fragment="topbar" class="topbar">
+    <div></div>
+    <div class="topbar-right">
+        <button id="darkModeToggle" class="topbar-dark-toggle">
+            <i id="darkModeIcon" class="fa-solid fa-moon"></i>
+        </button>
+        <a th:href="@{/profile}" class="topbar-avatar-link" title="My Profile">
+            <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+                 th:src="${profilePhoto}" alt="Profile" class="topbar-avatar-img">
+            <span th:unless="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
+                  class="topbar-avatar-initials"
+                  th:text="${userInitial != null} ? ${userInitial} : 'U'">U</span>
+        </a>
+    </div>
+</div>
+
+<th:block th:fragment="darkMode">
+
+    <!-- ══════════════════════════════════════
+         FINVISION AI CHATBOT — injected on every page via darkMode fragment
+         ══════════════════════════════════════ -->
+
+    <!-- Floating chatbot button (always present, managed here) -->
+    <div id="fvChatBtn" class="chatbot-btn" style="z-index:10001;">
+        <i class="fa-solid fa-robot"></i>
+    </div>
+
+    <div id="fvChatPanel" class="fv-chat-panel">
+
+        <!-- Header -->
+        <div class="fv-chat-header">
+            <div class="fv-chat-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="fv-chat-info">
+                <div class="fv-chat-name">FinVision AI</div>
+                <div class="fv-chat-status"><span class="fv-status-dot"></span> Online</div>
+            </div>
+            <div class="fv-header-actions">
+                <button class="fv-hdr-btn" id="fvVoiceOutBtn" onclick="fvToggleVoiceOut()" title="Toggle voice responses" style="color:#4facfe;">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button class="fv-hdr-btn" onclick="fvClose()" title="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="fv-messages" id="fvMessages"></div>
+
+        <!-- Typing indicator -->
+        <div class="fv-typing" id="fvTyping" style="display:none;">
+            <span class="fv-t-dot"></span><span class="fv-t-dot"></span><span class="fv-t-dot"></span>
+        </div>
+
+        <!-- Suggestion chips -->
+        <div class="fv-chips">
+            <button class="fv-chip" onclick="fvChip('Show my set budget details')">📊 Set Budget</button>
+            <button class="fv-chip" onclick="fvChip('What are my actual expenses?')">🧾 Actual</button>
+            <button class="fv-chip" onclick="fvChip('My goals')">🎯 Goals</button>
+            <button class="fv-chip" onclick="fvChip('Budget vs actual')">Compare</button>
+            <button class="fv-chip" onclick="fvChip('Budget health')">Health</button>
+            <button class="fv-chip" onclick="fvChip('Show all my data')">Summary</button>
+            <button class="fv-chip" onclick="fvChip('Give me financial advice')">Tips</button>
+        </div>
+
+        <!-- Input -->
+        <div class="fv-input-row">
+            <input id="fvInput" class="fv-input" type="text"
+                   placeholder="Ask me anything..."
+                   onkeydown="if(event.key==='Enter') fvSend()">
+            <button class="fv-mic-btn" id="fvMicBtn" onclick="fvToggleMic()" title="Voice input">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <button class="fv-send-btn" onclick="fvSend()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Styles ── -->
+    <style>
+        /* Upgrade existing chatbot-btn to show AI badge */
+        .chatbot-btn { position: fixed !important; cursor: pointer !important; }
+        .fv-ai-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: linear-gradient(135deg,#f5576c,#f093fb);
+            color: #fff; font-size: 0.5rem; font-weight: 900;
+            border-radius: 50px; padding: 2px 5px;
+            letter-spacing: 0.3px; pointer-events: none;
+        }
+
+        /* ── Chat Panel ── */
+        .fv-chat-panel {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 440px;
+            background: linear-gradient(170deg, #0d0b1e 0%, #1a1535 50%, #0f1a3a 100%);
+            border-radius: 24px 0 0 24px;
+            box-shadow: -8px 0 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(102,126,234,0.18);
+            display: flex; flex-direction: column; overflow: hidden;
+            z-index: 99999;
+            transform: translateX(100%);
+            pointer-events: none;
+            transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+        }
+        .fv-chat-panel.fv-open {
+            transform: translateX(0); pointer-events: all;
+        }
+
+        /* Header */
+        .fv-chat-header {
+            display: flex; align-items: center; gap: 0.8rem;
+            padding: 0.95rem 1.1rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
+        .fv-chat-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #fff; flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.45);
+        }
+        .fv-chat-name { font-size: 0.92rem; font-weight: 800; color: #fff; }
+        .fv-chat-status {
+            font-size: 0.68rem; color: rgba(255,255,255,0.55);
+            display: flex; align-items: center; gap: 0.3rem; margin-top: 1px;
+        }
+        .fv-status-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #38ef7d;
+            box-shadow: 0 0 6px #38ef7d;
+            animation: fv-pulse 2s ease-in-out infinite;
+        }
+        @keyframes fv-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+        .fv-header-actions { margin-left: auto; display: flex; gap: 0.35rem; }
+        .fv-hdr-btn {
+            width: 28px; height: 28px; border-radius: 8px;
+            background: rgba(255,255,255,0.07); border: none;
+            color: rgba(255,255,255,0.55); font-size: 0.8rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .fv-hdr-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        /* Messages */
+        .fv-messages {
+            flex: 1; overflow-y: auto; padding: 1rem 1rem 0.5rem;
+            display: flex; flex-direction: column; gap: 0.7rem;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent;
+        }
+        .fv-messages::-webkit-scrollbar { width: 3px; }
+        .fv-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+        .fv-msg { display: flex; }
+        .fv-msg-user { justify-content: flex-end; }
+        .fv-msg-bot  { justify-content: flex-start; }
+        .fv-bubble {
+            max-width: 82%; padding: 0.75rem 1rem;
+            border-radius: 16px; font-size: 0.88rem; line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .fv-msg-user .fv-bubble {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff; border-bottom-right-radius: 4px;
+        }
+        .fv-msg-bot .fv-bubble {
+            background: rgba(255,255,255,0.09);
+            color: rgba(255,255,255,0.9);
+            border-bottom-left-radius: 4px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* Typing */
+        .fv-typing {
+            display: flex; gap: 5px; padding: 0.4rem 1rem; align-items: center;
+        }
+        .fv-t-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(255,255,255,0.45);
+            animation: fv-bounce 1.3s ease-in-out infinite;
+            display: inline-block;
+        }
+        .fv-t-dot:nth-child(2) { animation-delay: 0.18s; }
+        .fv-t-dot:nth-child(3) { animation-delay: 0.36s; }
+        @keyframes fv-bounce { 0%,80%,100%{transform:scale(0.75);opacity:0.4} 40%{transform:scale(1.15);opacity:1} }
+
+        /* Chips */
+        .fv-chips {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            padding: 0.4rem 0.9rem 0;
+        }
+        .fv-chip {
+            padding: 0.28rem 0.75rem;
+            border: 1px solid rgba(102,126,234,0.4);
+            border-radius: 50px;
+            background: rgba(102,126,234,0.1);
+            color: rgba(255,255,255,0.75);
+            font-size: 0.72rem; cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .fv-chip:hover { background: rgba(102,126,234,0.35); color: #fff; }
+
+        /* Input row */
+        .fv-input-row {
+            display: flex; gap: 0.45rem;
+            padding: 0.75rem 0.9rem;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
+        .fv-input {
+            flex: 1; padding: 0.6rem 0.9rem;
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 50px; color: #fff;
+            font-size: 0.83rem; outline: none;
+            transition: border-color 0.2s;
+        }
+        .fv-input::placeholder { color: rgba(255,255,255,0.35); }
+        .fv-input:focus { border-color: rgba(102,126,234,0.6); }
+        .fv-mic-btn, .fv-send-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            border: none; color: #fff; font-size: 0.82rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .fv-mic-btn  { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .fv-send-btn { background: linear-gradient(135deg,#4facfe,#00f2fe); }
+        .fv-mic-btn:hover, .fv-send-btn:hover { transform: scale(1.1); }
+        .fv-mic-btn.fv-listening {
+            background: linear-gradient(135deg,#f5576c,#f093fb) !important;
+            animation: fv-pulse-btn 1s ease-in-out infinite;
+        }
+        @keyframes fv-pulse-btn { 0%,100%{box-shadow:0 0 0 0 rgba(245,87,108,0.5)} 50%{box-shadow:0 0 0 8px rgba(245,87,108,0)} }
+
+        /* Mobile */
+        @media (max-width: 480px) {
+            .fv-chat-panel { width: 100vw; border-radius: 0; }
+        }
+    </style>
+
+    <!-- ── JavaScript ── -->
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    var FV_CHAT_USER = /*[[${loggedInUsername}]]*/ 'guest';
+    /*]]>*/
+    </script>
+    <script>
+    (function() {
+        var open      = false;
+        var voiceOut  = true;
+        var listening = false;
+        var recognition = null;
+
+        // ── Goal tracking: read from localStorage and format response ──
+        var GOAL_KEYS = ['goal', 'target', 'goal tracking', 'my goals', 'show goals',
+                         'emergency fund', 'retirement', 'savings goal', 'financial goal',
+                         'debt payoff', 'vacation fund', 'home down', 'investment fund'];
+        function isGoalMsg(msg) {
+            var m = msg.toLowerCase();
+            return GOAL_KEYS.some(function(k) { return m.includes(k); });
+        }
+
+        function fvGoalResponse() {
+            var key   = 'fv_goals_' + FV_CHAT_USER;
+            var raw   = localStorage.getItem(key);
+            var goals = raw ? JSON.parse(raw) : [];
+
+            var CAT_LABELS = {
+                emergency:'Emergency Fund', retirement:'Retirement Savings',
+                house:'Home Down Payment', vacation:'Vacation Fund', debt:'Debt Payoff',
+                education:'Education', car:'Car / Vehicle', investment:'Investment Fund', custom:'Custom Goal'
+            };
+
+            if (!goals || goals.length === 0) {
+                return "\uD83C\uDFAF No goals set yet.\nVisit **Goal Tracking** in the sidebar to add your first financial goal!";
+            }
+
+            var totalSaved  = goals.reduce(function(s, g) { return s + Number(g.saved  || 0); }, 0);
+            var totalTarget = goals.reduce(function(s, g) { return s + Number(g.target || 0); }, 0);
+            var overallPct  = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+
+            var lines = [];
+            lines.push("\uD83C\uDFAF **Your Goal Tracking Overview**");
+            lines.push("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501");
+            lines.push("\uD83D\uDCCA **TOTALS**");
+            lines.push("\u2022 Active Goals:     **" + goals.length + "**");
+            lines.push("\u2022 Total Saved:      **$" + totalSaved.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + "**");
+            lines.push("\u2022 Total Target:     $" + totalTarget.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}));
+            lines.push("\u2022 Overall Progress: **" + overallPct + "%**");
+            lines.push("\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501");
+            lines.push("");
+            lines.push("\uD83C\uDFC6 **YOUR GOALS**");
+
+            goals.forEach(function(g, i) {
+                var saved  = Number(g.saved  || 0);
+                var target = Number(g.target || 0);
+                var pct    = target > 0 ? Math.min(Math.round((saved / target) * 100), 100) : 0;
+                var left   = Math.max(target - saved, 0);
+                var badge  = pct >= 100 ? '\uD83C\uDF89 Completed'
+                           : pct >= 75  ? '\uD83D\uDD25 Almost There'
+                           : pct >= 40  ? '\uD83D\uDCC8 On Track'
+                           : '\uD83D\uDE80 Getting Started';
+                var catLabel = CAT_LABELS[g.category] || 'Goal';
+
+                lines.push((i + 1) + ". **" + (g.name || 'Unnamed') + "**  [" + catLabel + "]");
+                lines.push("   Saved: $" + saved.toLocaleString('en-US', {minimumFractionDigits:2}) +
+                           " / $" + target.toLocaleString('en-US', {minimumFractionDigits:2}) +
+                           "  \u00B7  " + pct + "%");
+                lines.push("   $" + left.toLocaleString('en-US', {minimumFractionDigits:2}) + " remaining  \u00B7  " + badge);
+                if (g.date) lines.push("   \uD83D\uDCC5 Target Date: " + g.date);
+                lines.push("");
+            });
+
+            lines.push("\uD83D\uDC49 Visit **Goal Tracking** in the sidebar to add funds or create new goals.");
+            return lines.join("\n");
+        }
+
+        // ── Spending Visualization: read from localStorage (written by SpendingVisualization.html on visit) ──
+        var SPENDVIZ_KEYS = [
+            'spending visualization', 'spending viz', 'spending chart', 'expense chart',
+            'category breakdown', 'income vs expense', 'income vs expenses',
+            'spending breakdown', 'show spending', 'my spending', 'where am i spending',
+            'spending summary', 'expense breakdown', 'visualiz'
+        ];
+        function isSpendVizMsg(msg) {
+            var m = msg.toLowerCase();
+            return SPENDVIZ_KEYS.some(function(k) { return m.includes(k); });
+        }
+
+        function fvSpendVizResponse() {
+            var data = null;
+            try {
+                var raw = localStorage.getItem('fv_spendviz_' + FV_CHAT_USER);
+                data = raw ? JSON.parse(raw) : null;
+            } catch(e) {}
+
+            var SEP  = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+            var lines = [];
+
+            lines.push('\uD83D\uDCCA **Spending Visualization Summary**');
+            lines.push(SEP);
+
+            if (!data) {
+                lines.push('');
+                lines.push('\uD83D\uDCCB **No live data yet** \u2014 visit the **Spending Visualization** page once to load your chart data here.');
+                lines.push('\uD83D\uDC49 Go to **Spending Visualization** in the sidebar.');
+                return lines.join('\n');
+            }
+
+            var savedWhen = '';
+            try {
+                var d = new Date(data.savedAt);
+                savedWhen = d.toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+            } catch(e) {}
+            if (savedWhen) lines.push('\uD83D\uDD52 Data as of: ' + savedWhen);
+            lines.push('');
+
+            var income    = parseFloat(data.income)        || 0;
+            var expenses  = parseFloat(data.totalExpenses) || 0;
+            var remaining = income - expenses;
+            var pct       = income > 0 ? Math.round((expenses / income) * 100) : 0;
+            var savePct   = income > 0 ? Math.max(0, Math.round((remaining / income) * 100)) : 0;
+
+            var fmt = function(n) {
+                return '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+            };
+
+            // ── Financial overview ──
+            lines.push('\uD83D\uDCB0 **INCOME vs EXPENSES**');
+            lines.push('  \u2022 Monthly Income:   **' + fmt(income) + '**');
+            lines.push('  \u2022 Total Expenses:   **' + fmt(expenses) + '**');
+            lines.push('  \u2022 ' + (remaining >= 0 ? 'Savings:' : 'Deficit:') + '           **' + (remaining < 0 ? '-' : '') + fmt(remaining) + '**');
+            lines.push('  \u2022 Budget Utilised:  **' + pct + '%** of income');
+            if (remaining >= 0) {
+                lines.push('  \u2022 Savings Rate:     **' + savePct + '%**');
+            }
+            lines.push('');
+
+            // ── Utilisation bar ──
+            var filled = Math.min(Math.round(pct / 5), 20);
+            var bar    = '\u2588'.repeat(filled) + '\u2591'.repeat(20 - filled);
+            var barLabel = pct > 100 ? ' \uD83D\uDEA8 Overspent!'
+                         : pct > 80  ? ' \u26A0\uFE0F Running low'
+                         : ' \u2705 Healthy';
+            lines.push('\uD83D\uDCCA **BUDGET UTILISATION**');
+            lines.push('  [' + bar + '] ' + pct + '%' + barLabel);
+            lines.push('');
+
+            // ── Category breakdown ──
+            var labels = data.pieLabels || [];
+            var vals   = data.pieData   || [];
+            if (labels.length > 0) {
+                var total = vals.reduce(function(a, b) { return a + b; }, 0);
+
+                // Sort by amount descending
+                var cats = labels.map(function(lbl, i) {
+                    return { name: lbl, amount: parseFloat(vals[i]) || 0 };
+                }).sort(function(a, b) { return b.amount - a.amount; });
+
+                lines.push(SEP);
+                lines.push('\uD83C\uDFF7\uFE0F **EXPENSE BREAKDOWN BY CATEGORY**');
+                lines.push('  Total spending: **' + fmt(total) + '**');
+                lines.push('');
+
+                cats.forEach(function(c, i) {
+                    var catPct  = total > 0 ? Math.round((c.amount / total) * 100) : 0;
+                    var barLen  = Math.max(1, Math.round(catPct / 5));
+                    var catBar  = '\u2588'.repeat(barLen) + '\u2591'.repeat(20 - barLen);
+                    var rank    = i === 0 ? ' \uD83E\uDD47 Highest' : i === 1 ? ' \uD83E\uDD48' : i === 2 ? ' \uD83E\uDD49' : '';
+                    lines.push('  ' + (i + 1) + '. **' + c.name + '**' + rank);
+                    lines.push('     [' + catBar + '] ' + catPct + '%  \u00B7  ' + fmt(c.amount));
+                });
+                lines.push('');
+
+                // Top spender insight
+                if (cats.length > 0) {
+                    lines.push('\uD83D\uDD0D **KEY INSIGHT**');
+                    lines.push('  Your biggest expense is **' + cats[0].name + '** at ' +
+                        fmt(cats[0].amount) + ' (' +
+                        (total > 0 ? Math.round((cats[0].amount / total) * 100) : 0) + '% of spending).');
+                    if (remaining < 0) {
+                        lines.push('  \uD83D\uDEA8 You are overspending \u2014 review **' + cats[0].name + '** and **' + (cats[1] ? cats[1].name : 'other categories') + '** first.');
+                    } else if (pct > 80) {
+                        lines.push('  \u26A0\uFE0F Budget is running low \u2014 consider trimming **' + cats[0].name + '** next month.');
+                    } else {
+                        lines.push('  \u2705 Spending looks balanced. Keep tracking to stay on target!');
+                    }
+                    lines.push('');
+                }
+            }
+
+            lines.push(SEP);
+            lines.push('\uD83D\uDC49 Open **Spending Visualization** in the sidebar for interactive charts.');
+            return lines.join('\n');
+        }
+
+        // ── Insights: read from localStorage (written by Insightspage.html on visit) ──
+        var INSIGHTS_KEYS = [
+            'insight', 'insights', 'my insights', 'show insights', 'financial insights',
+            'monthly insight', 'budget health', 'recommendation', 'smart saving',
+            'debt reduction', 'investment idea', 'emergency fund tip', 'financial advice'
+        ];
+        function isInsightsMsg(msg) {
+            var m = msg.toLowerCase();
+            return INSIGHTS_KEYS.some(function(k) { return m.includes(k); });
+        }
+
+        function fvInsightsResponse() {
+            var data = null;
+            try {
+                var raw = localStorage.getItem('fv_insights_' + FV_CHAT_USER);
+                data = raw ? JSON.parse(raw) : null;
+            } catch(e) {}
+
+            var SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+            var lines = [];
+
+            lines.push('\uD83D\uDCA1 **Monthly Insights Summary**');
+            lines.push(SEP);
+
+            if (data) {
+                var savedWhen = '';
+                try {
+                    var d = new Date(data.savedAt);
+                    savedWhen = d.toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                } catch(e) {}
+                if (savedWhen) lines.push('\uD83D\uDD52 Data as of: ' + savedWhen);
+                lines.push('');
+
+                // Financial overview
+                lines.push('\uD83D\uDCB0 **FINANCIAL OVERVIEW**');
+                lines.push('  \u2022 Total Income:   **$' + data.income + '**');
+                lines.push('  \u2022 Total Expenses: **$' + data.expenses + '**');
+                lines.push('  \u2022 Remaining:      **$' + data.remaining + '**');
+                lines.push('  \u2022 Budget Used:    **' + data.percent + '%** of income');
+                lines.push('');
+
+                // Budget health bar
+                lines.push('\uD83E\uDE79 **BUDGET HEALTH**');
+                var pct      = parseFloat(data.percent) || 0;
+                var filled   = Math.min(Math.round(pct / 5), 20);
+                var bar      = '\u2588'.repeat(filled) + '\u2591'.repeat(20 - filled);
+                lines.push('  [' + bar + '] ' + data.percent + '%');
+                lines.push('');
+
+                if (data.status === 'healthy') {
+                    lines.push('  \u2705 **Status: Healthy \u2014 On Track!**');
+                    lines.push("  Great budget discipline. You've used " + data.percent + "% of income.");
+                    lines.push('  Consider allocating the remaining ' + (100 - pct).toFixed(0) + '% to savings or investments.');
+                } else if (data.status === 'low') {
+                    lines.push('  \u26A0\uFE0F **Status: Running Low**');
+                    lines.push('  Remaining balance is under 20% of income (' + data.percent + '% used).');
+                    lines.push('  Tip: Pause non-essential spending for the rest of the month.');
+                } else if (data.status === 'overspending') {
+                    lines.push('  \uD83D\uDEA8 **Status: Overspending!**');
+                    lines.push('  Expenses have exceeded income by $' + String(data.remaining).replace('-','') + '.');
+                    lines.push('  Action: Review and cut discretionary categories immediately.');
+                } else {
+                    lines.push('  \uD83D\uDCCB **Status: No budget set**');
+                    lines.push('  Visit the Budget page to set your monthly income and expenses.');
+                }
+                lines.push('');
+            } else {
+                lines.push('');
+                lines.push('\uD83D\uDCCB **No live data yet** \u2014 visit the **Insights** page once to load your financial overview here.');
+                lines.push('');
+            }
+
+            // Recommendations (always shown)
+            lines.push(SEP);
+            lines.push('\uD83C\uDFC6 **PERSONALIZED RECOMMENDATIONS**');
+            lines.push('');
+
+            lines.push('\uD83D\uDCB0 **Smart Saving**');
+            lines.push('  \u2022 **50/30/20 rule** \u2014 50% needs, 30% wants, 20% savings');
+            lines.push('  \u2022 Set up **automatic transfers** to savings on every payday');
+            lines.push('  \u2022 Build a **3\u20136 month emergency fund** before other investments');
+            lines.push('  \u2022 Cancel unused **subscriptions** and redirect to savings');
+            lines.push('');
+
+            lines.push('\uD83D\uDCB3 **Debt Reduction**');
+            lines.push('  \u2022 **Avalanche method** \u2014 pay highest-interest debt first');
+            lines.push('  \u2022 **Snowball method** \u2014 clear smallest debts first for quick wins');
+            lines.push('  \u2022 Always pay **more than the minimum** on credit cards');
+            lines.push('  \u2022 Avoid new debt while repaying existing balances');
+            lines.push('');
+
+            lines.push('\uD83D\uDCC8 **Investment Ideas**');
+            lines.push('  \u2022 Max out **401(k) or IRA** contributions first (tax-advantaged)');
+            lines.push('  \u2022 Use **low-cost index funds** for long-term wealth');
+            lines.push('  \u2022 **Dollar-cost average** \u2014 invest a fixed amount every month');
+            lines.push('  \u2022 Diversify across **stocks, bonds, and real estate**');
+            lines.push('');
+
+            lines.push('\uD83D\uDEE1\uFE0F **Emergency Fund**');
+            lines.push('  \u2022 Keep 3\u20136 months of expenses in a **high-yield savings account**');
+            lines.push('  \u2022 Only use it for **true emergencies** (job loss, medical, repairs)');
+            lines.push('  \u2022 **Replenish immediately** after any withdrawal');
+            lines.push('  \u2022 Keep it **separate** from your everyday checking account');
+            lines.push('');
+
+            lines.push(SEP);
+            lines.push('\uD83D\uDC49 Open **Insights** in the sidebar for the full interactive dashboard.');
+
+            return lines.join('\n');
+        }
+
+        // ── Alerts & Notifications: read from localStorage ──
+        var ALERTS_KEYS = [
+            'alert', 'notification', 'alerts and notification', 'alerts & notification',
+            'bill reminder', 'bills due', 'due today', 'my bills', 'bill due',
+            'overspending', 'budget alert', 'spending alert', 'savings nudge'
+        ];
+        function isAlertsMsg(msg) {
+            var m = msg.toLowerCase();
+            return ALERTS_KEYS.some(function(k) { return m.includes(k); });
+        }
+
+        function fvAlertsResponse() {
+            var dueKey  = 'fv_due_'  + FV_CHAT_USER;
+            var paidKey = 'fv_paid_' + FV_CHAT_USER;
+            var dates = {}, paid = {};
+            try { dates = JSON.parse(localStorage.getItem(dueKey)  || '{}'); } catch(e) {}
+            try { paid  = JSON.parse(localStorage.getItem(paidKey) || '{}'); } catch(e) {}
+
+            var today     = new Date();
+            var todayDay  = today.getDate();
+            var monthName = today.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+            var BILL_NAMES = {
+                rent: 'Rent / Mortgage', utilities: 'Utilities',
+                insurance: 'Insurance',  groceries: 'Groceries',
+                subscriptions: 'Subscriptions'
+            };
+
+            var dueToday = [], upcoming = [], paidBills = [], noDue = [];
+
+            Object.keys(dates).forEach(function(id) {
+                var label  = dates[id] || '';
+                var m      = label.match(/(\d+)/);
+                var dueDay = m ? parseInt(m[1]) : null;
+                var isPaid = !!paid[id];
+                var name   = BILL_NAMES[id] || (id.startsWith('var_') ? 'Custom Bill' : id);
+                var info   = { name: name, label: label, dueDay: dueDay, isPaid: isPaid };
+
+                if (isPaid) {
+                    paidBills.push(info);
+                } else if (dueDay === todayDay) {
+                    dueToday.push(info);
+                } else if (dueDay && dueDay > todayDay) {
+                    upcoming.push(info);
+                } else if (dueDay && dueDay < todayDay) {
+                    noDue.push(info); // past due this month
+                }
+            });
+
+            // Bills with no due date set at all
+            var ALL_IDS = ['rent','utilities','insurance','groceries','subscriptions'];
+            ALL_IDS.forEach(function(id) {
+                if (!dates[id]) {
+                    noDue.push({ name: BILL_NAMES[id], label: 'No due date set', dueDay: null, isPaid: !!paid[id] });
+                }
+            });
+
+            upcoming.sort(function(a,b){ return a.dueDay - b.dueDay; });
+
+            var SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+            var lines = [];
+
+            lines.push('\uD83D\uDD14 **Alerts & Notifications Summary**');
+            lines.push(SEP);
+            lines.push('\uD83D\uDCC5 **' + monthName + '  \u00B7  Today: ' + today.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}) + '**');
+            lines.push('');
+
+            // ── Due today ──
+            if (dueToday.length > 0) {
+                lines.push('\uD83D\uDD34 **BILLS DUE TODAY (' + dueToday.length + ')** \u26A0\uFE0F Action needed!');
+                dueToday.forEach(function(b) {
+                    lines.push('  \u2022 **' + b.name + '**  \u2014  ' + b.label);
+                    lines.push('    Status: \u23F3 Unpaid  \u2192  Visit Alerts page to Pay now');
+                });
+                lines.push('');
+            } else {
+                lines.push('\u2705 **No bills due today \u2014 you\'re all clear!**');
+                lines.push('');
+            }
+
+            // ── Upcoming ──
+            if (upcoming.length > 0) {
+                lines.push('\uD83D\uDCC6 **UPCOMING BILLS**');
+                upcoming.forEach(function(b) {
+                    var daysLeft = b.dueDay - todayDay;
+                    var urgency  = daysLeft <= 3 ? ' \u26A0\uFE0F ' + daysLeft + ' day' + (daysLeft===1?'':'s') + ' away!' : '  \u00B7  ' + daysLeft + ' days away';
+                    lines.push('  \u2022 **' + b.name + '**  \u2014  ' + b.label + urgency);
+                });
+                lines.push('');
+            }
+
+            // ── Paid this month ──
+            if (paidBills.length > 0) {
+                lines.push('\u2705 **PAID THIS MONTH (' + paidBills.length + ')**');
+                paidBills.forEach(function(b) {
+                    lines.push('  \u2022 **' + b.name + '**  \u2014  ' + b.label + '  \u2714\uFE0F Paid');
+                });
+                lines.push('');
+            }
+
+            // ── No date set ──
+            var noDateSet = noDue.filter(function(b){ return b.dueDay === null; });
+            if (noDateSet.length > 0) {
+                lines.push('\u2139\uFE0F **NO DUE DATE SET**');
+                noDateSet.forEach(function(b) {
+                    lines.push('  \u2022 **' + b.name + '**  \u2014  Click the due-date pill on the Alerts page to set one');
+                });
+                lines.push('');
+            }
+
+            // ── Past-due (earlier this month, still unpaid) ──
+            var overdue = noDue.filter(function(b){ return b.dueDay !== null && !b.isPaid; });
+            if (overdue.length > 0) {
+                lines.push('\uD83D\uDD34 **POSSIBLY OVERDUE THIS MONTH**');
+                overdue.forEach(function(b) {
+                    lines.push('  \u2022 **' + b.name + '**  \u2014  ' + b.label + '  \u26A0\uFE0F Past due, still unpaid');
+                });
+                lines.push('');
+            }
+
+            // ── Budget alerts ──
+            lines.push(SEP);
+            lines.push('\uD83D\uDCCA **BUDGET ALERTS**  (live data on the Alerts page)');
+            lines.push('  \u2022 Overspending warnings when expenses exceed income');
+            lines.push('  \u2022 Low-balance alert when spending > 80% of income');
+            lines.push('  \u2022 Monthly income vs. expense summary card');
+            lines.push('');
+
+            // ── Savings nudges ──
+            lines.push('\uD83D\uDCA1 **SAVINGS NUDGES**');
+            lines.push('  \u2022 Pay Yourself First \u2014 save 10\u201320% of income before spending');
+            lines.push('  \u2022 Cancel unused subscriptions (last 30 days)');
+            lines.push('  \u2022 Move idle savings to a high-yield account (4\u20135% APY)');
+            lines.push('  \u2022 Set a clear savings goal \u2014 visit **Goal Tracking** to track it');
+            lines.push('');
+            lines.push('\uD83D\uDC49 Open **Alerts & Notifications** in the sidebar for the full dashboard.');
+
+            return lines.join('\n');
+        }
+
+        // ── Hook chatbot button (use the one defined in this fragment) ──
+        var btn = document.getElementById('fvChatBtn')
+               || document.querySelector('.chatbot-btn');
+        if (btn) {
+            // Add AI badge if not already there
+            if (!btn.querySelector('.fv-ai-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'fv-ai-badge';
+                badge.textContent = 'AI';
+                btn.appendChild(badge);
+            }
+            btn.addEventListener('click', toggle);
+        }
+
+        function toggle() {
+            open = !open;
+            var panel = document.getElementById('fvChatPanel');
+            panel.classList.toggle('fv-open', open);
+            if (open) {
+                if (document.getElementById('fvMessages').children.length === 0) {
+                    addMsg("Hi there! \uD83D\uDC4B I'm FinVision AI — your personal finance assistant.\n\nI know your budget, savings, spending, and account info. Ask me anything, or try the suggestion buttons below!\n\nType 'help' to see all commands. I also support \uD83C\uDFA4 voice input!", 'bot');
+                }
+                setTimeout(function() { document.getElementById('fvInput').focus(); }, 50);
+            }
+        }
+
+        window.fvClose = function() {
+            open = false;
+            document.getElementById('fvChatPanel').classList.remove('fv-open');
+        };
+
+        window.fvChip = function(text) {
+            document.getElementById('fvInput').value = text;
+            fvSend();
+        };
+
+        // ── Add message bubble ──
+        function addMsg(text, sender) {
+            var container = document.getElementById('fvMessages');
+            var wrap = document.createElement('div');
+            wrap.className = 'fv-msg fv-msg-' + sender;
+            var bubble = document.createElement('div');
+            bubble.className = 'fv-bubble';
+            // Escape HTML, then format
+            var html = text
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+                .replace(/\n/g,'<br>');
+            bubble.innerHTML = html;
+            wrap.appendChild(bubble);
+            container.appendChild(wrap);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ── Profile & Password ──
+        var PROFILE_KEYS = ['change password','update password','reset password',
+            'profile setting','my profile','account setting','edit profile','password'];
+        function isProfileMsg(msg) {
+            return PROFILE_KEYS.some(function(k) { return msg.toLowerCase().includes(k); });
+        }
+        function fvProfileResponse() {
+            return '\uD83D\uDD10 **Change Password**\n\nTo update your password, head to **Profile Settings** \u2014 click your profile icon at the **top-right corner** of the page.\n\nOnce there:\n  1. Scroll to the **Change Password** section\n  2. Enter your **current password**\n  3. Enter your **new password** and confirm it\n  4. Click **Update Password**';
+        }
+
+        // ── Send message ──
+        window.fvSend = async function() {
+            var input = document.getElementById('fvInput');
+            var msg   = input.value.trim();
+            if (!msg) return;
+            addMsg(msg, 'user');
+            input.value = '';
+
+            var typing = document.getElementById('fvTyping');
+            typing.style.display = 'flex';
+            document.getElementById('fvMessages').scrollTop = 99999;
+
+            // ── Client-side goal interception (goals live in localStorage) ──
+            if (isGoalMsg(msg)) {
+                setTimeout(function() {
+                    typing.style.display = 'none';
+                    var resp = fvGoalResponse();
+                    addMsg(resp, 'bot');
+                    if (voiceOut) fvSpeak(resp);
+                }, 400);
+                return;
+            }
+
+            // ── Client-side profile / password interception ──
+            if (isProfileMsg(msg)) {
+                setTimeout(function() {
+                    typing.style.display = 'none';
+                    var resp = fvProfileResponse();
+                    addMsg(resp, 'bot');
+                    if (voiceOut) fvSpeak(resp);
+                }, 300);
+                return;
+            }
+
+            // ── Client-side spending visualization interception ──
+            if (isSpendVizMsg(msg)) {
+                setTimeout(function() {
+                    typing.style.display = 'none';
+                    var resp = fvSpendVizResponse();
+                    addMsg(resp, 'bot');
+                    if (voiceOut) fvSpeak(resp);
+                }, 450);
+                return;
+            }
+
+            // ── Client-side insights interception ──
+            if (isInsightsMsg(msg)) {
+                setTimeout(function() {
+                    typing.style.display = 'none';
+                    var resp = fvInsightsResponse();
+                    addMsg(resp, 'bot');
+                    if (voiceOut) fvSpeak(resp);
+                }, 450);
+                return;
+            }
+
+            // ── Client-side alerts interception (due dates live in localStorage) ──
+            if (isAlertsMsg(msg)) {
+                setTimeout(function() {
+                    typing.style.display = 'none';
+                    var resp = fvAlertsResponse();
+                    addMsg(resp, 'bot');
+                    if (voiceOut) fvSpeak(resp);
+                }, 450);
+                return;
+            }
+
+            try {
+                var res  = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                var data = await res.json();
+                typing.style.display = 'none';
+                addMsg(data.response, 'bot');
+                if (voiceOut) fvSpeak(data.response);
+            } catch(e) {
+                typing.style.display = 'none';
+                addMsg("Sorry, I couldn't connect. Please try again.", 'bot');
+            }
+        };
+
+        // ── Voice Input ──
+        window.fvToggleMic = function() {
+            var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) {
+                addMsg("Voice input isn't supported in your browser. Try Chrome or Edge.", 'bot');
+                return;
+            }
+            if (listening) {
+                if (recognition) recognition.stop();
+                return;
+            }
+            // Always create a fresh instance for reliability
+            recognition = new SR();
+            recognition.continuous     = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 3;
+            recognition.lang           = 'en-US';
+
+            var inputEl = document.getElementById('fvInput');
+            var savedPlaceholder = inputEl.placeholder;
+
+            recognition.onstart = function() {
+                inputEl.placeholder = '\uD83C\uDFA4 Listening...';
+            };
+
+            recognition.onspeechstart = function() {
+                inputEl.placeholder = '\uD83C\uDFA4 Hearing you...';
+            };
+
+            recognition.onresult = function(e) {
+                var interim = '';
+                var final_  = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    var transcript = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        // Pick the alternative with highest confidence
+                        var best = e.results[i][0];
+                        for (var j = 1; j < e.results[i].length; j++) {
+                            if (e.results[i][j].confidence > best.confidence) best = e.results[i][j];
+                        }
+                        final_ += best.transcript;
+                    } else {
+                        interim += transcript;
+                    }
+                }
+                // Show live interim text in the input field
+                if (interim) inputEl.value = interim;
+                if (final_) {
+                    inputEl.value = final_;
+                    inputEl.placeholder = savedPlaceholder;
+                }
+            };
+
+            recognition.onend = function() {
+                listening = false;
+                updateMic();
+                inputEl.placeholder = savedPlaceholder;
+                // If there's text in the input after recognition ends, send it
+                if (inputEl.value.trim()) fvSend();
+            };
+
+            recognition.onerror = function(e) {
+                listening = false;
+                updateMic();
+                inputEl.placeholder = savedPlaceholder;
+                var msgs = {
+                    'no-speech':       '\uD83C\uDFA4 No speech detected. Try speaking louder or closer to the mic.',
+                    'not-allowed':     '\uD83D\uDEAB Microphone access denied. Please allow microphone in your browser settings.',
+                    'network':         '\uD83D\uDEF0\uFE0F Network error. Check your connection and try again.',
+                    'audio-capture':   '\uD83C\uDFA4 No microphone found. Please connect one and try again.',
+                    'aborted':         null
+                };
+                var m = msgs[e.error];
+                if (m) addMsg(m, 'bot');
+            };
+
+            recognition.start();
+            listening = true;
+            addMsg("\uD83C\uDFA4 Listening... speak your question!", 'bot');
+            updateMic();
+        };
+
+        function updateMic() {
+            var btn = document.getElementById('fvMicBtn');
+            if (!btn) return;
+            btn.classList.toggle('fv-listening', listening);
+            btn.querySelector('i').className = listening
+                ? 'fa-solid fa-microphone-slash'
+                : 'fa-solid fa-microphone';
+        }
+
+        // ── Voice Output ──
+        window.fvToggleVoiceOut = function() {
+            voiceOut = !voiceOut;
+            if (!voiceOut && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            var btn = document.getElementById('fvVoiceOutBtn');
+            if (btn) btn.style.color = voiceOut ? '#4facfe' : '';
+            addMsg(voiceOut
+                ? "\uD83D\uDD0A Voice responses ON \u2014 I'll read my answers aloud."
+                : "\uD83D\uDD07 Voice responses OFF.", 'bot');
+        };
+
+        function fvSpeak(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            var clean = text
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/[•\u2022]/g, '')
+                .replace(/\n/g, '. ');
+            var u = new SpeechSynthesisUtterance(clean);
+            u.lang  = 'en-US';
+            u.rate  = 0.95;
+            u.pitch = 1.05;
+            window.speechSynthesis.speak(u);
+        }
+    })();
+    </script>
+
+    <script>
+    (function() {
+        var badge = document.getElementById('alerts-due-badge');
+        if (!badge) return;
+        try {
+            var key   = 'fv_due_' + (typeof FV_CHAT_USER !== 'undefined' ? FV_CHAT_USER : 'guest');
+            var dates = JSON.parse(localStorage.getItem(key) || '{}');
+            var today = new Date().getDate();
+            var count = Object.values(dates).filter(function(label) {
+                var m = label && label.match(/(\d+)/);
+                return m && parseInt(m[1]) === today;
+            }).length;
+            badge.textContent = count > 0 ? '(' + count + ')' : '';
+        } catch(e) { badge.textContent = ''; }
+    })();
+    </script>
+
+    <script th:src="@{/js/darkmode.js}"></script>
+</th:block>
+
+</body>
+</html>
