@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Budget History – FinVision</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .history-page { padding: 1.5rem 1.8rem 3rem; max-width: 1000px; }
+
+        .history-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 18px;
+            padding: 1.6rem 2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 6px 24px rgba(102,126,234,0.35);
+        }
+        .history-hero .hero-icon {
+            width: 60px; height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; flex-shrink: 0;
+        }
+        .history-hero h2 { margin: 0 0 0.2rem; font-size: 1.4rem; }
+        .history-hero p  { margin: 0; font-size: 0.88rem; opacity: 0.88; }
+
+        .history-card {
+            background: var(--bg-card, #fff);
+            border-radius: 16px;
+            padding: 1.5rem 1.6rem;
+            box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+            margin-bottom: 1.4rem;
+        }
+        .history-card .card-title {
+            display: flex; align-items: center; gap: 0.6rem;
+            font-size: 1rem; font-weight: 700;
+            color: var(--text-main, #2c3e50);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .history-card .card-title .title-icon {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; color: #fff; flex-shrink: 0;
+        }
+
+        /* Chart */
+        .chart-wrap { position: relative; height: 280px; }
+
+        /* Table */
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .history-table th {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .history-table th:first-child { border-radius: 10px 0 0 0; }
+        .history-table th:last-child  { border-radius: 0 10px 0 0; }
+        .history-table td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            color: var(--text-main, #2c3e50);
+        }
+        .history-table tr:last-child td { border-bottom: none; }
+        .history-table tr:hover td { background: rgba(102,126,234,0.04); }
+
+        /* Status badges */
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 50px;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .badge-over   { background: #ffeaea; color: #c0392b; }
+        .badge-near   { background: #fff3cd; color: #856404; }
+        .badge-under  { background: #d4edda; color: #155724; }
+
+        /* Diff cell */
+        .diff-over  { color: #c0392b; font-weight: 600; }
+        .diff-under { color: #27ae60; font-weight: 600; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted, #888);
+        }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.35; }
+        .empty-state p { margin: 0 0 1.2rem; font-size: 1rem; }
+        .empty-state a {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.65rem 1.4rem;
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff; border-radius: 10px;
+            text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.35);
+            transition: transform 0.2s;
+        }
+        .empty-state a:hover { transform: translateY(-2px); }
+
+        @media (max-width: 640px) {
+            .history-table { font-size: 0.78rem; }
+            .history-table th, .history-table td { padding: 0.6rem 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+    <aside th:replace="~{basetemplate :: sidebar}"></aside>
+
+    <main class="main">
+        <div th:replace="~{basetemplate :: topbar}"></div>
+
+        <div class="history-page">
+
+            <!-- Hero -->
+            <div class="history-hero">
+                <div class="hero-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div>
+                    <h2>Budget History</h2>
+                    <p>Compare your budgeted expenses vs. actual spending month by month.</p>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div th:unless="${hasHistory}" class="history-card">
+                <div class="empty-state">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <p>No budget history yet. Set your first monthly budget to start tracking.</p>
+                    <a th:href="@{/budget}"><i class="fa-solid fa-plus"></i> Set Budget</a>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div th:if="${hasHistory}" class="history-card">
+                <div class="card-title">
+                    <div class="title-icon"><i class="fa-solid fa-chart-bar"></i></div>
+                    Budget vs Actual — Monthly Overview
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="historyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div th:if="${hasHistory}" class="history-card">
+                <div class="card-title">
+                    <div class="title-icon"><i class="fa-solid fa-table-list"></i></div>
+                    Month-by-Month Breakdown
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Income</th>
+                                <th>Budgeted</th>
+                                <th>Actual</th>
+                                <th>Difference</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row : ${history}">
+                                <td style="font-weight:600;" th:text="${row.month}">Month</td>
+                                <td th:text="'$' + ${row.income}">$0.00</td>
+                                <td th:text="'$' + ${row.budgeted}">$0.00</td>
+                                <td th:text="'$' + ${row.actual}">$0.00</td>
+                                <td>
+                                    <span th:classappend="${row.diffSign == 'over'} ? 'diff-over' : 'diff-under'">
+                                        <span th:text="${row.diffSign == 'over'} ? '▲ $' + ${row.difference} : '▼ $' + ${row.difference}">$0.00</span>
+                                        <small th:text="${row.diffSign == 'over'} ? 'over budget' : 'under budget'" style="font-weight:400;"></small>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:if="${row.status == 'over'}"   class="badge badge-over"><i class="fa-solid fa-triangle-exclamation"></i> Over</span>
+                                    <span th:if="${row.status == 'near'}"   class="badge badge-near"><i class="fa-solid fa-circle-exclamation"></i> Near</span>
+                                    <span th:if="${row.status == 'under'}"  class="badge badge-under"><i class="fa-solid fa-circle-check"></i> On Track</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script th:if="${hasHistory}" th:inline="javascript">
+/*<![CDATA[*/
+var months   = /*[[${chartMonths}]]*/ [];
+var budgeted = /*[[${chartBudgeted}]]*/ [];
+var actual   = /*[[${chartActual}]]*/ [];
+
+new Chart(document.getElementById('historyChart'), {
+    type: 'bar',
+    data: {
+        labels: months,
+        datasets: [
+            {
+                label: 'Budgeted',
+                data: budgeted.map(Number),
+                backgroundColor: 'rgba(102,126,234,0.75)',
+                borderColor: '#667eea',
+                borderWidth: 2,
+                borderRadius: 6
+            },
+            {
+                label: 'Actual',
+                data: actual.map(Number),
+                backgroundColor: 'rgba(118,75,162,0.65)',
+                borderColor: '#764ba2',
+                borderWidth: 2,
+                borderRadius: 6
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    label: function(ctx) {
+                        return ctx.dataset.label + ': $' + Number(ctx.raw).toFixed(2);
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(val) { return '$' + val.toLocaleString(); }
+                }
+            }
+        }
+    }
+});
+/*]]>*/
+</script>
+
+<th:block th:replace="~{basetemplate :: darkMode}"></th:block>
+</body>
+</html>

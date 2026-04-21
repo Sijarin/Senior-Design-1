@@ -208,9 +208,12 @@
         .sum-remaining-positive { color: #b3f7d4; }
         .sum-remaining-negative { color: #ffb3b3; }
 
-        /* ── Save button ── */
+        /* ── Save / Reset button row ── */
+        .btn-row {
+            display: flex; gap: 1rem;
+        }
         .btn-save {
-            width: 100%;
+            flex: 1;
             padding: 1rem;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff; border: none; border-radius: 12px;
@@ -223,6 +226,21 @@
         .btn-save:hover {
             transform: translateY(-2px);
             box-shadow: 0 7px 22px rgba(102,126,234,0.5);
+        }
+        .btn-reset {
+            padding: 1rem 1.6rem;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 1.05rem; font-weight: 700;
+            cursor: pointer; letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(231,76,60,0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+            white-space: nowrap;
+        }
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 22px rgba(231,76,60,0.5);
         }
 
         /* ── Success message ── */
@@ -405,10 +423,15 @@
                     </div>
                 </div>
 
-                <!-- ══ SAVE BUTTON ══ -->
-                <button type="submit" class="btn-save">
-                    <i class="fa-solid fa-floppy-disk"></i> Save Budget
-                </button>
+                <!-- ══ SAVE / RESET BUTTONS ══ -->
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Budget
+                    </button>
+                    <button type="button" class="btn-reset" onclick="resetForm()">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
 
             </form>
         </div>
@@ -478,6 +501,14 @@
     function removeRow(id) {
         const row = document.getElementById(id);
         if (row) { row.remove(); recalc(); }
+    }
+
+    function resetForm() {
+        if (!confirm('Reset all budget fields to zero? This will clear everything on the page.')) return;
+        document.querySelectorAll('.income-input, .expense-input').forEach(el => el.value = '');
+        document.getElementById('varContainer').innerHTML = '';
+        rowCount = 0;
+        recalc();
     }
 </script>
 

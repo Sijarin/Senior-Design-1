@@ -2,8 +2,14 @@ package com.finvision.controller;
 
 import java.security.Principal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -209,7 +215,7 @@ public class DashboardController {
 
         if (principal != null) {
             Budget existing = budgetRepository
-                    .findTopByUsernameOrderByIdDesc(principal.getName()).orElse(null);
+                    .findByUsernameAndMonth(principal.getName(), currentMonth).orElse(null);
             if (existing != null) {
                 model.addAttribute("budget", existing);
                 model.addAttribute("varTitles", existing.getVariableTitle());
@@ -217,6 +223,81 @@ public class DashboardController {
             }
         }
         return "BudgetSet";
+    }
+
+    @GetMapping("/budget-history")
+    public String budgetHistory(Principal principal, Model model) {
+        String username = (principal != null) ? principal.getName() : null;
+
+        List<Budget> budgets = (username != null)
+                ? budgetRepository.findByUsernameOrderByIdDesc(username)
+                : Collections.emptyList();
+
+        DateTimeFormatter displayFmt = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH);
+        DateTimeFormatter ymFmt = DateTimeFormatter.ofPattern("yyyy-MM");
+
+        List<Map<String, Object>> history = new ArrayList<>();
+        List<String> chartMonths = new ArrayList<>();
+        List<String> chartBudgeted = new ArrayList<>();
+        List<String> chartActual = new ArrayList<>();
+
+        for (Budget b : budgets) {
+            String yearMonth;
+            try {
+                YearMonth ym = YearMonth.parse(b.getMonth(), displayFmt);
+                yearMonth = ym.format(ymFmt);
+            } catch (Exception e) {
+                continue;
+            }
+
+            double budgetedExpenses = b.getRent() + b.getUtilities() + b.getInsurance()
+                    + b.getGroceries() + b.getSubscriptions();
+            List<Double> varAmounts = b.getVariableAmount();
+            if (varAmounts != null) {
+                for (Double amt : varAmounts) {
+                    if (amt != null && amt > 0) budgetedExpenses += amt;
+                }
+            }
+
+            double actualExpenses = (username != null)
+                    ? receiptRepository.findByUsernameAndYearMonth(username, yearMonth)
+                            .stream().mapToDouble(ScannedReceipt::getAmount).sum()
+                    : 0;
+
+            double income = b.getMonthlyIncome() + b.getOtherIncome();
+            double diff = budgetedExpenses - actualExpenses;
+            String diffSign = diff >= 0 ? "under" : "over";
+            String status;
+            if (actualExpenses > budgetedExpenses) status = "over";
+            else if (actualExpenses > budgetedExpenses * 0.9) status = "near";
+            else status = "under";
+
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("month", b.getMonth());
+            entry.put("income", String.format("%.2f", income));
+            entry.put("budgeted", String.format("%.2f", budgetedExpenses));
+            entry.put("actual", String.format("%.2f", actualExpenses));
+            entry.put("difference", String.format("%.2f", Math.abs(diff)));
+            entry.put("diffSign", diffSign);
+            entry.put("status", status);
+            history.add(entry);
+
+            chartMonths.add(b.getMonth());
+            chartBudgeted.add(String.format("%.2f", budgetedExpenses));
+            chartActual.add(String.format("%.2f", actualExpenses));
+        }
+
+        Collections.reverse(history);
+        Collections.reverse(chartMonths);
+        Collections.reverse(chartBudgeted);
+        Collections.reverse(chartActual);
+
+        model.addAttribute("history", history);
+        model.addAttribute("hasHistory", !history.isEmpty());
+        model.addAttribute("chartMonths", chartMonths);
+        model.addAttribute("chartBudgeted", chartBudgeted);
+        model.addAttribute("chartActual", chartActual);
+        return "BudgetHistory";
     }
 
     @GetMapping("/predictive-cash-flow")
