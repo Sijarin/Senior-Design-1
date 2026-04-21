@@ -46,6 +46,16 @@
         .card-remaining-warn { background: linear-gradient(135deg, #f6d365, #fda085); }
         .card-remaining-bad  { background: linear-gradient(135deg, #c0392b, #e74c3c); }
 
+        @media (max-width: 768px) {
+            .stat-cards {
+                flex-direction: column;
+            }
+            .stat-card {
+                min-width: unset;
+                width: 100%;
+            }
+        }
+
         /* ── Budget health bar ── */
         .health-section {
             background: var(--card-bg, #fff);
