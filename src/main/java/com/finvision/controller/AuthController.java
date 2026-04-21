@@ -20,6 +20,12 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // ─── ROOT ────────────────────────────────────────────────────────────────
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/login";
+    }
+
     // ─── LOGIN ───────────────────────────────────────────────────────────────
     @GetMapping("/login")
     public String login() {
