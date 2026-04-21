@@ -1180,11 +1180,13 @@
         var badge = document.getElementById('alerts-due-badge');
         if (!badge) return;
         try {
-            var key   = 'fv_due_' + (typeof FV_CHAT_USER !== 'undefined' ? FV_CHAT_USER : 'guest');
-            var dates = JSON.parse(localStorage.getItem(key) || '{}');
+            var user  = typeof FV_CHAT_USER !== 'undefined' ? FV_CHAT_USER : 'guest';
+            var dates = JSON.parse(localStorage.getItem('fv_due_'  + user) || '{}');
+            var paid  = JSON.parse(localStorage.getItem('fv_paid_' + user) || '{}');
             var today = new Date().getDate();
-            var count = Object.values(dates).filter(function(label) {
-                var m = label && label.match(/(\d+)/);
+            var count = Object.keys(dates).filter(function(id) {
+                if (paid[id]) return false;
+                var m = dates[id] && dates[id].match(/(\d+)/);
                 return m && parseInt(m[1]) === today;
             }).length;
             badge.textContent = count > 0 ? '(' + count + ')' : '';
