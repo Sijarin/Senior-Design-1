@@ -95,13 +95,52 @@
 
 </aside>
 
-<!-- Shared topbar: dark mode toggle + profile avatar -->
+<!-- Shared topbar: dark mode toggle + bell reminders + profile avatar -->
 <div th:fragment="topbar" class="topbar">
     <div></div>
     <div class="topbar-right">
         <button id="darkModeToggle" class="topbar-dark-toggle">
             <i id="darkModeIcon" class="fa-solid fa-moon"></i>
         </button>
+
+        <!-- Bill reminder bell -->
+        <div class="topbar-bell-wrapper" id="bellWrapper">
+            <button class="topbar-bell-btn" id="bellBtn" title="Bill Reminders">
+                <i class="fa-solid fa-bell"></i>
+                <span class="bell-badge" th:if="${bellCount != null and bellCount > 0}" th:text="${bellCount}"></span>
+            </button>
+            <div class="bell-dropdown" id="bellDropdown">
+                <div class="bell-dropdown-header">
+                    <span class="bell-dropdown-title">Bill Reminders</span>
+                    <a th:href="@{/alerts}" class="bell-view-all">View All</a>
+                </div>
+                <div class="bell-dropdown-body">
+                    <div th:if="${bellItems == null or #lists.isEmpty(bellItems)}" class="bell-empty">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>No upcoming bills due</span>
+                    </div>
+                    <div th:each="item : ${bellItems}"
+                         class="bell-item"
+                         th:classappend="${item.statusColor == 'red'} ? ' bell-item-overdue' : ' bell-item-soon'">
+                        <div class="bell-item-icon">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="bell-item-info">
+                            <div class="bell-item-name" th:text="${item.name}">Bill Name</div>
+                            <div class="bell-item-meta">
+                                <span class="bell-item-amount" th:text="${item.amount}">$0.00</span>
+                                <span class="bell-item-sep">·</span>
+                                <span class="bell-item-due" th:text="${item.dueText}">Due today</span>
+                            </div>
+                        </div>
+                        <span class="bell-status-pill"
+                              th:classappend="${item.statusColor == 'red'} ? ' pill-red' : ' pill-yellow'"
+                              th:text="${item.statusLabel}">Status</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <a th:href="@{/profile}" class="topbar-avatar-link" title="My Profile">
             <img th:if="${profilePhoto != null and !#strings.isEmpty(profilePhoto)}"
                  th:src="${profilePhoto}" alt="Profile" class="topbar-avatar-img">
@@ -110,6 +149,92 @@
                   th:text="${userInitial != null} ? ${userInitial} : 'U'">U</span>
         </a>
     </div>
+    <script th:inline="javascript">
+    var _FV_BELL_USER = /*[[${loggedInUsername}]]*/ null;
+    </script>
+    <script>
+    (function() {
+        var btn = document.getElementById('bellBtn');
+        var dropdown = document.getElementById('bellDropdown');
+        if (!btn || !dropdown) return;
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('bell-open');
+        });
+        document.addEventListener('click', function(e) {
+            var wrapper = document.getElementById('bellWrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                dropdown.classList.remove('bell-open');
+            }
+        });
+    })();
+
+    // Inject budget bills from localStorage into the bell
+    (function() {
+        if (!_FV_BELL_USER) return;
+        var dueDates, paidStatus;
+        try { dueDates  = JSON.parse(localStorage.getItem('fv_due_'  + _FV_BELL_USER) || '{}'); } catch(e) { dueDates  = {}; }
+        try { paidStatus = JSON.parse(localStorage.getItem('fv_paid_' + _FV_BELL_USER) || '{}'); } catch(e) { paidStatus = {}; }
+
+        var NAMES = { rent:'Rent', utilities:'Utilities', insurance:'Insurance',
+                      groceries:'Groceries', subscriptions:'Subscriptions' };
+        var today    = new Date();
+        var todayDay = today.getDate();
+        var items    = [];
+
+        Object.keys(dueDates).forEach(function(id) {
+            if (paidStatus[id]) return;
+            var m = (dueDates[id] || '').match(/(\d+)/);
+            if (!m) return;
+            var dueDay    = parseInt(m[1]);
+            var daysUntil = dueDay - todayDay;
+            if (daysUntil > 7) return;
+            var name       = NAMES[id] || id;
+            var statusLabel = daysUntil < 0 ? 'Overdue' : 'Due Soon';
+            var statusColor = daysUntil < 0 ? 'red' : 'yellow';
+            var dueText    = daysUntil < 0
+                ? 'Overdue by ' + (-daysUntil) + ' day' + (-daysUntil === 1 ? '' : 's')
+                : daysUntil === 0 ? 'Due today'
+                : 'Due in ' + daysUntil + ' day' + (daysUntil === 1 ? '' : 's');
+            items.push({ name: name, dueText: dueText, statusLabel: statusLabel, statusColor: statusColor });
+        });
+
+        if (items.length === 0) return;
+
+        var body = document.querySelector('#bellDropdown .bell-dropdown-body');
+        if (!body) return;
+
+        var emptyDiv = body.querySelector('.bell-empty');
+        if (emptyDiv) emptyDiv.remove();
+
+        items.forEach(function(b) {
+            var div = document.createElement('div');
+            div.className = 'bell-item ' + (b.statusColor === 'red' ? 'bell-item-overdue' : 'bell-item-soon');
+            div.innerHTML =
+                '<div class="bell-item-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>' +
+                '<div class="bell-item-info">' +
+                    '<div class="bell-item-name">' + b.name + '</div>' +
+                    '<div class="bell-item-meta"><span class="bell-item-due">' + b.dueText + '</span></div>' +
+                '</div>' +
+                '<span class="bell-status-pill ' + (b.statusColor === 'red' ? 'pill-red' : 'pill-yellow') + '">' + b.statusLabel + '</span>';
+            body.appendChild(div);
+        });
+
+        // Update badge count
+        var bellBtn = document.getElementById('bellBtn');
+        var badge   = bellBtn ? bellBtn.querySelector('.bell-badge') : null;
+        var current = badge ? (parseInt(badge.textContent) || 0) : 0;
+        var total   = current + items.length;
+        if (badge) {
+            badge.textContent = total;
+        } else if (bellBtn) {
+            var nb = document.createElement('span');
+            nb.className = 'bell-badge';
+            nb.textContent = total;
+            bellBtn.appendChild(nb);
+        }
+    })();
+    </script>
 </div>
 
 <th:block th:fragment="darkMode">

@@ -187,6 +187,16 @@
         .bc-subs,
         .bc-custom  { background: linear-gradient(135deg,#667eea,#764ba2); }
 
+        .bill-card.bill-card-urgent {
+            background: linear-gradient(135deg,#e74c3c,#c0392b) !important;
+            box-shadow: 0 6px 22px rgba(231,76,60,0.45);
+            animation: urgentPulse 2.4s ease-in-out infinite;
+        }
+        @keyframes urgentPulse {
+            0%,100% { box-shadow: 0 6px 22px rgba(231,76,60,0.45); }
+            50%      { box-shadow: 0 6px 30px rgba(231,76,60,0.75); }
+        }
+
         /* ── Paid / Unpaid toggle ── */
         .bill-paid-toggle {
             display: inline-flex; align-items: center; gap: 4px;
@@ -622,6 +632,26 @@
         if (stored[id]) pill.childNodes[0].textContent = stored[id] + ' ';
     });
 
+    // ── Highlight urgent cards (due today or tomorrow) ──
+    (function() {
+        const todayDay = new Date().getDate();
+        const dates = loadDueDates();
+        let paid = {};
+        try { paid = JSON.parse(localStorage.getItem('fv_paid_' + FV_ALERTS_USER) || '{}'); } catch(e) {}
+        document.querySelectorAll('.bill-due[data-bill-id]').forEach(function(pill) {
+            const id    = pill.getAttribute('data-bill-id');
+            if (paid[id]) return;
+            const label = dates[id] || '';
+            const m     = label.match(/(\d+)/);
+            if (!m) return;
+            const daysUntil = parseInt(m[1]) - todayDay;
+            if (daysUntil <= 1) {
+                const card = pill.closest('.bill-card');
+                if (card) card.classList.add('bill-card-urgent');
+            }
+        });
+    })();
+
     // ── Picker state ──
     let activePill      = null;
     let pickerEl        = null;
@@ -960,6 +990,17 @@
                 removeDueTodayCard(id);
             } else if (dueToday) {
                 addDueTodayCard(id);
+            }
+
+            // Sync red-urgent class with paid state
+            var card = btn.closest('.bill-card');
+            if (card) {
+                if (nowPaid) {
+                    card.classList.remove('bill-card-urgent');
+                } else {
+                    var daysUntil = m ? (parseInt(m[1]) - new Date().getDate()) : 999;
+                    if (daysUntil <= 1) card.classList.add('bill-card-urgent');
+                }
             }
         });
     })();

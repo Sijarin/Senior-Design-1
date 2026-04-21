@@ -474,6 +474,54 @@ public class BillService {
         public List<BillCard> getBills() { return bills; }
     }
 
+    public List<BellItem> buildBellItems(String username) {
+        List<BellItem> items = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        for (Bill bill : findBillsForUser(username)) {
+            if (bill.getDueDate() == null || bill.isPaid()) continue;
+            if (bill.getSnoozedUntil() != null && !today.isAfter(bill.getSnoozedUntil())) continue;
+            long daysUntil = ChronoUnit.DAYS.between(today, bill.getDueDate());
+            if (daysUntil > 7) continue;
+            String statusLabel = daysUntil < 0 ? "Overdue" : "Due Soon";
+            String statusColor = daysUntil < 0 ? "red" : "yellow";
+            String dueText = daysUntil < 0
+                    ? "Overdue by " + (-daysUntil) + " day" + (-daysUntil == 1 ? "" : "s")
+                    : daysUntil == 0 ? "Due today"
+                    : "Due in " + daysUntil + " day" + (daysUntil == 1 ? "" : "s");
+            items.add(new BellItem(bill.getBillName(),
+                    formatCurrency(Math.max(bill.getAmount() - safe(bill.getPaidAmount()), 0)),
+                    dueText, statusLabel, statusColor, bill.getDueDate().toString()));
+        }
+        items.sort(Comparator.comparing(BellItem::getDueDateRaw));
+        return items;
+    }
+
+    public static class BellItem {
+        private final String name;
+        private final String amount;
+        private final String dueText;
+        private final String statusLabel;
+        private final String statusColor;
+        private final String dueDateRaw;
+
+        public BellItem(String name, String amount, String dueText,
+                        String statusLabel, String statusColor, String dueDateRaw) {
+            this.name = name;
+            this.amount = amount;
+            this.dueText = dueText;
+            this.statusLabel = statusLabel;
+            this.statusColor = statusColor;
+            this.dueDateRaw = dueDateRaw;
+        }
+
+        public String getName() { return name; }
+        public String getAmount() { return amount; }
+        public String getDueText() { return dueText; }
+        public String getStatusLabel() { return statusLabel; }
+        public String getStatusColor() { return statusColor; }
+        public String getDueDateRaw() { return dueDateRaw; }
+    }
+
     public static class ActiveReminderItem {
         private final String billId;
         private final String name;
