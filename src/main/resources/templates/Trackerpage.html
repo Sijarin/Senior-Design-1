@@ -203,8 +203,13 @@
             width:100%;padding:.7rem .9rem;border:2px solid #e8eaf6;
             border-radius:10px;font-size:.95rem;margin-bottom:1rem;
             color:#2c3e50;background:#fff;transition:border-color .2s;
+            box-sizing:border-box;min-height:44px;-webkit-appearance:none;appearance:none;
         }
         .modal input:focus,.modal select:focus { outline:none;border-color:#667eea; }
+        @media (max-width: 768px) {
+            .overlay { padding: 1.2rem; }
+            .modal { max-height: 90vh; overflow-y: auto; }
+        }
         .modal-footer { display:flex;gap:.7rem;justify-content:flex-end;margin-top:.5rem; }
         .btn-cancel  { padding:.6rem 1.2rem;border:2px solid #e0e0e0;background:transparent;border-radius:9px;cursor:pointer;font-size:.9rem;color:#666; }
         .btn-confirm { padding:.6rem 1.4rem;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:9px;font-size:.9rem;font-weight:700;cursor:pointer; }
