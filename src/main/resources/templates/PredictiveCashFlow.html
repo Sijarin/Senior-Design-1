@@ -68,6 +68,10 @@
             box-shadow: 0 3px 16px rgba(0,0,0,0.08);
             margin-bottom: 1.8rem;
         }
+        .chart-wrapper {
+            position: relative;
+            height: 220px;
+        }
         .chart-card h3 {
             margin: 0 0 1.2rem; font-size: 1rem;
             color: var(--text-main,#2c3e50);
@@ -149,6 +153,9 @@
             .stat-card .sc-label { font-size: 0.7rem; }
             .months-grid {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            .chart-wrapper {
+                height: 300px;
             }
         }
     </style>
@@ -250,7 +257,7 @@
                     <i class="fa-solid fa-chart-line" style="color:#667eea;"></i>
                     6-Month Balance Forecast
                 </h3>
-                <canvas id="forecastChart" height="110"></canvas>
+                <div class="chart-wrapper"><canvas id="forecastChart"></canvas></div>
             </div>
 
             <!-- ── Month-by-Month Cards ── -->
@@ -359,6 +366,7 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
             legend: {

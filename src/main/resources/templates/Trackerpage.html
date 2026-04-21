@@ -216,6 +216,10 @@
             padding:1.5rem 1.6rem;box-shadow:0 3px 16px rgba(0,0,0,.07);margin-bottom:1.8rem;
         }
         .chart-card h3 { margin:0 0 1rem;font-size:1rem;color:var(--text-main,#2c3e50);display:flex;align-items:center;gap:.5rem; }
+        .chart-wrapper { position:relative; height:220px; }
+        @media (max-width:768px) {
+            .chart-wrapper { height:300px; }
+        }
 
         /* ── Empty state ── */
         .empty-state {
@@ -314,7 +318,7 @@
             <!-- Chart -->
             <div class="chart-card" id="chartSection" style="display:none;">
                 <h3><i class="fa-solid fa-chart-bar" style="color:#667eea;"></i> Goal Progress Overview</h3>
-                <canvas id="goalChart" height="100"></canvas>
+                <div class="chart-wrapper"><canvas id="goalChart"></canvas></div>
             </div>
 
             <!-- Tips -->
@@ -522,6 +526,7 @@
             },
             options: {
                 responsive:true,
+                maintainAspectRatio:false,
                 plugins: {
                     legend: { position:'top', labels:{ boxWidth:14, padding:12 } },
                     tooltip: { callbacks:{ label: c => c.dataset.label+': $'+c.parsed.y.toLocaleString() } }
