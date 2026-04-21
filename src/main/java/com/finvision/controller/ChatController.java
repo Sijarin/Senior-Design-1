@@ -95,8 +95,16 @@ public class ChatController {
                 .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
 
         // ── Greetings ──
-        if (matches(msg, "hello", "hi ", "hey ", "good morning", "good evening", "howdy", "what's up", "sup")) {
+        if (matches(msg, "hello", "hi there", "hi!", "hey there", "good morning", "good afternoon",
+                "good evening", "good night", "howdy", "what's up", "sup", "greetings", "hiya", "yo", "wassup")
+                || msg.equals("hi") || msg.equals("hey") || msg.startsWith("hi ") || msg.startsWith("hey ")) {
             return "Hello " + name + "! \uD83D\uDC4B I'm FinVision AI, your personal finance assistant.\n\nI can help with:\n\u2022 Budget & actual spending insights\n\u2022 Account & profile information\n\u2022 Expense categories & comparisons\n\u2022 Savings analysis & financial tips\n\nType 'help' for all commands, or just ask anything!";
+        }
+
+        // ── How are you ──
+        if (matches(msg, "how are you", "how're you", "how are u", "how do you do", "how's it going",
+                "how is it going", "how have you been", "you doing", "you good", "are you okay", "are you ok")) {
+            return "I'm doing great, " + name + "! \uD83D\uDE0A Thanks for asking.\n\nI'm always here and ready to help you stay on top of your finances. Is there anything you'd like to check today?\n\u2022 Budget & spending\n\u2022 Savings progress\n\u2022 Financial tips\n\nJust ask away!";
         }
 
         // ── Help ──
