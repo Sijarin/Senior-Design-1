@@ -902,48 +902,126 @@ select {
     border-color: var(--border-input);
 }
 
-/* Responsive — stacks sidebar on top for screens under 768px */
+/* ── Sidebar overlay backdrop ── */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* ── Mobile hamburger button in topbar (hidden on desktop) ── */
+.topbar-menu-toggle {
+    display: none;
+}
+
+/* Responsive — slide-in sidebar drawer for screens under 768px */
 @media (max-width: 768px) {
     .dashboard-wrapper {
-        flex-direction: column;
-    }
-    .sidebar {
-        width: 100%;
-        padding: 10px 15px;
-        position: relative;
-        height: auto;
         flex-direction: row;
-        flex-wrap: wrap;
-    }
-    .sb-brand { padding: 0.5rem 0; border: none; width: 100%; justify-content: space-between; }
-    .sb-user, .sb-section-label, .sidebar-footer { display: none; }
-    .menu-toggle {
-        display: block;
-    }
-    .nav-menu {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0; right: 0;
-        flex-direction: column;
-        width: 100%;
-        background: linear-gradient(180deg, #0c0a1e, #1a1535);
-        padding: 10px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        z-index: 100;
-    }
-    .nav-menu.show {
-        display: flex;
-    }
-    .sidebar-footer {
-        display: none;
-    }
-    .nav-menu.show ~ .sidebar-footer {
-        display: block;
-        margin-top: 10px;
     }
     .main {
-        padding: 20px 15px;
+        margin-left: 0;
+        padding: 0 15px 20px;
+    }
+    .topbar {
+        justify-content: space-between;
+        margin-left: -15px;
+        margin-right: -15px;
+        width: calc(100% + 30px);
+    }
+
+    /* Sidebar slides in from the left as a full-height drawer */
+    .sidebar {
+        transform: translateX(-280px);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        position: fixed;
+        width: 260px;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 1100;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        padding: 0;
+        overflow-y: scroll;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* Restore sidebar sections hidden by old mobile rules */
+    .sb-brand {
+        padding: 1.4rem 1.2rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        width: auto;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .sb-user { display: flex; flex-shrink: 0; }
+    .sb-section-label { display: block; }
+
+    /* Nav menu: natural height so sidebar can scroll down to the footer */
+    .nav-menu {
+        display: flex;
+        flex: 0 0 auto;
+        overflow-y: visible;
+        position: static;
+        width: 100%;
+        background: transparent;
+        padding: 0 0.6rem;
+        box-shadow: none;
+        z-index: auto;
+    }
+
+    /* Footer always reachable by scrolling the sidebar */
+    .sidebar-footer {
+        display: flex;
+        flex-shrink: 0;
+        margin-top: 1rem;
+    }
+
+    /* X close button inside sidebar */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        flex-shrink: 0;
+        font-size: 18px;
+    }
+
+    /* Hamburger button shown in topbar on mobile */
+    .topbar-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: var(--text-main);
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+    .topbar-menu-toggle:hover,
+    .topbar-menu-toggle:active {
+        background: rgba(102, 126, 234, 0.12);
     }
 }
 

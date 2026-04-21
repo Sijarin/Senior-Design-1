@@ -13,8 +13,8 @@
                 <span class="sb-logo-sub">Clarity in every dollar</span>
             </div>
         </div>
-        <button class="menu-toggle" onclick="document.querySelector('.nav-menu').classList.toggle('show')">
-            <i class="fa-solid fa-bars"></i>
+        <button class="menu-toggle" id="sidebarClose" aria-label="Close navigation menu">
+            <i class="fa-solid fa-xmark"></i>
         </button>
     </div>
 
@@ -97,7 +97,11 @@
 
 <!-- Shared topbar: dark mode toggle + bell reminders + profile avatar -->
 <div th:fragment="topbar" class="topbar">
-    <div></div>
+    <div>
+        <button class="topbar-menu-toggle" id="sidebarToggle" aria-label="Open navigation menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </div>
     <div class="topbar-right">
         <button id="darkModeToggle" class="topbar-dark-toggle">
             <i id="darkModeIcon" class="fa-solid fa-moon"></i>
@@ -233,6 +237,40 @@
             nb.textContent = total;
             bellBtn.appendChild(nb);
         }
+    })();
+    </script>
+
+    <!-- Mobile sidebar overlay backdrop -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <script>
+    (function() {
+        var openBtn  = document.getElementById('sidebarToggle');
+        var closeBtn = document.getElementById('sidebarClose');
+        var overlay  = document.getElementById('sidebarOverlay');
+        var sidebar  = document.querySelector('.sidebar');
+        if (!sidebar) return;
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (openBtn)  openBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay)  overlay.addEventListener('click', closeSidebar);
+
+        sidebar.querySelectorAll('.menu-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
+        });
     })();
     </script>
 </div>

@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dashboard – FinVision</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -486,11 +487,16 @@
         }
         @media (max-width: 768px) {
             .charts-row { grid-template-columns: 1fr; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
             .quick-grid { grid-template-columns: 1fr; }
             .hero-right { display: none; }
             .hero-left h1 { font-size: 1.75rem; }
             .content { padding: 1.2rem 1rem 2rem; }
+            .stat-card { padding: 1rem 0.85rem; }
+            .stat-value { font-size: 1.25rem; }
+            .stat-icon-box { width: 36px; height: 36px; font-size: 1rem; border-radius: 10px; }
+            .stat-label-chip { font-size: 0.62rem; padding: 0.15rem 0.5rem; }
+            .stat-top { margin-bottom: 0.7rem; }
         }
     </style>
 </head>
