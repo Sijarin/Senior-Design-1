@@ -304,6 +304,126 @@
         @media (max-width: 480px) {
             .field-row { grid-template-columns: 1fr; }
         }
+
+        /* ── DISCLOSURE MODAL ── */
+        .disclosure-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .disclosure-overlay.open { display: flex; }
+
+        .disclosure-modal {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem 2.2rem;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.22s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.94) translateY(12px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .disc-header {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            margin-bottom: 1.4rem;
+            flex-shrink: 0;
+        }
+        .disc-icon {
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(243,156,18,0.35);
+        }
+        .disc-header-text h3 {
+            font-size: 1.2rem; font-weight: 700;
+            color: #2c3e50; margin-bottom: 0.1rem;
+        }
+        .disc-header-text p {
+            font-size: 0.78rem; color: #7f8c8d;
+        }
+
+        .disc-body {
+            background: #fafafa;
+            border: 1px solid #e8eaf6;
+            border-radius: 12px;
+            padding: 1.1rem 1.2rem;
+            margin-bottom: 1.4rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .disc-body p {
+            font-size: 0.88rem; color: #444;
+            line-height: 1.65; margin-bottom: 0.85rem;
+        }
+        .disc-body p:last-child { margin-bottom: 0; }
+        .disc-body strong { color: #2c3e50; }
+
+        .disc-points {
+            list-style: none;
+            margin: 0.6rem 0 0.9rem;
+            padding: 0;
+        }
+        .disc-points li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 0.55rem;
+            line-height: 1.5;
+        }
+        .disc-points li i {
+            color: #e74c3c;
+            font-size: 0.75rem;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .disc-footer {
+            display: flex;
+            gap: 0.75rem;
+            flex-shrink: 0;
+            padding-top: 0.2rem;
+        }
+        .btn-cancel-disc {
+            flex: 1; padding: 0.75rem;
+            background: #f0f0f5;
+            color: #555; border: none; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-cancel-disc:hover { background: #e0e0ea; }
+
+        .btn-agree {
+            flex: 2; padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff; border: none; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .btn-agree:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.5);
+        }
     </style>
 </head>
 <body>
@@ -373,7 +493,7 @@
             <span th:text="${message}"></span>
         </div>
 
-        <form th:action="@{/register}" method="post">
+        <form id="registerForm" th:action="@{/register}" method="post">
 
             <!-- Account Info -->
             <div class="section-label"><i class="fa-solid fa-id-card"></i> Account Info</div>
@@ -508,7 +628,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">
+            <button type="button" class="btn-submit" onclick="openDisclosure()">
                 <i class="fa-solid fa-rocket"></i> Create My Account
             </button>
 
@@ -518,6 +638,80 @@
             Already have an account? <a th:href="@{/login}">Sign In</a>
         </div>
 
+    </div>
+</div>
+
+<!-- ══ DISCLOSURE MODAL ══ -->
+<div class="disclosure-overlay" id="disclosureOverlay">
+    <div class="disclosure-modal">
+        <div class="disc-header">
+            <div class="disc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="disc-header-text">
+                <h3>Important Disclosure</h3>
+                <p>Please read before creating your account</p>
+            </div>
+        </div>
+
+        <div class="disc-body">
+            <p>
+                <strong>FinVision is a personal finance suggestion tool — not a professional financial advisory service.</strong>
+                By creating an account, you acknowledge and agree to the following:
+            </p>
+            <ul class="disc-points">
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    FinVision is not created by licensed financial professionals.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    Nothing in this app constitutes financial, investment, or legal advice.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    All budgets, insights, and suggestions are for informational purposes only.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    They may not accurately reflect your personal financial situation.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    We are not responsible for any financial decisions, losses, or mismanagement that occur as a result of using this app.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of this app.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    We do not guarantee the accuracy, completeness, or reliability of any financial data, projections, or calculations displayed.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    Any reliance you place on information provided by FinVision is strictly at your own risk.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    We are not responsible for any overdrafts, missed payments, debt, or financial loss resulting from actions taken based on this app.
+                </li>
+                <li>
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    For proper financial guidance, please consult a certified financial planner or licensed professional advisor.
+                </li>
+            </ul>
+            <p>
+                This app is a <strong>student project</strong> intended to help you visualize and track your spending habits. Use it as a guide, not a guarantee.
+            </p>
+        </div>
+
+        <div class="disc-footer">
+            <button class="btn-cancel-disc" onclick="closeDisclosure()">
+                Cancel
+            </button>
+            <button class="btn-agree" onclick="agreeAndSubmit()">
+                <i class="fa-solid fa-check"></i> I Understand &amp; Agree
+            </button>
+        </div>
     </div>
 </div>
 
@@ -556,6 +750,27 @@
         text.textContent       = lvl.label;
         text.style.color       = lvl.textColor;
     }
+
+    function openDisclosure() {
+        const form = document.getElementById('registerForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        document.getElementById('disclosureOverlay').classList.add('open');
+    }
+
+    function closeDisclosure() {
+        document.getElementById('disclosureOverlay').classList.remove('open');
+    }
+
+    function agreeAndSubmit() {
+        document.getElementById('registerForm').submit();
+    }
+
+    document.getElementById('disclosureOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDisclosure();
+    });
 </script>
 
 </body>
