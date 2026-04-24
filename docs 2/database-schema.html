@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finvision – Database Schema</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; color: #222; }
+    h1 { color: #1a73e8; border-bottom: 2px solid #1a73e8; padding-bottom: 8px; }
+    h2 { color: #1a73e8; margin-top: 40px; }
+    h3 { margin-top: 0; color: #333; }
+    .collection { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 32px; overflow: hidden; }
+    .collection-header { background: #f0f6ff; padding: 14px 20px; border-bottom: 1px solid #ddd; }
+    .collection-header p { margin: 4px 0 0; color: #555; font-size: 0.9em; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1a73e8; color: #fff; text-align: left; padding: 10px 14px; font-size: 0.9em; }
+    td { padding: 9px 14px; border-bottom: 1px solid #eee; font-size: 0.88em; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafafa; }
+    code { background: #f4f4f4; padding: 1px 5px; border-radius: 3px; font-size: 0.9em; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78em; font-weight: bold; }
+    .required  { background: #fce8e6; color: #c5221f; }
+    .optional  { background: #e8f5e9; color: #1e7e34; }
+    .indexed   { background: #e8f0fe; color: #1a73e8; }
+    .embedded  { background: #fff3e0; color: #e65100; }
+    .meta { color: #666; font-size: 0.85em; margin-bottom: 6px; }
+    nav { background: #f0f6ff; border: 1px solid #c8dafc; border-radius: 6px; padding: 14px 20px; margin-bottom: 32px; }
+    nav a { color: #1a73e8; text-decoration: none; margin-right: 20px; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<h1>Finvision – Database Schema</h1>
+
+<p class="meta">
+  <strong>Database:</strong> MongoDB (NoSQL document store) &nbsp;|&nbsp;
+  <strong>Driver:</strong> Spring Data MongoDB &nbsp;|&nbsp;
+  <strong>Collections:</strong> 4
+</p>
+
+<nav>
+  <strong>Collections:</strong>
+  <a href="#users">users</a>
+  <a href="#bills">bills</a>
+  <a href="#budgets">budgets</a>
+  <a href="#scanned_receipts">scanned_receipts</a>
+</nav>
+
+<p>
+  Finvision uses <strong>MongoDB</strong> as its sole database. Because MongoDB is a document-oriented
+  NoSQL database, there is no SQL DDL schema. The structure of each collection is enforced at the
+  application layer by the Java model classes annotated with
+  <code>@Document</code> (Spring Data MongoDB).
+  Each document in a collection corresponds to an instance of one of these classes.
+</p>
+
+<!-- ─── USERS ─────────────────────────────────────────────────────────────── -->
+<h2 id="users">Collection: <code>users</code></h2>
+<div class="collection">
+  <div class="collection-header">
+    <h3>User</h3>
+    <p>One document per registered user. Stores authentication credentials, account-recovery data, and profile information.</p>
+    <p><strong>Java class:</strong> <code>com.finvision.model.User</code></p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>_id</code></td>
+        <td>String (ObjectId)</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">indexed</span></td>
+        <td>MongoDB auto-generated primary key.</td>
+      </tr>
+      <tr>
+        <td><code>username</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">unique index</span></td>
+        <td>Unique login name chosen at registration.</td>
+      </tr>
+      <tr>
+        <td><code>password</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>BCrypt-hashed password.</td>
+      </tr>
+      <tr>
+        <td><code>email</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>User's email address (reserved for future notifications).</td>
+      </tr>
+      <tr>
+        <td><code>securityQuestion</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Security question used for password reset identity verification.</td>
+      </tr>
+      <tr>
+        <td><code>securityAnswer</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Lowercase-normalized answer to the security question (plain text).</td>
+      </tr>
+      <tr>
+        <td><code>name</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Full display name (first + last). Falls back to username in the UI if absent.</td>
+      </tr>
+      <tr>
+        <td><code>accountNumber</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Auto-generated 10-digit virtual account number (assigned on first profile visit).</td>
+      </tr>
+      <tr>
+        <td><code>routingNumber</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Auto-generated 10-digit virtual routing number (assigned on first profile visit).</td>
+      </tr>
+      <tr>
+        <td><code>profilePhoto</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Base64-encoded data URL of the user's profile photo (e.g. <code>data:image/jpeg;base64,…</code>).</td>
+      </tr>
+      <tr>
+        <td><code>pin</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>BCrypt-hashed 4-digit PIN used as an alternative identity verification method during password reset.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ─── BILLS ─────────────────────────────────────────────────────────────── -->
+<h2 id="bills">Collection: <code>bills</code></h2>
+<div class="collection">
+  <div class="collection-header">
+    <h3>Bill</h3>
+    <p>One document per bill or recurring payment obligation. Tracks due dates, payment status, reminders, and amount history.</p>
+    <p><strong>Java class:</strong> <code>com.finvision.model.Bill</code></p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>_id</code></td>
+        <td>String (ObjectId)</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">indexed</span></td>
+        <td>MongoDB auto-generated primary key.</td>
+      </tr>
+      <tr>
+        <td><code>username</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Owner of this bill (foreign key to <code>users.username</code>).</td>
+      </tr>
+      <tr>
+        <td><code>billName</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Display name of the bill (e.g. "Electricity", "Netflix").</td>
+      </tr>
+      <tr>
+        <td><code>amountType</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Either <code>"fixed"</code> or <code>"variable"</code>.</td>
+      </tr>
+      <tr>
+        <td><code>amount</code></td>
+        <td>double</td>
+        <td><span class="badge required">required</span></td>
+        <td>Known/fixed dollar amount of the bill.</td>
+      </tr>
+      <tr>
+        <td><code>estimatedAmount</code></td>
+        <td>Double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Estimated amount for variable bills only.</td>
+      </tr>
+      <tr>
+        <td><code>lastMonthAmount</code></td>
+        <td>Double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Amount paid in the most recent payment cycle (variable bills).</td>
+      </tr>
+      <tr>
+        <td><code>dueDate</code></td>
+        <td>LocalDate (ISO string)</td>
+        <td><span class="badge required">required</span></td>
+        <td>Date the bill is due.</td>
+      </tr>
+      <tr>
+        <td><code>frequency</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Recurrence: <code>"one-time"</code>, <code>"weekly"</code>, <code>"monthly"</code>, or <code>"yearly"</code>.</td>
+      </tr>
+      <tr>
+        <td><code>category</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Spending category label (e.g. "Utilities", "Rent").</td>
+      </tr>
+      <tr>
+        <td><code>notes</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Free-text notes about the bill.</td>
+      </tr>
+      <tr>
+        <td><code>reminderDaysBefore</code></td>
+        <td>Array&lt;Integer&gt;</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Days before due date to trigger a reminder (e.g. <code>[7, 3, 1, 0]</code>). Defaults to <code>[7, 3, 1, 0]</code>.</td>
+      </tr>
+      <tr>
+        <td><code>overdueReminderDaysAfter</code></td>
+        <td>Array&lt;Integer&gt;</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Days after due date to trigger an overdue reminder (e.g. <code>[1, 3]</code>). Defaults to <code>[1, 3]</code>.</td>
+      </tr>
+      <tr>
+        <td><code>paid</code></td>
+        <td>boolean</td>
+        <td><span class="badge required">required</span></td>
+        <td><code>true</code> once the full amount has been paid.</td>
+      </tr>
+      <tr>
+        <td><code>paidAmount</code></td>
+        <td>Double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Cumulative amount paid so far (supports partial payments).</td>
+      </tr>
+      <tr>
+        <td><code>paidAt</code></td>
+        <td>LocalDateTime</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Timestamp when the bill was marked fully paid.</td>
+      </tr>
+      <tr>
+        <td><code>snoozedUntil</code></td>
+        <td>LocalDate</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>If set, reminders are suppressed until this date.</td>
+      </tr>
+      <tr>
+        <td><code>autoGenerated</code></td>
+        <td>boolean</td>
+        <td><span class="badge required">required</span></td>
+        <td><code>true</code> if this bill was auto-created when a recurring parent bill was paid.</td>
+      </tr>
+      <tr>
+        <td><code>parentBillId</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>ID of the recurring bill that spawned this instance.</td>
+      </tr>
+      <tr>
+        <td><code>createdAt</code></td>
+        <td>LocalDateTime</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Timestamp when the bill was first created.</td>
+      </tr>
+      <tr>
+        <td><code>updatedAt</code></td>
+        <td>LocalDateTime</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Timestamp of the most recent update.</td>
+      </tr>
+      <tr>
+        <td><code>amountHistory</code></td>
+        <td><span class="badge embedded">embedded array</span></td>
+        <td><span class="badge optional">optional</span></td>
+        <td>
+          Array of <strong>AmountHistory</strong> sub-documents for variable bills:<br/>
+          &nbsp;• <code>timestamp</code> — LocalDateTime of the payment<br/>
+          &nbsp;• <code>amount</code> — dollar amount paid at that time
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ─── BUDGETS ───────────────────────────────────────────────────────────── -->
+<h2 id="budgets">Collection: <code>budgets</code></h2>
+<div class="collection">
+  <div class="collection-header">
+    <h3>Budget</h3>
+    <p>One document per user per calendar month. Stores planned income and categorised expense amounts for that month.</p>
+    <p><strong>Java class:</strong> <code>com.finvision.model.Budget</code></p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>_id</code></td>
+        <td>String (ObjectId)</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">indexed</span></td>
+        <td>MongoDB auto-generated primary key.</td>
+      </tr>
+      <tr>
+        <td><code>username</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Owner of this budget (foreign key to <code>users.username</code>).</td>
+      </tr>
+      <tr>
+        <td><code>month</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Calendar month label, e.g. <code>"April 2026"</code>. Combined with <code>username</code>, this is effectively a unique composite key.</td>
+      </tr>
+      <tr>
+        <td><code>monthlyIncome</code></td>
+        <td>double</td>
+        <td><span class="badge required">required</span></td>
+        <td>Primary monthly income (salary, wages, etc.).</td>
+      </tr>
+      <tr>
+        <td><code>otherIncome</code></td>
+        <td>double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Additional income (freelance, side income, etc.). Defaults to 0.</td>
+      </tr>
+      <tr>
+        <td><code>rent</code></td>
+        <td>double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Budgeted rent or mortgage expense. Defaults to 0.</td>
+      </tr>
+      <tr>
+        <td><code>utilities</code></td>
+        <td>double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Budgeted utilities expense (electricity, water, gas). Defaults to 0.</td>
+      </tr>
+      <tr>
+        <td><code>insurance</code></td>
+        <td>double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Budgeted insurance expense. Defaults to 0.</td>
+      </tr>
+      <tr>
+        <td><code>groceries</code></td>
+        <td>double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Budgeted groceries expense. Defaults to 0.</td>
+      </tr>
+      <tr>
+        <td><code>subscriptions</code></td>
+        <td>double</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Budgeted subscription services expense. Defaults to 0.</td>
+      </tr>
+      <tr>
+        <td><code>variableTitle</code></td>
+        <td>Array&lt;String&gt;</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>User-defined variable expense category names (parallel array with <code>variableAmount</code>).</td>
+      </tr>
+      <tr>
+        <td><code>variableAmount</code></td>
+        <td>Array&lt;Double&gt;</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Dollar amounts for each user-defined variable expense (parallel array with <code>variableTitle</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ─── SCANNED RECEIPTS ──────────────────────────────────────────────────── -->
+<h2 id="scanned_receipts">Collection: <code>scanned_receipts</code></h2>
+<div class="collection">
+  <div class="collection-header">
+    <h3>ScannedReceipt</h3>
+    <p>One document per manually entered or scanned receipt. Records actual spending transactions used in Budget vs. Actual comparisons.</p>
+    <p><strong>Java class:</strong> <code>com.finvision.model.ScannedReceipt</code></p>
+    <p>
+      <strong>Index:</strong> Compound index <code>{ username: 1, yearMonth: 1 }</code>
+      named <code>username_yearmonth_idx</code> — enables fast per-month receipt queries.
+    </p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Type</th>
+        <th>Constraints</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>_id</code></td>
+        <td>String (ObjectId)</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">indexed</span></td>
+        <td>MongoDB auto-generated primary key.</td>
+      </tr>
+      <tr>
+        <td><code>username</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">indexed</span></td>
+        <td>Owner of this receipt (foreign key to <code>users.username</code>).</td>
+      </tr>
+      <tr>
+        <td><code>merchantName</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Name of the merchant or payee. Defaults to <code>"Unknown"</code> if not provided.</td>
+      </tr>
+      <tr>
+        <td><code>amount</code></td>
+        <td>double</td>
+        <td><span class="badge required">required</span></td>
+        <td>Dollar amount of the transaction.</td>
+      </tr>
+      <tr>
+        <td><code>category</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span></td>
+        <td>Spending category. One of: <code>Groceries</code>, <code>Dining</code>, <code>Shopping</code>, <code>Transport</code>, <code>Healthcare</code>, <code>Entertainment</code>, <code>Rent</code>, <code>Utilities</code>, <code>Insurance</code>, <code>Subscriptions</code>, <code>Other</code>.</td>
+      </tr>
+      <tr>
+        <td><code>dateStr</code></td>
+        <td>String (ISO date)</td>
+        <td><span class="badge required">required</span></td>
+        <td>Date of the transaction in <code>YYYY-MM-DD</code> format.</td>
+      </tr>
+      <tr>
+        <td><code>yearMonth</code></td>
+        <td>String</td>
+        <td><span class="badge required">required</span> <span class="badge indexed">indexed</span></td>
+        <td>First 7 characters of <code>dateStr</code> (e.g. <code>"2026-04"</code>). Used for fast month-filtered queries.</td>
+      </tr>
+      <tr>
+        <td><code>notes</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Free-text notes about the transaction.</td>
+      </tr>
+      <tr>
+        <td><code>imageData</code></td>
+        <td>String</td>
+        <td><span class="badge optional">optional</span></td>
+        <td>Base64-encoded receipt image thumbnail (e.g. <code>data:image/jpeg;base64,…</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr style="margin-top:40px; border-color:#ddd;" />
+<p style="color:#888; font-size:0.82em;">
+  Generated for Finvision v1.0.0 &nbsp;|&nbsp; University of Texas at Arlington – Senior Design &nbsp;|&nbsp;
+  Database: MongoDB &nbsp;|&nbsp; Spring Boot 3.2.0 / Spring Data MongoDB
+</p>
+
+</body>
+</html>
