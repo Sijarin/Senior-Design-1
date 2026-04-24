@@ -21,6 +21,21 @@ import com.finvision.model.ScannedReceipt;
 import com.finvision.repository.BudgetRepository;
 import com.finvision.repository.ScannedReceiptRepository;
 
+/**
+ * Serves the main dashboard and all financial-overview pages in Finvision.
+ *
+ * <p>Pages handled:
+ * <ul>
+ *   <li>{@code /dashboard} — summary of budgeted vs. actual income/expenses</li>
+ *   <li>{@code /spending-visualization} — pie-chart breakdown of actual spending</li>
+ *   <li>{@code /tracker} — savings tracker with total saved this month</li>
+ *   <li>{@code /budget} — budget entry form (pre-filled if a budget exists)</li>
+ *   <li>{@code /budget-history} — month-by-month budget vs. actual history</li>
+ *   <li>{@code /predictive-cash-flow} — 6-month projected cash-flow forecast</li>
+ *   <li>{@code /alerts} — bill alerts and budget status overview</li>
+ *   <li>{@code /insights} — spending insight summary</li>
+ * </ul>
+ */
 @Controller
 public class DashboardController {
 
@@ -30,14 +45,29 @@ public class DashboardController {
     @Autowired
     private ScannedReceiptRepository receiptRepository;
 
-    // ─── Helper: sum this month's scanned receipts for a user ───────────────
+    /**
+     * Returns the total dollar amount of all scanned receipts for the current
+     * calendar month (format: {@code yyyy-MM}) for the given user.
+     *
+     * @param username the authenticated user's username
+     * @return sum of receipt amounts for the current month
+     */
     private double receiptTotal(String username) {
         String ym = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
         return receiptRepository.findByUsernameAndYearMonth(username, ym)
                 .stream().mapToDouble(ScannedReceipt::getAmount).sum();
     }
 
-    // ─── Helper: build pie-chart entries from receipts ──────────────────────
+    /**
+     * Appends per-category receipt totals for the current month to the provided
+     * pie-chart label and data lists. If a category name already exists in
+     * {@code pieLabels} (from the budget breakdown), it is suffixed with
+     * {@code " (receipts)"} to avoid duplicate labels.
+     *
+     * @param username  the authenticated user's username
+     * @param pieLabels mutable list of chart labels to append to
+     * @param pieData   mutable list of chart amounts to append to
+     */
     private void addReceiptsToPie(String username,
             java.util.List<String> pieLabels, java.util.List<Double> pieData) {
         String ym = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
@@ -57,6 +87,17 @@ public class DashboardController {
         }
     }
 
+    /**
+     * Renders the main dashboard with both budgeted and actual financial summaries.
+     *
+     * <p>When a budget exists, populates income, expenses, savings, savings rate,
+     * spending percentage, status label, and pie-chart data for both the planned
+     * budget and actual (receipt-based) spending.</p>
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code Dashboard} template
+     */
     @GetMapping("/dashboard")
     public String dashboard(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : "User";
@@ -155,6 +196,13 @@ public class DashboardController {
         return "Dashboard";
     }
 
+    /**
+     * Renders the Spending Visualization page with a pie chart of actual expenses.
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code SpendingVisualization} template
+     */
     @GetMapping("/spending-visualization")
     public String spendingVisualization(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : null;
@@ -183,6 +231,14 @@ public class DashboardController {
         return "SpendingVisualization";
     }
 
+    /**
+     * Renders the Savings Tracker page with this month's total amount saved
+     * (income minus actual expenses, floored at zero).
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code Trackerpage} template
+     */
     @GetMapping("/tracker")
     public String tracker(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : null;
@@ -207,6 +263,14 @@ public class DashboardController {
         return "Trackerpage";
     }
 
+    /**
+     * Displays the Budget Set form, pre-filled with the existing budget for
+     * the current month if one exists.
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code BudgetSet} template
+     */
     @GetMapping("/budget")
     public String budget(Principal principal, Model model) {
         String currentMonth = LocalDate.now()
@@ -225,6 +289,14 @@ public class DashboardController {
         return "BudgetSet";
     }
 
+    /**
+     * Renders the Budget History page showing month-by-month budgeted vs. actual
+     * spending, including chart data for a bar/line visualization.
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code BudgetHistory} template
+     */
     @GetMapping("/budget-history")
     public String budgetHistory(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : null;
@@ -300,6 +372,14 @@ public class DashboardController {
         return "BudgetHistory";
     }
 
+    /**
+     * Renders the Predictive Cash Flow page with a 6-month rolling forecast
+     * based on the current month's income and actual spending rate.
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code PredictiveCashFlow} template
+     */
     @GetMapping("/predictive-cash-flow")
     public String predictiveCashFlow(Principal principal, Model model) {
         String username = (principal != null) ? principal.getName() : null;
@@ -355,6 +435,16 @@ public class DashboardController {
         return "PredictiveCashFlow";
     }
 
+    /**
+     * Renders the Alerts &amp; Notifications page with budget status and bill list.
+     *
+     * <p>Safe defaults are set before fetching data so the template never
+     * renders with missing attributes even if no budget exists.</p>
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code AlertsNotifications} template
+     */
     @GetMapping("/alerts")
     public String alerts(Principal principal, Model model) {
         // Always set safe defaults first so the template never renders with missing
@@ -403,6 +493,13 @@ public class DashboardController {
         return "AlertsNotifications";
     }
 
+    /**
+     * Renders the Insights page with a high-level spending summary.
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code Insightspage} template
+     */
     @GetMapping("/insights")
     public String insights(Principal principal, Model model) {
         model.addAttribute("income", "0.00");

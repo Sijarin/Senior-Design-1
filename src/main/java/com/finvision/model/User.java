@@ -4,6 +4,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * MongoDB document representing a registered Finvision user.
+ *
+ * <p>Stores authentication credentials (username, BCrypt-hashed password and PIN),
+ * account recovery data (security question/answer), and profile information
+ * (display name, profile photo, virtual account/routing numbers).</p>
+ *
+ * <p>Stored in the {@code users} collection.</p>
+ */
 @Document(collection = "users")
 public class User {
 

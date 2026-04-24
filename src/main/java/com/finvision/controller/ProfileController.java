@@ -20,6 +20,10 @@ import java.security.Principal;
 import java.util.Base64;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Handles the user profile page: viewing account info, changing the password,
+ * uploading a profile photo, and deleting the account.
+ */
 @Controller
 public class ProfileController {
 
@@ -35,6 +39,16 @@ public class ProfileController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * Displays the user's profile page.
+     *
+     * <p>Auto-generates a 10-digit account number and routing number on the
+     * first visit if they have not been set yet.</p>
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code profile} template, or redirect to {@code /login} if unauthenticated
+     */
     @GetMapping("/profile")
     public String profile(Principal principal, Model model) {
         if (principal == null) return "redirect:/login";
@@ -59,6 +73,13 @@ public class ProfileController {
         return "profile";
     }
 
+    /**
+     * Refreshes the profile page after an update action.
+     *
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code profile} template
+     */
     @PostMapping("/profile/update")
     public String updateProfile(Principal principal, Model model) {
         if (principal == null) return "redirect:/login";
@@ -68,6 +89,19 @@ public class ProfileController {
         return "profile";
     }
 
+    /**
+     * Changes the authenticated user's password.
+     *
+     * <p>Verifies the current password, confirms the new password matches its
+     * confirmation, and enforces a minimum length of 6 characters before saving.</p>
+     *
+     * @param currentPassword the user's existing password
+     * @param newPassword     the desired new password
+     * @param confirmPassword confirmation of the new password
+     * @param principal       the currently authenticated user
+     * @param model           Spring MVC model
+     * @return the {@code profile} template with a success or error message
+     */
     @PostMapping("/profile/password")
     public String changePassword(
             @RequestParam String currentPassword,
@@ -103,6 +137,17 @@ public class ProfileController {
         return "profile";
     }
 
+    /**
+     * Uploads and saves a new profile photo for the authenticated user.
+     *
+     * <p>The image is Base64-encoded and stored inline in the user document as a
+     * data URL (e.g., {@code data:image/jpeg;base64,...}).</p>
+     *
+     * @param photo     the uploaded image file
+     * @param principal the currently authenticated user
+     * @param model     Spring MVC model
+     * @return the {@code profile} template with a success or error message
+     */
     @PostMapping("/profile/photo")
     public String uploadPhoto(
             @RequestParam("photo") MultipartFile photo,
@@ -129,6 +174,17 @@ public class ProfileController {
         return "profile";
     }
 
+    /**
+     * Permanently deletes the authenticated user's account and all associated data.
+     *
+     * <p>Erases all budget documents, scanned receipts, and the user document from
+     * MongoDB, then invalidates the HTTP session and clears the Spring Security
+     * context to log the user out immediately.</p>
+     *
+     * @param principal the currently authenticated user
+     * @param request   the HTTP request used to invalidate the session
+     * @return redirect to {@code /login?deleted}
+     */
     @PostMapping("/profile/delete")
     public String deleteAccount(Principal principal, HttpServletRequest request) {
         if (principal == null) return "redirect:/login";

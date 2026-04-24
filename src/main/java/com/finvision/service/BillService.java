@@ -17,6 +17,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeSet;
 
+/**
+ * Core service for bill management in Finvision.
+ *
+ * <p>Responsibilities include:
+ * <ul>
+ *   <li>Building the {@link AlertsBillView} used to render the Alerts page</li>
+ *   <li>Tracking payment status and recording partial/full payments</li>
+ *   <li>Auto-generating the next recurring bill instance when a bill is fully paid</li>
+ *   <li>Computing bell-notification items for the global navigation badge</li>
+ *   <li>Evaluating active reminders for upcoming and overdue bills</li>
+ * </ul>
+ */
 @Service
 public class BillService {
 
@@ -25,11 +37,27 @@ public class BillService {
 
     private static final DateTimeFormatter UI_DATE = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
+    /**
+     * Returns all bills for the given user sorted by due date ascending.
+     *
+     * @param username the authenticated user's username
+     * @return list of bills, or an empty list if the username is blank
+     */
     public List<Bill> findBillsForUser(String username) {
         if (username == null || username.isBlank()) return Collections.emptyList();
         return billRepository.findByUsernameOrderByDueDateAsc(username);
     }
 
+    /**
+     * Builds the full view model for the Alerts &amp; Notifications page.
+     *
+     * <p>Categorizes each bill into overdue, due-soon (within 3 days), upcoming,
+     * or paid-this-month buckets and computes summary statistics (counts, totals,
+     * paid percentage, and a month-grouped list of all bills).</p>
+     *
+     * @param username the authenticated user's username
+     * @return an {@link AlertsBillView} containing all display-ready data
+     */
     public AlertsBillView buildAlertsBillView(String username) {
         List<Bill> bills = findBillsForUser(username);
         List<BillCard> overdue = new ArrayList<>();
@@ -145,6 +173,13 @@ public class BillService {
         );
     }
 
+    /**
+     * Returns reminder items for bills whose pre-due or overdue reminder days
+     * match today's date and that are not currently snoozed.
+     *
+     * @param username the authenticated user's username
+     * @return list of {@link ActiveReminderItem} sorted by due date
+     */
     public List<ActiveReminderItem> buildActiveReminderItems(String username) {
         List<ActiveReminderItem> items = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -182,6 +217,14 @@ public class BillService {
         return items;
     }
 
+    /**
+     * Normalizes a raw list of pre-due reminder days, always including day 0
+     * (the due day itself) and returning values in descending order.
+     * Defaults to [7, 3, 1, 0] when the input is null or empty.
+     *
+     * @param raw raw reminder-days list from the form or bill document
+     * @return sorted, deduplicated list of reminder days in descending order
+     */
     public List<Integer> normalizeBefore(List<Integer> raw) {
         if (raw == null || raw.isEmpty()) return List.of(7, 3, 1, 0);
         TreeSet<Integer> out = new TreeSet<>();
@@ -190,6 +233,13 @@ public class BillService {
         return new ArrayList<>(out.descendingSet());
     }
 
+    /**
+     * Normalizes a raw list of post-due (overdue) reminder days, excluding
+     * non-positive values. Defaults to [1, 3] when the input is null or empty.
+     *
+     * @param raw raw overdue-days list from the form or bill document
+     * @return sorted, deduplicated list of positive overdue days
+     */
     public List<Integer> normalizeOverdue(List<Integer> raw) {
         if (raw == null || raw.isEmpty()) return List.of(1, 3);
         TreeSet<Integer> out = new TreeSet<>();
@@ -197,6 +247,18 @@ public class BillService {
         return new ArrayList<>(out);
     }
 
+    /**
+     * Records a payment against a bill and marks it fully paid when the
+     * cumulative paid amount meets or exceeds the bill amount.
+     *
+     * <p>For variable bills the payment is also appended to the bill's
+     * {@link Bill#getAmountHistory() amountHistory}. When the bill is fully
+     * paid and recurring, a new bill instance for the next period is saved.</p>
+     *
+     * @param bill           the bill to update (must not be {@code null})
+     * @param paidAmountNow  the dollar amount paid now; if {@code null} or zero,
+     *                       the outstanding balance is applied
+     */
     public void markAsPaid(Bill bill, Double paidAmountNow) {
         if (bill == null) return;
 
@@ -230,6 +292,11 @@ public class BillService {
         }
     }
 
+    /**
+     * Resets a bill's payment status, clearing paid amount and timestamp.
+     *
+     * @param bill the bill to revert (must not be {@code null})
+     */
     public void markAsUnpaid(Bill bill) {
         if (bill == null) return;
         bill.setPaid(false);
@@ -239,6 +306,13 @@ public class BillService {
         billRepository.save(bill);
     }
 
+    /**
+     * Snoozes the bill's reminder by setting {@code snoozedUntil} to today plus
+     * the requested number of days (minimum 1).
+     *
+     * @param bill the bill to snooze (must not be {@code null})
+     * @param days number of days to snooze; values below 1 are treated as 1
+     */
     public void snooze(Bill bill, int days) {
         if (bill == null) return;
         int safeDays = Math.max(days, 1);
@@ -247,12 +321,26 @@ public class BillService {
         billRepository.save(bill);
     }
 
+    /**
+     * Returns {@code true} when the frequency string represents a recurring
+     * schedule (weekly, monthly, or yearly).
+     *
+     * @param frequency the frequency value stored on a bill
+     * @return {@code true} if recurring, {@code false} for one-time or unknown
+     */
     public boolean isRecurring(String frequency) {
         if (frequency == null) return false;
         String f = frequency.trim().toLowerCase(Locale.ROOT);
         return f.equals("weekly") || f.equals("monthly") || f.equals("yearly");
     }
 
+    /**
+     * Calculates the next due date for a recurring bill.
+     *
+     * @param dueDate   the current due date
+     * @param frequency the recurrence frequency ({@code "weekly"}, {@code "monthly"}, {@code "yearly"})
+     * @return the advanced due date, or the original date for one-time bills
+     */
     public LocalDate nextDueDate(LocalDate dueDate, String frequency) {
         if (dueDate == null || frequency == null) return dueDate;
         return switch (frequency.toLowerCase(Locale.ROOT)) {
@@ -288,6 +376,14 @@ public class BillService {
         return next;
     }
 
+    /**
+     * Returns {@code true} when the user has added at least 2 one-time bills
+     * with the same name, indicating they may want to convert it to recurring.
+     *
+     * @param username the authenticated user's username
+     * @param billName the bill name to check (case-insensitive)
+     * @return {@code true} if 2 or more matching one-time bills exist
+     */
     public boolean suggestRecurringMonthly(String username, String billName) {
         if (username == null || billName == null || billName.isBlank()) return false;
         List<Bill> sameName = billRepository.findByUsernameAndBillNameIgnoreCase(username, billName.trim());
@@ -474,6 +570,14 @@ public class BillService {
         public List<BillCard> getBills() { return bills; }
     }
 
+    /**
+     * Builds the list of bell-notification items for the global navbar badge.
+     * Includes unpaid bills that are due within 7 days or overdue, excluding
+     * currently snoozed bills. Results are sorted by due date ascending.
+     *
+     * @param username the authenticated user's username
+     * @return list of {@link BellItem} objects for display in the navbar dropdown
+     */
     public List<BellItem> buildBellItems(String username) {
         List<BellItem> items = new ArrayList<>();
         LocalDate today = LocalDate.now();

@@ -15,6 +15,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * Handles the Receipt Scanner page: viewing, adding, and deleting scanned receipts,
+ * and computing a Budget vs. Actual spending comparison.
+ */
 @Controller
 public class ReceiptController {
 

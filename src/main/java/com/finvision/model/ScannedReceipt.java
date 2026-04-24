@@ -5,6 +5,16 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * MongoDB document representing a manually entered or scanned receipt.
+ *
+ * <p>Records an actual spending transaction with merchant name, dollar amount,
+ * spending category, date, optional notes, and an optional Base64-encoded
+ * image thumbnail. The {@code yearMonth} field (format: {@code YYYY-MM}) is
+ * indexed together with {@code username} for fast monthly filtering.</p>
+ *
+ * <p>Stored in the {@code scanned_receipts} collection.</p>
+ */
 @Document(collection = "scanned_receipts")
 @CompoundIndexes({
         @CompoundIndex(name = "username_yearmonth_idx", def = "{'username': 1, 'yearMonth': 1}")

@@ -11,6 +11,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * Handles user authentication flows: registration, login, and password reset.
+ *
+ * <p>The password-reset flow is a three-step process:
+ * <ol>
+ *   <li>User submits their username ({@code /forgot-password}).</li>
+ *   <li>User verifies identity via PIN or security question ({@code /verify-identity}).</li>
+ *   <li>User sets a new password ({@code /reset-password}).</li>
+ * </ol>
+ * The verified username is held in the HTTP session between steps 2 and 3.
+ */
 @Controller
 public class AuthController {
 
@@ -20,24 +31,56 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ─── ROOT ────────────────────────────────────────────────────────────────
+    /**
+     * Redirects the root URL to the login page.
+     *
+     * @return redirect to {@code /login}
+     */
     @GetMapping("/")
     public String root() {
         return "redirect:/login";
     }
 
-    // ─── LOGIN ───────────────────────────────────────────────────────────────
+    /**
+     * Displays the login page.
+     *
+     * @return the {@code login} template name
+     */
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
-    // ─── REGISTER ────────────────────────────────────────────────────────────
+    /**
+     * Displays the registration page.
+     *
+     * @return the {@code register} template name
+     */
     @GetMapping("/register")
     public String register() {
         return "register";
     }
 
+    /**
+     * Processes the registration form.
+     *
+     * <p>Validates that passwords match, that the username is not already taken,
+     * and that the PIN is exactly 4 digits. On success, saves the new user with
+     * BCrypt-hashed password and PIN, then redirects to the login page.</p>
+     *
+     * @param username         chosen username
+     * @param password         chosen password
+     * @param confirmPassword  password confirmation (optional)
+     * @param email            optional email address
+     * @param firstName        optional first name
+     * @param lastName         optional last name
+     * @param pin              4-digit numeric PIN for account recovery
+     * @param securityQuestion optional security question for password reset
+     * @param securityAnswer   answer to the security question (stored lowercase)
+     * @param model            Spring MVC model for error messages
+     * @return redirect to {@code /login?registered=true} on success, or back to
+     *         the registration page with an error message
+     */
     @PostMapping("/register")
     public String registerUser(
             @RequestParam String username,
@@ -81,12 +124,27 @@ public class AuthController {
         return "redirect:/login?registered=true";
     }
 
-    // ─── FORGOT PASSWORD (Step 1: enter username) ─────────────────────────────
+    /**
+     * Displays the "Forgot Password" page (Step 1 of password reset).
+     *
+     * @return the {@code forgot-password} template name
+     */
     @GetMapping("/forgot-password")
     public String showForgotPasswordPage() {
         return "forgot-password";
     }
 
+    /**
+     * Processes the username submission for password reset (Step 1).
+     *
+     * <p>Looks up the account and, if found, forwards to the reset-password
+     * page with the user's security question pre-loaded for Step 2.</p>
+     *
+     * @param username the username whose password should be reset
+     * @param model    Spring MVC model
+     * @return the {@code reset-password} template (Step 2 view) or back to
+     *         {@code forgot-password} with an error if the username is not found
+     */
     @PostMapping("/forgot-password")
     public String processForgotPassword(
             @RequestParam("username") String username, Model model) {
@@ -103,7 +161,22 @@ public class AuthController {
         return "reset-password";
     }
 
-    // ─── VERIFY IDENTITY (Step 2: PIN or security question) ──────────────────
+    /**
+     * Verifies the user's identity via PIN or security-question answer (Step 2).
+     *
+     * <p>On success, stores the username in the HTTP session under the key
+     * {@code pendingReset} so Step 3 can authorize the password change without
+     * requiring the user to re-verify.</p>
+     *
+     * @param username       the username being verified
+     * @param verifyMethod   either {@code "pin"} or {@code "question"}
+     * @param pinValue       the 4-digit PIN (required when {@code verifyMethod} is {@code "pin"})
+     * @param securityAnswer the answer to the security question (required when method is {@code "question"})
+     * @param request        the HTTP request (used to access the session)
+     * @param model          Spring MVC model
+     * @return the {@code reset-password} template advanced to Step 3 on success,
+     *         or Step 2 again with an error message on failure
+     */
     @PostMapping("/verify-identity")
     public String verifyIdentity(
             @RequestParam String username,
@@ -148,7 +221,14 @@ public class AuthController {
         return "reset-password";
     }
 
-    // ─── RESET PASSWORD (Step 3: set new password) ───────────────────────────
+    /**
+     * Displays the reset-password page. If a {@code pendingReset} session attribute
+     * is present the page renders in Step 3 (new-password entry) mode.
+     *
+     * @param request the HTTP request (checked for the {@code pendingReset} session attribute)
+     * @param model   Spring MVC model
+     * @return the {@code reset-password} template
+     */
     @GetMapping("/reset-password")
     public String resetPasswordPage(HttpServletRequest request, Model model) {
         String username = (String) request.getSession().getAttribute("pendingReset");
@@ -158,6 +238,20 @@ public class AuthController {
         return "reset-password";
     }
 
+    /**
+     * Saves the new password for the user identified by the {@code pendingReset}
+     * session attribute (Step 3).
+     *
+     * <p>Validates that the new password is confirmed and at least 6 characters long,
+     * then BCrypt-hashes and persists it. Clears the session attribute on success.</p>
+     *
+     * @param newPassword     the new password entered by the user
+     * @param confirmPassword optional confirmation of the new password
+     * @param request         HTTP request used to access and clear the session
+     * @param model           Spring MVC model
+     * @return redirects to {@code /forgot-password} if the session is missing; otherwise
+     *         renders the login page with a success message or the reset page with an error
+     */
     @PostMapping("/reset-password")
     public String processResetPassword(
             @RequestParam String newPassword,

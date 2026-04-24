@@ -17,6 +17,13 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Handles HTTP endpoints for bill creation, editing, payment tracking,
+ * deletion, and snoozing on the Alerts &amp; Notifications page.
+ *
+ * <p>All write endpoints require an authenticated principal and redirect to
+ * {@code /alerts} on success or failure.</p>
+ */
 @Controller
 public class BillController {
 
@@ -26,6 +33,26 @@ public class BillController {
     @Autowired
     private BillService billService;
 
+    /**
+     * Creates a new bill for the authenticated user.
+     *
+     * <p>If the bill is one-time and the user has added a bill with the same name
+     * before, a suggestion to make it recurring monthly is shown.</p>
+     *
+     * @param billName           display name of the bill
+     * @param amountType         {@code "fixed"} or {@code "variable"}
+     * @param amount             the known/fixed dollar amount
+     * @param estimatedAmount    estimated amount (only used when type is variable)
+     * @param dueDate            due date in {@code YYYY-MM-DD} format
+     * @param frequency          {@code "one-time"}, {@code "weekly"}, {@code "monthly"}, or {@code "yearly"}
+     * @param category           spending category label
+     * @param notes              optional free-text notes
+     * @param reminderBefore     days-before-due to send reminders
+     * @param overdueAfter       days-after-due to send overdue reminders
+     * @param principal          the currently authenticated user
+     * @param redirectAttributes flash attributes for the redirect response
+     * @return redirect to {@code /alerts}
+     */
     @PostMapping("/alerts/bills")
     public String createBill(
             @RequestParam String billName,
@@ -64,6 +91,24 @@ public class BillController {
         return "redirect:/alerts";
     }
 
+    /**
+     * Updates an existing bill owned by the authenticated user.
+     *
+     * @param id                 the bill's MongoDB document ID
+     * @param billName           updated bill name
+     * @param amountType         {@code "fixed"} or {@code "variable"}
+     * @param amount             updated fixed amount
+     * @param estimatedAmount    updated estimated amount (variable bills only)
+     * @param dueDate            updated due date in {@code YYYY-MM-DD} format
+     * @param frequency          updated recurrence frequency
+     * @param category           updated spending category
+     * @param notes              updated notes
+     * @param reminderBefore     updated pre-due reminder days
+     * @param overdueAfter       updated overdue reminder days
+     * @param principal          the currently authenticated user
+     * @param redirectAttributes flash attributes for the redirect response
+     * @return redirect to {@code /alerts}
+     */
     @PostMapping("/alerts/bills/{id}/edit")
     public String editBill(
             @PathVariable String id,
@@ -102,6 +147,15 @@ public class BillController {
         return "redirect:/alerts";
     }
 
+    /**
+     * Marks a bill as paid and records the payment amount.
+     *
+     * @param id                 the bill's MongoDB document ID
+     * @param paidAmount         the amount actually paid (optional; uses bill amount if omitted)
+     * @param principal          the currently authenticated user
+     * @param redirectAttributes flash attributes for the redirect response
+     * @return redirect to {@code /alerts}
+     */
     @PostMapping("/alerts/bills/{id}/paid")
     public String markPaid(
             @PathVariable String id,
@@ -123,6 +177,14 @@ public class BillController {
         return "redirect:/alerts";
     }
 
+    /**
+     * Reverts a bill's payment status back to unpaid.
+     *
+     * @param id                 the bill's MongoDB document ID
+     * @param principal          the currently authenticated user
+     * @param redirectAttributes flash attributes for the redirect response
+     * @return redirect to {@code /alerts}
+     */
     @PostMapping("/alerts/bills/{id}/unpaid")
     public String markUnpaid(
             @PathVariable String id,
@@ -142,6 +204,14 @@ public class BillController {
         return "redirect:/alerts";
     }
 
+    /**
+     * Permanently deletes a bill owned by the authenticated user.
+     *
+     * @param id                 the bill's MongoDB document ID
+     * @param principal          the currently authenticated user
+     * @param redirectAttributes flash attributes for the redirect response
+     * @return redirect to {@code /alerts}
+     */
     @PostMapping("/alerts/bills/{id}/delete")
     public String deleteBill(
             @PathVariable String id,
@@ -157,6 +227,15 @@ public class BillController {
         return "redirect:/alerts";
     }
 
+    /**
+     * Snoozes a bill reminder by the specified number of days.
+     *
+     * @param id                 the bill's MongoDB document ID
+     * @param snoozeDays         number of days to snooze (defaults to 1)
+     * @param principal          the currently authenticated user
+     * @param redirectAttributes flash attributes for the redirect response
+     * @return redirect to {@code /alerts}
+     */
     @PostMapping("/alerts/bills/{id}/snooze")
     public String snoozeBill(
             @PathVariable String id,

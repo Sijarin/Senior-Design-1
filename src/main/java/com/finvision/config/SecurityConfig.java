@@ -7,13 +7,37 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Spring Security configuration for Finvision.
+ *
+ * <p>Defines which routes are publicly accessible, configures form-based login
+ * and logout behavior, and registers the BCrypt password encoder bean.</p>
+ */
 @Configuration
 public class SecurityConfig {
 
+    /**
+     * Registers a BCrypt password encoder used throughout the application.
+     *
+     * @return a {@link BCryptPasswordEncoder} instance
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    /**
+     * Configures the HTTP security filter chain.
+     *
+     * <p>Public routes: {@code /}, {@code /login}, {@code /register},
+     * {@code /forgot-password}, {@code /reset-password}, {@code /verify-identity},
+     * and all static assets under {@code /css/**} and {@code /js/**}.
+     * All other requests require authentication.</p>
+     *
+     * @param http the {@link HttpSecurity} builder
+     * @return the configured {@link SecurityFilterChain}
+     * @throws Exception if the security configuration fails
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

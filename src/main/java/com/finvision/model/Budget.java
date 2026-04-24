@@ -4,6 +4,16 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 
+/**
+ * MongoDB document representing a monthly budget plan in Finvision.
+ *
+ * <p>Captures a user's projected income (primary + other) and planned expenses
+ * split into fixed categories (rent, utilities, insurance, groceries,
+ * subscriptions) and user-defined variable categories.</p>
+ *
+ * <p>Each document is scoped to a single user and calendar month.
+ * Stored in the {@code budgets} collection.</p>
+ */
 @Document(collection = "budgets")
 public class Budget {
 

@@ -8,6 +8,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * MongoDB document representing a bill or recurring payment in Finvision.
+ *
+ * <p>A bill tracks a financial obligation for a user, including its amount
+ * (fixed or variable), due date, recurrence frequency, reminder schedule,
+ * payment status, and a history of past amounts.</p>
+ *
+ * <p>Stored in the {@code bills} collection.</p>
+ */
 @Document(collection = "bills")
 public class Bill {
 

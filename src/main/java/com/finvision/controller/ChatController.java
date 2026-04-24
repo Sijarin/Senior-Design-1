@@ -17,6 +17,18 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * Provides a rule-based AI financial assistant via the {@code POST /chat} endpoint.
+ *
+ * <p>The assistant understands natural-language questions about the user's budget,
+ * spending categories, savings rate, and financial health. Responses are generated
+ * by pattern-matching the user's message against known intents (greetings, budget
+ * queries, savings advice, receipt summaries, etc.) and injecting live data from
+ * the user's most recent budget and current-month scanned receipts.</p>
+ *
+ * <p>No external AI API is used — all responses are template-driven and computed
+ * server-side on each request.</p>
+ */
 @Controller
 public class ChatController {
 
@@ -29,6 +41,18 @@ public class ChatController {
     @Autowired
     private ScannedReceiptRepository receiptRepository;
 
+    /**
+     * Accepts a chat message from the authenticated user and returns a
+     * personalised financial assistant response.
+     *
+     * <p>Fetches the user's profile, latest budget, and current-month receipts
+     * before delegating to {@code generateResponse} to produce the reply.</p>
+     *
+     * @param body      JSON request body containing a {@code "message"} key
+     * @param principal the currently authenticated user
+     * @return a JSON object with a single {@code "response"} key containing
+     *         the assistant's reply text
+     */
     @PostMapping("/chat")
     @ResponseBody
     public Map<String, String> chat(@RequestBody Map<String, String> body, Principal principal) {

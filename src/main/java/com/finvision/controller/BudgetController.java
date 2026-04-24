@@ -12,12 +12,34 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Handles the budget-save form submission on the Budget Set page.
+ *
+ * <p>Performs an upsert: if a budget already exists for the current user and
+ * calendar month it is updated in-place; otherwise a new document is created.</p>
+ */
 @Controller
 public class BudgetController {
 
     @Autowired
     private BudgetRepository budgetRepository;
 
+    /**
+     * Saves or updates the monthly budget for the authenticated user.
+     *
+     * @param monthlyIncome  primary monthly income amount
+     * @param otherIncome    additional income amount (defaults to 0)
+     * @param rent           budgeted rent expense (defaults to 0)
+     * @param utilities      budgeted utilities expense (defaults to 0)
+     * @param insurance      budgeted insurance expense (defaults to 0)
+     * @param groceries      budgeted groceries expense (defaults to 0)
+     * @param subscriptions  budgeted subscriptions expense (defaults to 0)
+     * @param variableTitle  list of user-defined variable expense names
+     * @param variableAmount list of amounts corresponding to each variable expense
+     * @param principal      the currently authenticated user
+     * @param model          Spring MVC model
+     * @return the {@code BudgetSet} template with updated budget data pre-filled
+     */
     @PostMapping("/budget")
     public String saveBudget(
             @RequestParam double monthlyIncome,
